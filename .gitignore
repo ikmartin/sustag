@@ -1,0 +1,70 @@
+# Data artifacts live under src/data/ but must never be committed (large / regenerable).
+# keep the raw water folder, needed
+src/data/raw/basins
+src/data/raw/crops
+src/data/raw/surplus
+src/data/raw/weather
+src/data/raw/water
+src/data/interim/*
+src/data/processed/*
+src/data/cache/*
+!src/data/**/.gitkeep
+
+# EXCEPTION: the annual, cell-aggregated crop/surplus globals + the static grid are TINY (~6MB each)
+# -- one row per (cell, YEAR), not (cell, day) like weather. Committing them lets a fresh clone run
+# without the multi-GB raw CDL/surplus sources (the crops/surplus builders short-circuit on these).
+# (weather_global_*.parquet stays ignored: ~260MB/year, 4.6GB total -> hosted download / re-fetch.)
+!src/data/interim/grid_global.parquet
+!src/data/interim/crops_global.parquet
+!src/data/interim/surplus_global.parquet
+
+# EXCEPTION: the per-site water data + metadata is the ONLY durable copy of IWQIS nitrate
+# (not re-fetchable from any API), so it is tracked in git. The 3.1GB raw IWQIS chunks under
+# raw/water/ stay ignored (rebuildable, and the parquets supersede them as source of truth).
+!src/data/processed/water/
+!src/data/processed/water/**
+
+# EXCEPTION: basins are small (~7MB parquets) and slow to re-fetch (NLDI/KMZ for 85 sites), and
+# the 552KB D8 direction raster is a runtime asset site_view needs. Track both.
+!src/data/processed/basins/
+!src/data/processed/basins/**
+!src/data/raw/basins/
+!src/data/raw/basins/**
+
+# EXCEPTION: the widget's surplus display assets. meta/surplus_stats.csv (4KB colour-scale min/max,
+# read by BOTH the Iowa heatmap and the Voronoi rain-grid cell colouring) + images/iowa_surplus_*.png
+# (~32MB statewide heatmap PNGs). Already generated; the gitignored raw pixels can't rebuild them on
+# a fresh clone, so track them so the surplus visuals work without the data download.
+!src/data/processed/surplus/
+!src/data/processed/surplus/**
+
+# EXCEPTION: the basin-containment graph (~4KB). Read at runtime by access.get_basin_graph ->
+# src/splits/conflict_graph.py (the LOFO family splitter), so the honest cross-validation would
+# FileNotFoundError on a fresh clone without it. Slow to regenerate (needs all 85 basins). Track it.
+!src/data/processed/aux/
+!src/data/processed/aux/**
+
+# Python / tooling
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.pytest_cache/
+
+# Project memory (mirrors sustag/.gitignore)
+MEMORY.md
+
+# macOS Finder cruft (must win over the processed/** exceptions above)
+.DS_Store
+**/.DS_Store
+
+# never commit the zipped weather bundle (it is the Box download)
+src/data/interim.zip
+
+.vscode
+.claude
+MEMORY.md
+
+__pycache__/
+*.pyc
+
+cache/

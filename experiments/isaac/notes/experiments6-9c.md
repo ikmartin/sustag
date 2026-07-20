@@ -1,0 +1,722 @@
+# Experiments
+
+Two different targets: nitrate regression and nitrate violation classification.
+Two diferenent models: individual site models, general location models.
+
+| | Nitrate Regression | Violation Classification |
+|-|-|-|
+| Fixed Site       | Baseline "predict yesterday's" value does incredibly well. Might be better to predict "will it spike?" | Idk what to put here, I guess "predict violation state of yesterday" does pretty well too |
+| General Location | Can't use past nitrate | Can't use past nitrate |
+
+Sections are roughly 
+- Experiment description and results
+- Score descriptions (this part was Claude generated because I got lazy at the end)
+- Individual feature scores for each experiment
+
+XGBoost provides its own feature scores, I also included one from sklearn, these are the "Col Shuffle" tables. Basically sklearn takes a trained model, tests it on some test data, and then one at a time it shuffles a column and applies the model again. If shuffling a column makes the model way worse, the column is important. Higher score = feature is more important.
+
+## Table of Contents
+
+- [Experiment descriptions and results](#summary-of-results-and-my-interpretation)
+  - [Experiment 6: Does weather data improve regression?](#experiment-6-does-weather-data-improve-regression)
+  - [Experiment 6c: Does weather data improve classification?](#experiment-6c-does-weather-data-improve-classification)
+  - [Experiment 7: Which recipes perform best on individual site modeling?](#experiment-7-which-recipes-perform-best-on-individual-site-modeling)
+  - [Experiment 7c:](#experiment-7c)
+  - [Experiment 8:](#experiment-8)
+  - [Experiment 8c:](#experiment-8c)
+  - [Experiment 9:](#experiment-9)
+  - [Experiment 9c:](#experiment-9c)
+- [Regression score descriptions](#regression-score-table-columns-eg-_experiment6csv)
+- [Classification score descriptions](#classification-score-table-columns-eg-_experiment6ccsv)
+- [Experiment 6/6c: Does weather or lagged weather improve performance on multisite regression/classification?](#experiment-66c-does-weather-or-lagged-weather-improve-performance-on-multisite-regressionclassification)
+  - [Exp 6 Feature Importance XGBoost](#exp-6-feature-importance-xgboost)
+  - [Exp 6 Feature Importance Col Shuffle](#exp-6-feature-importance-col-shuffle)
+  - [Exp 6c Feature Importance XGBoost](#exp-6c-feature-importance-xgboost)
+  - [Exp 6c Feature Importance Col Shuffle](#exp-6c-feature-importance-col-shuffle)
+  - [Exp 7 Feature Importance XGBoost](#exp-7-feature-importance-xgboost)
+  - [Exp 7 Feature Importance Col Shuffle](#exp-7-feature-importance-col-shuffle)
+
+## List of experiments, results, and my interpretation
+
+### Experiment 6: Does weather data improve regression?
+Yes, including the weather data improves results quite a bit. Lagged weather data doesn't help.
+
+* No Weather recipe: basin-aggregated crop, basin-aggregated surplus, pure seasonality signal.
+* 0_Lags recipe: No Weather + Daily weather
+* 1_Lags recipe: 0_Lags + copy of every weather column lagged by 1 day
+* 2_Lags recipe: 1_Lags + copy of every weather column lagged by 3 days
+* 3_Lags recipe: 2_Lags + copy of every weather column lagged by 7 days
+* 4_Lags recipe: 3_Lags + copy of every weather column lagged by 14 days
+
+|recipe|n_sites|n_rows|n_feat|loso_r2|lofo_r2|rmse|between_r2|within_r2|macro_r2|
+|-|-|-|-|-|-|-|-|-|-|
+|0_Lags|20|64807|21|0.1164678371864057|0.0741736213315035|4.440714726959775|-1.2546736707196118|0.336055673316052|0.3069999264615034|
+|1_Lags|20|64807|30|0.109123270218675|0.0778797931991754|4.4591337659720525|-1.2139896945653694|0.3277890879598506|0.3212673604491273|
+|2_Lags|20|64807|39|0.019145698572732|-0.0103089765575898|4.67890194182973|-1.9288825942157324|0.3272861771521207|0.3312467989672863|
+|3_Lags|20|64807|48|0.0177012602334372|0.0060428559603717|4.682345826928637|-1.852240292684313|0.3212811996832708|0.2972105647806638|
+|4_Lags|20|64807|57|0.0181876415601706|0.0378634212708504|4.681186460910328|-2.0082399167252043|0.3474406507939748|0.3355258189738003|
+|no_weather|20|64807|12|0.0027809021309981|-0.1116734923202105|4.717772414091567|-1.1519610195217935|0.1871658598103492|0.1075552824438559|
+
+### Experiment 6c: Does weather data improve classification?
+Yes, including the weather data helps a bit, but not as drastically as it does in the regression. Lagged weather data also doesn't matter.
+
+|recipe|n_sites|n_rows|n_feat|loso_auc|lofo_auc|prauc|brier|base|between_rate_r2|macro_auc|
+|-|-|-|-|-|-|-|-|-|-|-|
+|0_Lags|20|64807|21|0.7561793445986376|0.7323667246839052|0.4527968126560898|0.1590138926823411|0.2153316771336429|-0.7812331983393002|0.8834327738124312|
+|1_Lags|20|64807|30|0.7526718088163223|0.7326660991579867|0.4529097160124932|0.160107686300132|0.2153316771336429|-0.7942746928463804|0.8753571367504475|
+|2_Lags|20|64807|39|0.7578605316393957|0.7420639243866387|0.4693743481886722|0.1574280289107578|0.2153316771336429|-0.6871497627600684|0.8836210556751647|
+|3_Lags|20|64807|48|0.7554664454633215|0.7296330119148076|0.4627973346236435|0.1586526027332993|0.2153316771336429|-0.7535949773474595|0.8811211928644664|
+|4_Lags|20|64807|57|0.7583821675073797|0.733585953327355|0.4657674644637612|0.1575754864309926|0.2153316771336429|-0.7634776327046993|0.8904589704312502|
+|no_weather|20|64807|12|0.730527804068899|0.7031861043392078|0.3873952475733466|0.1698916732440958|0.2153316771336429|-1.0699301193160946|0.8349317073438671|
+
+### Experiment 7: Which recipes perform best on individual site modeling?
+
+Tested 4 different recipes on 20 sites, each site gets its own model, no cross-site generalization tested for.
+
+* `A_static`: Just the covariates + static features (lat/lon, basin area). This is crop and surplus exponential-decay aggregation across entire basin, the weather time series, and a pure cos/sin signal for a seasonality reference.
+* `B_static`: `A_static` + a site's OWN past nitrate. This only makes sense for individual site monitoring, if you wanted to setup a virtual site you obviously wouldn't have access to past nitrate readings because there aren't past nitrate readings.
+* `C_static`: `A_static` + "cross-site climatology". Specifically, the rolling average of all sites on 3D, 7D, 14D, 30D windows, the average daily nitrate of all sensors across the state, the day of year, week of year, month of year signals, and 3 copies of every single other sites's nitrate one for 1,3,7 day lags. A big row set, all basically other nitrate data. Exhibits leakage because a sensor's own nitrate today is the target and is included in the daily average across the site.
+* `D_static`: `A_static` + toned down version of C protected from leakage. Rolling average of all sites (up to yesterday, so today is not included) and then the average daily nitrate of all sensors EXCEPT this one at 1,2,3,7,14 day lags. 
+
+|recipe|n_sites|median_r2|mean_r2|
+|-|-|-|-|
+|A_static|20|-0.0248873320155595|-0.641397738975395|
+|B_static|20|0.8779130870020047|0.7513493106700608|
+|C_static|20|0.5618503174004563|0.4247365245935888|
+|D_static|20|0.4546353715630746|0.2854733279150639|
+
+### Experiment 7c: Which recipes perform best on individual site classification?
+
+Same thing as Exp 7 but for classification.
+
+|recipe|n_sites|median_auc|mean_auc|
+|-|-|-|-|
+|A_static|20|0.7822688973012577|0.7397451086833315|
+|B_static|20|0.9775|0.969622296576636|
+|C_static|20|0.9373456790123456|0.8591490455342916|
+|D_static|20|0.8747452791740253|0.8175727279298256|
+
+### Experiment 8: Is nitrate_surplus useful for regression?
+
+Preet's EDA seemed to suggest that nitrate surplus is a useless feature. But maybe that's only the case because we only have data up until 2017-12-31? I'm testing on data cut off at 2018. This is for the general location model.
+
+* The `A` and `D` are the same as the `A` and `D` in Experiment 7, this time with static and non-static variants.
+* All data is cutoff at `2017-12-31`.
+
+If you look at the variable scores, I think surplus does help a bit, it makes it into the top 12 or 15 or whatever, but it's not as important as other features. Rolling average nitrogen is OP as hell, and is not realistic to include in a model you want to generalize spatially, unfortunately.
+
+Longitude is super useful, especially for classification. Max distance to sensor is also a pretty good static feature.
+
+|recipe|n_sites|n_rows|n_feat|loso_r2|lofo_r2|rmse|between_r2|within_r2|macro_r2|
+|-|-|-|-|-|-|-|-|-|-|
+|A|20|26539|21|-0.013687095112626|0.0369889154173355|4.881314883313023|-1.201168703004413|0.3925916551365096|0.0381398379252552|
+|A_static|20|26539|26|0.2156711491662465|0.2074488336832811|4.29372237612248|-0.5310563971919335|0.4356524829209729|0.2239101560449439|
+|D|20|26539|30|0.1505517420657923|0.215594905534242|4.468413241899997|-1.0343238710553466|0.5330778354309071|0.129416384168818|
+|D_static|20|26539|35|0.3809962148064747|0.2919067976006186|3.814446407610853|-0.3241055789327882|0.5923494363462818|0.3315684546127485|
+
+### Experiment 8c: Is nitrate_surplus useful for classification?
+
+Same thing as 8 but for classification. Again, this is a general location model, so training across multiple sites simultaneously.
+
+|recipe|n_sites|n_rows|n_feat|loso_auc|lofo_auc|prauc|brier|base|between_rate_r2|macro_auc|
+|-|-|-|-|-|-|-|-|-|-|-|
+|A|20|26539|21|0.6795554896005264|0.6998000396379653|0.4262099241989956|0.2333511248985659|0.2789102829797656|-1.306174233952186|0.8712501099674496|
+|A_static|20|26539|26|0.7585058338079823|0.7593379289314182|0.5086390116129348|0.1976731191137319|0.2789102829797656|-0.6047147559118278|0.8679557317622391|
+|D|20|26539|30|0.7716159913055702|0.7557493051601913|0.5303402163804419|0.2000132306226066|0.2789102829797656|-0.7550799526767573|0.9013409961685824|
+|D_static|20|26539|35|0.8204752582726038|0.8081851911324645|0.581975938438955|0.1734317808600184|0.2789102829797656|-0.3250508731125494|0.9108436956812408|
+
+### Experiment 9: Are buckets ever useful in regression?
+
+Are distance buckets ever useful in regression or is exponential decay weights for a total basin aggregation strictly better? Try a few different bucket, water velocity pairs together with a few different lambda values, look at the results. It seems like buckets actually do something (I thought they were useless before this) but 3 buckets is bad.
+
+2 buckets > exp-decay > 3 buckets
+
+The LOSO values are best for 1 bucket with edge at 10k and a water velocity of 0.8 m/s.
+
+Perhaps 1 bucket + exponential decay is best.
+
+**Also weird**: `Fuel_moisture_1000h_b1` is apparently a really important variable. This is a "dryness of large logs over the last 43 days" variable from the 2nd weather source, gridMET. It's important in both XGBoost gain metrics and in sklearns "col shuffle" metrics. I don't fully understand it.
+
+|recipe|n_sites|n_rows|n_feat|loso_r2|lofo_r2|rmse|between_r2|within_r2|macro_r2|
+|-|-|-|-|-|-|-|-|-|-|
+|A_exp_lam2k|20|64807|26|0.0333644657802506|-0.0566433383542628|4.644864733473061|-2.19587736703333|0.3685054673481309|0.275619419723929|
+|A_exp_lam5k|20|64807|26|0.0075318739695029|0.1492185125728425|4.706520742304252|-2.140311968680982|0.3261608257049355|0.2717869323917835|
+|A_exp_lam10k|20|64807|26|0.1305212660282481|0.1250132111383201|4.405256242008825|-1.4118054262871973|0.3622755899270437|0.338163634759922|
+|A_exp_lam20k|20|64807|26|0.0907403267813112|0.0705494064057387|4.504905219101604|-1.5618264848439014|0.3497693914367242|0.3080808032916717|
+|B_buck_5k_v0.3|20|64807|45|0.1995132886655642|0.1030530483025724|4.226868689801373|-0.6782207855695179|0.3323758890925076|0.2870567002256185|
+|B_buck_5k_v0.8|20|64807|45|0.2025433531358957|0.1003552767692438|4.218861169120295|-0.6192469953919157|0.3332228790395044|0.3103153378975843|
+|B_buck_10k_v0.3|20|64807|45|0.2017631480658968|0.1703533908538641|4.220924461330576|-1.0530584889478978|0.3536298468645974|0.3403656714429275|
+|B_buck_10k_v0.8|20|64807|45|0.2733243000668575|0.138859156559002|4.027281729709979|-0.6770466784423976|0.3839306538288163|0.3477608833227322|
+|B_buck_5k-15k_v0.3|20|64807|64|0.0366752653855766|-0.1748089084237403|4.636903404581211|-1.877003829950619|0.3202996399370947|0.3064622236155994|
+|B_buck_5k-15k_v0.8|20|64807|64|0.0289667873115865|-0.1426328592621843|4.6554185777262695|-1.8981198963387735|0.3165800169432639|0.3094625505321394|
+
+### Experiment 9c: Are buckets ever useful in classification?
+
+Same thing but for classificaiton. Strangely these seem to perform basically identically.
+
+Also both total and surplus nitrate show up as important variables in the shuffle columns score. Perhaps it's worth taking the 2017 nitrate values and broadcasting them forward into the future. It'd be better probably to actually model how nitrate is changing, check if it does better than the "take last value" baseline, but this takes time.
+
+|recipe|n_sites|n_rows|n_feat|loso_auc|lofo_auc|prauc|brier|base|between_rate_r2|macro_auc|
+|-|-|-|-|-|-|-|-|-|-|-|
+|A_exp_lam2k|20|64807|26|0.8063598150644511|0.7557335063544786|0.4982447357691292|0.1470957960780677|0.2153316771336429|-0.540878409852366|0.8718768877133785|
+|A_exp_lam5k|20|64807|26|0.8187001259202451|0.7774916476624206|0.5332792747250965|0.1406988762196265|0.2153316771336429|-0.2374972986313601|0.8761727717385521|
+|A_exp_lam10k|20|64807|26|0.8500348162615377|0.8055546930677465|0.5874744137528031|0.1269587263966651|0.2153316771336429|0.0692136042267909|0.8974945888774648|
+|A_exp_lam20k|20|64807|26|0.8257957341335742|0.7758225526741276|0.5414707066591362|0.1381306372229875|0.2153316771336429|-0.3116082032112439|0.904127246296087|
+|B_buck_5k_v0.3|20|64807|45|0.8299499009116824|0.7606172638378188|0.5713636950274379|0.1325819849244578|0.2153316771336429|-0.112904403243053|0.8894121241803232|
+|B_buck_5k_v0.8|20|64807|45|0.8374150523097877|0.76307781543664|0.586323278780279|0.1299535517642223|0.2153316771336429|-0.0839655322471897|0.8925767630770733|
+|B_buck_10k_v0.3|20|64807|45|0.8488419207009934|0.7741098538658339|0.5897557666501353|0.1301664918060789|0.2153316771336429|-0.1503797146766259|0.9017548569246632|
+|B_buck_10k_v0.8|20|64807|45|0.8480160924207647|0.7769619126135087|0.589341265245677|0.1297621487289316|0.2153316771336429|-0.1429845619482268|0.8981747424617272|
+|B_buck_5k-15k_v0.3|20|64807|64|0.8379725331304059|0.7561137422899955|0.5812349300972696|0.1309547537285834|0.2153316771336429|-0.0894124263940125|0.8941018569599875|
+|B_buck_5k-15k_v0.8|20|64807|64|0.8380266197354301|0.7491307940708951|0.5840908450164892|0.130750034776312|0.2153316771336429|-0.105504822342048|0.8948297730190373|
+
+## Regression score table columns (e.g. `_experiment6.csv`)
+
+- **recipe** — The name of the feature recipe being evaluated. Each row is one recipe scored across the same pooled set of sites, so rows are directly comparable.
+
+- **n_sites** — The number of distinct sites pooled into the cross-site model. Every site contributes rows to training and is held out once for scoring.
+
+- **n_rows** — The total number of usable daily observations pooled across all sites after merging and dropping NaNs. This is the actual sample size the model was trained and scored on.
+
+- **n_feat** — The number of feature columns the recipe produced (excluding the target). Higher values mean a richer/larger feature set.
+
+- **loso_r2** — Leave-one-site-out $R^2$: pooled $R^2$ over out-of-fold predictions where each site is held out once and predicted by a model trained on the others. This is the headline cross-site generalization score, row-weighted so big sites dominate.
+
+- **lofo_r2** — Leave-one-family-out $R^2$: the same idea but folds are whole site families (connected components of the basin graph) instead of single sites. It is stricter than LOSO (always smaller) because it prevents a site leaking through its connected neighbors, so it is the more honest transfer estimate (and is NaN when there are fewer than 2 families).
+
+- **rmse** — Root mean squared error of the LOSO out-of-fold predictions, in the target's units (mg/L nitrate). Unlike $R^2$ it is an absolute error scale, so lower is better and it is comparable across recipes but not across different targets.
+
+- **between_r2** — $R^2$ of per-site *mean* predicted vs per-site *mean* actual, i.e. is the model good at guessing the mean nitrate levels of a site. It collapses each site to a single point, it's mean nitrate level over the entire test time period for that site, and then $R^2$ errors. If this is positive it's pretty impressive. Basically an attempt at measuring "does the model learn which sites are generally high or low".
+
+- **within_r2** — $R^2$ after subtracting each site's actual mean from both actual and predicted, i.e. does the model do a good job of tracking day-to-day movement away from baseline *within* a site.
+
+- **macro_r2** — The median of the per-site $R^2$ scores. This gives sites equal measure regardless of how many observations the site has. It's supposed to complement the row-weighted `loso_r2` by showing the *typical*-site performance rather than the big-site-dominated average.
+
+
+## Classification score table columns (e.g. `_experiment6c.csv`)
+
+- **recipe** — The name of the feature recipe being evaluated. Each row is one recipe scored across the same pooled set of sites, so rows are directly comparable.
+
+- **n_sites** — The number of distinct sites pooled into the cross-site model. Every site contributes rows to training and is held out once for scoring.
+
+- **n_rows** — The total number of usable daily observations pooled across all sites after merging and dropping NaNs. This is the actual sample size the model was trained and scored on.
+
+- **n_feat** — The number of feature columns the recipe produced (excluding the target). Higher values mean a richer/larger feature set.
+
+- **loso_auc** — Leave-one-site-out ROC-AUC: the area under the ROC curve over out-of-fold predictions where each site is held out once and scored by a model trained on the others. This is the headline cross-site discrimination score; 0.5 is chance and 1.0 is perfect ranking of violation vs non-violation days.
+
+- **lofo_auc** — Leave-one-family-out ROC-AUC: the same metric but folds are whole basin families instead of single sites. It is stricter than LOSO because it blocks leakage through hydrologically connected neighbors, and is NaN when there are fewer than 2 families.
+
+- **prauc** — Area under the precision-recall curve (average precision) over the LOSO out-of-fold predictions. Unlike AUC it focuses on the positive (violation) class and is more informative when violations are rare, so compare it against the `base` rate rather than against 0.5.
+
+- **brier** — Brier score: the mean squared error between predicted violation probabilities and the 0/1 outcomes. It rewards calibrated probabilities (not just correct ranking), and lower is better.
+
+
+
+
+#### Exp 6 Feature Importance XGBoost
+(Top 12 kept for each column)
+|features|0_Lags|1_Lags|2_Lags|3_Lags|4_Lags|no_weather|
+|-|-|-|-|-|-|-|
+|fuel_moisture_1000h_lag3|nan|nan|0.09712658|0.098019585|0.10781417|nan|
+|doy_sin|0.09290817|0.09214246|0.09167559|0.08208793|0.08068488|0.09952179|
+|Nonag|0.08088158|0.07536088|0.06607219|0.062715456|0.051392205|0.113766|
+|total_kg_N|0.073514685|0.06465008|0.06512599|0.05171442|0.05207532|0.12804028|
+|Corn|0.08401893|0.07050376|0.06004118|0.056709748|0.057434462|0.082810886|
+|surplus_kgha|0.082539245|0.071847424|0.046560567|0.052611142|0.03974146|0.08989596|
+|Soybeans|0.06746831|0.060537916|0.057062685|0.04394568|0.043140613|0.10668262|
+|fuel_moisture_1000h_lag1|nan|0.10214138|0.06717348|0.043242693|0.037622146|nan|
+|Hay_Pasture|0.059579182|0.057180524|0.054013006|0.041426335|0.038198642|0.08511412|
+|Other|0.063617244|0.04797598|0.04568292|0.040519517|0.039081983|0.08713636|
+|doy_cos|0.051155467|0.04707795|0.04968781|0.0518251|0.055019338|0.051087994|
+|fuel_moisture_1000h_lag7|nan|nan|nan|0.044832967|0.041841693|nan|
+|fuel_moisture_1000h|0.09409456|0.0431456|0.01889941|0.020837158|0.012155788|nan|
+|Alfalfa|0.04332433|0.03514571|0.033315077|0.03099246|0.027790826|0.056380738|
+|Fallow|0.038318302|0.035257336|0.030979414|0.029379675|0.026178163|0.05545817|
+|Small_Grains|0.030720394|0.026078057|0.021491129|0.019850662|0.016358066|0.044105086|
+
+#### Exp 6 Feature Importance Col Shuffle
+(Top 12 kept for each column)
+|features|0_Lags|1_Lags|2_Lags|3_Lags|4_Lags|no_weather|
+|-|-|-|-|-|-|-|
+|doy_sin|0.3593945514851149|0.3672423104395232|0.3472458529528761|0.3250966717594633|0.3188081025501089|0.3572083014503673|
+|Other|0.1142898932609007|0.1173485951148471|0.1598586497736824|0.1102918915189224|0.122428618939746|0.1437259833432333|
+|Nonag|0.1365813651764996|0.1492743006060904|0.1075910038725865|0.0990970854986728|0.0932103200755432|0.0778178788898644|
+|fuel_moisture_1000h_lag3|nan|nan|0.1505306193201978|0.0826438707567954|0.0817853446661953|nan|
+|fuel_moisture_1000h_lag1|nan|0.2030476705473339|0.0312501288994059|0.0259856505954662|0.0197796010503135|nan|
+|fuel_moisture_1000h|0.2789770771562246|0.0221536796386901|0.002469785095353|0.0073090973860807|0.0066544601540739|nan|
+|doy_cos|0.0594265567783339|0.065714496628656|0.0581529263243914|0.0666380193943778|0.0534924950051047|0.0757660372358925|
+|Soybeans|0.0398292602829377|0.0424154358238511|0.0697760285720772|0.0344916429761099|0.0340582246798368|0.0446617101851452|
+|total_kg_N|0.0337089856384133|0.0303061621334292|0.0627548215094185|0.0274358564904616|0.0392617494253979|0.0389655898634836|
+|fuel_moisture_1000h_lag14|nan|nan|nan|nan|0.0206334522592045|nan|
+|fuel_moisture_1000h_lag7|nan|nan|nan|0.0274310016086009|0.0126015978237032|nan|
+|Fallow|0.0128955844757915|0.0164425914737909|0.020027272251566|0.0190332058444249|0.0147198201349285|0.0060709236694688|
+|surplus_kgha|0.0151874980358521|0.0118461922926512|0.0081806637385055|0.0099261397892212|0.015754808079111|0.0138152349657474|
+|Alfalfa|0.036515146286488|-0.0056315011207578|0.0157348824082163|0.0067056032255863|-0.0075882658187286|0.0231909230143183|
+|solar_rad_lag1|nan|0.0027323322778949|0.0186729692570697|0.0034210453972124|0.0025183927765076|nan|
+|evapotranspiration|-0.0012525799851264|0.0066886185657659|0.0031735716061153|0.0061408004873455|4.412796427414102e-05|nan|
+|min_rel_humidity|0.0054771221632862|-0.0042505860529074|-0.0014080323079748|-0.0013504808261905|-0.0030506191804701|nan|
+|Hay_Pasture|-0.0008933011618146|0.0054114115841452|0.0030613653247627|0.0152012984914344|-0.0143529386562673|-0.0194464982149448|
+|Small_Grains|0.0073489369712802|-0.0057219086366308|-0.0086056721726674|-0.0053414647488487|-0.0007520853715911|-0.0171485095302967|
+|Corn|-0.1251217546768561|-0.0966045200170464|-0.2046682761099332|-0.1718306205931269|-0.1859933055769538|-0.0739007835279343|
+
+#### Exp 6c Feature Importance XGBoost
+(Top 12 kept for each column)
+|features|0_Lags|1_Lags|2_Lags|3_Lags|4_Lags|no_weather|
+|-|-|-|-|-|-|-|
+|Nonag|0.09468572|0.0831418|0.07042374|0.066074595|0.05484773|0.12401171|
+|doy_sin|0.08345747|0.079189755|0.076342806|0.06973873|0.0692484|0.092456296|
+|total_kg_N|0.08020317|0.067146525|0.06798269|0.053961147|0.051431693|0.1197592|
+|surplus_kgha|0.07550649|0.06665498|0.04887391|0.048806585|0.04218494|0.08870725|
+|Hay_Pasture|0.0633678|0.058301084|0.052689828|0.043255396|0.042495996|0.09179037|
+|Soybeans|0.06263459|0.05284707|0.050637484|0.04079685|0.03701479|0.09208213|
+|doy_cos|0.05650569|0.0514865|0.053082835|0.04832495|0.04831312|0.063263185|
+|Corn|0.06593952|0.05095928|0.047032543|0.040772505|0.04102787|0.07452269|
+|fuel_moisture_1000h_lag3|nan|nan|0.050892036|0.049625553|0.05080244|nan|
+|Other|0.055047076|0.04402904|0.04047782|0.037816368|0.03307319|0.079205394|
+|Alfalfa|0.056419414|0.044180907|0.03694437|0.036011457|0.030701166|0.06607531|
+|Fallow|0.04389419|0.0406595|0.033586018|0.03242729|0.028626952|0.055981863|
+|fuel_moisture_1000h_lag1|nan|0.052105486|0.03612382|0.030139428|0.027013132|nan|
+|Small_Grains|0.038376726|0.028276775|0.026881004|0.02282863|0.019342657|0.052144635|
+|solar_rad|0.043347456|0.035484884|0.021169951|0.02358069|0.029651115|nan|
+|fuel_moisture_1000h|0.057451647|0.035155915|0.02071123|0.016969522|0.014103323|nan|
+
+#### Exp 6c Feature Importance Col Shuffle
+(Top 12 kept for each column)
+|features|0_Lags|1_Lags|2_Lags|3_Lags|4_Lags|no_weather|
+|-|-|-|-|-|-|-|
+|doy_sin|0.1688336589477665|0.159522564312282|0.1535127380037519|0.1424574581519601|0.1374875338469586|0.169318253954048|
+|doy_cos|0.0527785408046917|0.053802014362051|0.0516045781036574|0.0546211818999811|0.0465524591099127|0.0624154956038404|
+|Nonag|0.0342315971830991|0.0368705387890034|0.0364691727786232|0.0426347651814691|0.0378884099254678|0.0347593893582717|
+|fuel_moisture_1000h_lag3|nan|nan|0.0325937444474892|0.0218673691917766|0.0221789234835819|nan|
+|fuel_moisture_1000h_lag1|nan|0.0425495998642698|0.0093310649418224|0.0098620778399053|0.0099552640005746|nan|
+|fuel_moisture_1000h|0.0659282029927861|0.0084883073142739|0.0032548381465989|0.0027117718067149|0.0029618242301159|nan|
+|Other|0.01150457069479|0.0117403108907531|0.0118706274968324|0.0091101741163292|0.0101105234658884|0.0165741158973964|
+|total_kg_N|0.0096498939183611|0.0093377464560854|0.0117575403804749|0.0104972106706912|0.0095594152571277|0.0095353047796944|
+|Fallow|0.0066688009976835|0.0054825097152609|0.0046849860901052|0.0051109747997889|0.004864241564527|0.0034702783441865|
+|fuel_moisture_1000h_lag7|nan|nan|nan|0.0037606960748088|0.0040964484892471|nan|
+|surplus_kgha|0.003614102334877|0.0022414405422432|0.001152092615321|0.0019827984351261|0.0015132598743958|0.005594356020136|
+|fuel_moisture_1000h_lag14|nan|nan|nan|nan|0.0022024151832431|nan|
+|min_temp|0.0026617464824238|0.0012927594991567|0.0015981601043327|0.0015362371002448|0.0010664230576667|nan|
+|min_temp_lag3|nan|nan|0.0014241577210178|0.0010563194792215|0.0016216009655996|nan|
+|min_temp_lag1|nan|0.0011434403452375|0.0008465976728057|0.0012782458639221|0.0005923151152291|nan|
+|evapotranspiration|0.0011539419829313|0.0007032201164715|0.0007251014361008|0.0008812114532583|0.0005600919240975|nan|
+|min_rel_humidity|0.0018062638625035|0.0006171317256742|0.0004267597860263|0.00045925067875|0.0005188337362562|nan|
+|min_rel_humidity_lag1|nan|0.0010633917983154|0.0002847796766792|0.0003156257370327|0.0002784053020598|nan|
+|Small_Grains|0.0005386543596665|-0.0013890081410942|-0.0005377571424831|0.0005255863178056|0.000438802428419|-0.0002853140017638|
+|Soybeans|-0.0008558160628797|-0.000374766873608|-0.0013778313797386|0.0001334133022011|-0.0018662926054308|-0.0014069203606807|
+|Hay_Pasture|-0.0059645225876572|-0.0071963035505977|-0.0069425973028914|-0.0090984813003123|-0.0080962381807597|-0.0018017697371701|
+|Alfalfa|-0.0070879422448348|-0.008300154414145|-0.0080094396130849|-0.0072444451933062|-0.0088042905196391|-0.0046613022565605|
+|Corn|-0.0080615977543277|-0.0085043580044253|-0.0078788813162411|-0.0085922477976384|-0.0089876485082905|-0.0105465172553859|
+
+#### Exp 7 Feature Importance XGBoost
+(Top 12 kept for each column)
+|features|A_static|B_static|C_static|D_static|
+|-|-|-|-|-|
+|USGS-05482300_lag2|nan|0.28880247|nan|nan|
+|USGS-05482500_lag2|nan|0.28468436|nan|nan|
+|USGS-05464420_lag2|nan|0.28327346|nan|nan|
+|USGS-05484500_lag2|nan|0.27970624|nan|nan|
+|USGS-05484500_lag1|nan|0.40633783|0.016541358|nan|
+|USGS-05412500_lag1|nan|0.35250717|0.00757526|nan|
+|USGS-05482500_lag1|nan|0.3345037|0.010669898|nan|
+|WQS0024_lag1|nan|0.331601|0.0029850875|nan|
+|USGS-05464420_lag1|nan|0.31589395|0.016140407|nan|
+|USGS-05482300_lag1|nan|0.3135966|0.014191818|nan|
+|USGS-06817000_lag1|nan|0.31939977|0.0060694492|nan|
+|WQS0001_lag1|nan|0.27516732|0.004801431|nan|
+|nroll_3|nan|nan|0.081672534|0.18294498|
+|USGS-05482300_lag3|nan|0.24827269|0.013154388|nan|
+|USGS-05465500_lag1|nan|0.23360078|0.0120652|nan|
+|WQS0002_lag1|nan|0.19481342|0.009229467|nan|
+|USGS-05484500_lag3|nan|0.17305169|0.015259736|nan|
+|rest_of_state_nitrate_lag1|nan|nan|nan|0.092237934|
+|nroll_7|nan|nan|0.057946116|0.10000422|
+|rest_of_state_nitrate_lag2|nan|nan|nan|0.0747907|
+|ncal_d|nan|nan|0.068880156|nan|
+|rest_of_state_nitrate_lag3|nan|nan|nan|0.047874127|
+|doy_sin|0.10643844|0.022231292|0.0043683043|0.026104242|
+|surplus_kgha|0.1137893|0.010402508|0.0029444548|0.025335114|
+|nroll_14|nan|nan|0.012756688|0.058183413|
+|total_kg_N|0.085173935|0.011666088|0.00373976|0.02529652|
+|Alfalfa|0.06666087|0.020604353|0.005691094|0.030842016|
+|Hay_Pasture|0.06058821|0.019822653|0.0026443847|0.019541705|
+|fuel_moisture_1000h|0.058760464|0.014141674|0.0047568236|0.020451318|
+|Other|0.052164875|0.017233443|0.0029946275|0.024355661|
+|Soybeans|0.05095636|0.018138194|0.003925384|0.023633458|
+|Corn|0.04943018|0.019208152|0.0042997836|0.022560341|
+|doy_cos|0.05420669|0.017587088|0.0034374776|0.01942717|
+|Small_Grains|0.050285827|0.015177026|0.0034273681|0.024833808|
+|Fallow|0.046109453|0.014724992|0.0034223176|0.02322285|
+
+#### Exp 7 Feature Importance Col Shuffle
+(Top 12 kept for each column)
+|features|A_static|B_static|C_static|D_static|
+|-|-|-|-|-|
+|WQS0001_lag1|nan|1.245127261395803|0.0035867843718655|nan|
+|USGS-05464420_lag1|nan|1.089126108620167|0.025047694616573|nan|
+|WQS0010_lag1|nan|1.08803273436815|0.0017668238310147|nan|
+|USGS-05412500_lag1|nan|1.0331691821992297|0.0013989184234647|nan|
+|USGS-06817000_lag1|nan|0.9875503508424724|0.0018547325964547|nan|
+|USGS-05484500_lag1|nan|0.9431087519693688|-0.0011931597547874|nan|
+|USGS-05482300_lag1|nan|0.9097913416621471|0.0144108839404617|nan|
+|WQS0024_lag1|nan|0.8286587611883542|0.0008142169876404|nan|
+|WQS0005_lag1|nan|0.810304064547495|0.0065406665031114|nan|
+|WQS0014_lag1|nan|0.802661209633326|0.0048717401766727|nan|
+|USGS-05482500_lag1|nan|0.7678331952245093|0.0333935513106001|nan|
+|USGS-05465500_lag1|nan|0.7945937806181195|0.0050397485384648|nan|
+|WQS0003_lag1|nan|0.7205165299757833|0.0061112163669368|nan|
+|WQS0002_lag1|nan|0.60693208464189|0.0152470810474615|nan|
+|fuel_moisture_1000h|0.1705331759998874|0.0068917369145382|0.014690861343989|0.0525056793170013|
+|nroll_3|nan|nan|0.000409679274437|0.1152965778552888|
+|doy_sin|0.188608468553879|0.0069112675562607|0.0031318755060854|0.0111387380405307|
+|ncal_d|nan|nan|0.0193624312435368|nan|
+|nroll_14|nan|nan|0.0030652310261132|0.018849121977091|
+|WQS0048_lag1|nan|nan|0.0094651971321339|nan|
+|rest_of_state_nitrate_lag1|nan|nan|nan|0.0082125521194645|
+|rest_of_state_nitrate_lag7|nan|nan|nan|0.0061700843011884|
+|USGS-05464420_lag3|nan|0.0067571637832787|0.0045682563593246|nan|
+|rest_of_state_nitrate_lag3|nan|nan|nan|0.0049290118274456|
+|nroll_30|nan|nan|0.0008836279894647|0.0069104737341635|
+|Alfalfa|0.0023167399094191|0.0021177403423855|0.0003979612545044|0.0077187394365179|
+|Hay_Pasture|0.0114818631574607|0.0001296960832582|-0.0001087772682032|-0.0028450962517266|
+|min_rel_humidity|0.007851767576946|-0.0007246659630276|-2.8790308312518084e-05|0.0005862869931265|
+|precip_in_1d|0.0039203145543328|0.000979417025108|-0.0001239714947167|-0.0006771247251842|
+|min_temp|0.0018066185695847|-0.0008992275614173|0.0004541389715644|-0.0009415190251129|
+|total_kg_N|0.0|0.0|0.0|0.0|
+|surplus_kgha|0.0|0.0|0.0|0.0|
+|max_dist_to_sensor|0.0|0.0|0.0|0.0|
+|lon|0.0|0.0|0.0|0.0|
+|log_basin_area|0.0|0.0|0.0|0.0|
+|max_rel_humidity|-0.0015056666105395|-0.0013585701878117|-7.587953254804659e-05|0.001588683590014|
+|evapotranspiration|-0.0049080909360603|0.0003361905671703|0.0004437087609684|0.0014542360398066|
+|nroll_7|nan|nan|-0.0055264808040108|0.0025586890384442|
+
+
+#### Exp 7c Feature Importance XGBoost
+(Top 12 kept for each column)
+|features|A_static|B_static|C_static|D_static|
+|-|-|-|-|-|
+|WQS0024_lag2|nan|0.2805795|nan|nan|
+|USGS-05464420_lag2|nan|0.27711418|nan|nan|
+|USGS-05484500_lag2|nan|0.27652618|nan|nan|
+|WQS0001_lag2|nan|0.27251905|nan|nan|
+|USGS-05482500_lag2|nan|0.26238734|nan|nan|
+|WQS0014_lag1|nan|0.3247831|0.0071137045|nan|
+|WQS0003_lag1|nan|0.30578145|0.008493755|nan|
+|WQS0012_lag1|nan|0.30622154|0.005307161|nan|
+|USGS-05482300_lag1|nan|0.29353315|0.01097416|nan|
+|USGS-05484500_lag1|nan|0.2729808|0.0068326113|nan|
+|USGS-06817000_lag3|nan|0.27367184|0.0040380694|nan|
+|USGS-05482500_lag1|nan|0.26234254|0.013243056|nan|
+|WQS0013_lag1|nan|0.2624589|0.0054352297|nan|
+|USGS-05464420_lag1|nan|0.23294249|0.029515853|nan|
+|USGS-05412500_lag1|nan|0.23276083|0.009807021|nan|
+|USGS-05482300_lag3|nan|0.18434626|0.010203066|nan|
+|USGS-05482500_lag3|nan|0.15459022|0.012894657|nan|
+|nroll_3|nan|nan|0.043499116|0.12216441|
+|rest_of_state_nitrate_lag1|nan|nan|nan|0.076827206|
+|rest_of_state_nitrate_lag2|nan|nan|nan|0.075085334|
+|nroll_7|nan|nan|0.039117515|0.0974781|
+|USGS-05464420_lag3|nan|0.106467865|0.019266272|nan|
+|rest_of_state_nitrate_lag3|nan|nan|nan|0.04902659|
+|doy_sin|0.10761291|0.02286989|0.0053644003|0.031486742|
+|nroll_14|nan|nan|0.014326578|0.067922994|
+|ncal_d|nan|nan|0.036768705|nan|
+|surplus_kgha|0.09939549|0.0130200265|0.00270047|0.019870546|
+|total_kg_N|0.08146765|0.014350159|0.0045583835|0.024862986|
+|Alfalfa|0.0640368|0.0156226605|0.0051022368|0.034511127|
+|Hay_Pasture|0.058398195|0.020359194|0.004560619|0.028874096|
+|doy_cos|0.06292764|0.015415823|0.00433023|0.023590058|
+|fuel_moisture_1000h|0.0493322|0.017811958|0.005761658|0.023781992|
+|Other|0.044609413|0.013949074|0.0035381764|0.03031661|
+|Corn|0.047410738|0.016144846|0.0046012383|0.023914646|
+|Nonag|0.048517097|0.011380819|0.0019283425|0.025190134|
+|Small_Grains|0.04638157|0.015418269|0.0023565306|0.021123005|
+|Soybeans|0.043552108|0.011002608|0.0018969408|0.027245346|
+|solar_rad|0.045210037|0.015278245|0.0024989615|0.018498432|
+|Fallow|0.037711013|0.010932295|0.001597641|0.025917929|
+|nmoy|nan|nan|0.009688074|nan|
+
+#### Exp 7c Feature Importance Col Shuffle
+(Top 12 kept for each column)
+|features|A_static|B_static|C_static|D_static|
+|-|-|-|-|-|
+|USGS-05464420_lag1|nan|0.3002480233073432|0.0258798280844429|nan|
+|USGS-05465500_lag1|nan|0.3179634268257409|0.0024916208788863|nan|
+|WQS0010_lag1|nan|0.3038109767189735|0.0025548310945845|nan|
+|WQS0005_lag1|nan|0.2967918745787198|0.0034770108831453|nan|
+|USGS-06817000_lag1|nan|0.2607807111119033|0.0032233357500398|nan|
+|USGS-05412500_lag1|nan|0.2536269538604095|0.0069911423798871|nan|
+|WQS0023_lag1|nan|0.2548688300843473|-0.000540898708081|nan|
+|USGS-05484500_lag1|nan|0.2446438159262642|0.0022255129729324|nan|
+|WQS0007_lag1|nan|0.2285897826285516|0.0030321726698526|nan|
+|WQS0001_lag1|nan|0.2259605797056428|0.0008585770736513|nan|
+|WQS0002_lag1|nan|0.2179709570703952|0.0076319787329019|nan|
+|WQS0008_lag1|nan|0.2111064285508729|0.001225412301641|nan|
+|WQS0014_lag1|nan|0.1729630978124953|0.0044198747396014|nan|
+|WQS0013_lag1|nan|0.1356913623463649|0.0097777915060858|nan|
+|USGS-05482500_lag1|nan|0.1239510489510489|0.0043616971815713|nan|
+|doy_sin|0.0881215929489044|0.0045460686125199|0.0023448538100849|0.0191401411724919|
+|fuel_moisture_1000h|0.0309864802767876|0.0075796015840886|0.0153058892033281|0.0416871633650627|
+|rest_of_state_nitrate_lag1|nan|nan|nan|0.0205174183885045|
+|nroll_3|nan|nan|-0.0001145036442741|0.0361083978354553|
+|USGS-05482300_lag1|nan|0.0314606741573033|0.0035341689380361|nan|
+|ncal_d|nan|nan|0.0078534891914955|nan|
+|nroll_14|nan|nan|0.0033992777701355|0.0081554568232447|
+|nroll_7|nan|nan|0.0022983910872618|0.0084555442454839|
+|doy_cos|0.0195630576112046|0.0012274650392749|5.2263320750631246e-05|-0.000727595918785|
+|USGS-05464420_lag3|nan|0.0034812154696119|0.0039671878962557|nan|
+|nroll_30|nan|nan|1.3500871013369963e-05|0.0027024437153531|
+|rest_of_state_nitrate_lag2|nan|nan|nan|0.0012495440148847|
+|Corn|0.0013769375320574|1.0332846918211345e-05|2.133577571289268e-05|0.0027474237072977|
+|Soybeans|0.0022373483349281|0.0001395544917446|0.0|0.0014797702567923|
+|evapotranspiration|0.0031284949550604|0.0003223311170769|-0.0004039628892154|0.0001393778490399|
+|min_rel_humidity|0.0010859431446592|-7.739337558281261e-05|0.0004211051516514|0.0014960713970469|
+|Alfalfa|0.0036336996722311|-0.0001551541611124|-1.26612083233584e-05|-0.0007024181409197|
+|vpd|0.0014666981088783|0.0001679679351232|-0.000815299889072|0.0014535730948448|
+|Other|0.00119403439999|4.3694256578562554e-05|0.0|0.0006342146009335|
+|max_temp|0.0031708532307845|-0.0005538123948118|-0.001086764739215|0.0001012400097215|
+|max_rel_humidity|0.0012533809401406|0.0006406024379542|9.169151499032048e-05|-0.0011048497817912|
+
+#### Exp 8 Feature Importance XGBoost
+(Top 12 kept for each column)
+|features|A|A_static|D|D_static|
+|-|-|-|-|-|
+|nroll_3|nan|nan|0.28074563|0.21393466|
+|lon|nan|0.16229627|nan|0.1542702|
+|lat|nan|0.1345252|nan|0.079918645|
+|nroll_7|nan|nan|0.12015865|0.064117886|
+|Nonag|0.09357257|0.05215794|0.07060995|0.02502121|
+|Corn|0.09212921|0.047895215|0.06691305|0.031044323|
+|Soybeans|0.066617936|0.050610114|0.052697886|0.04346121|
+|total_kg_N|0.07192731|0.041136764|0.053732775|0.036577784|
+|doy_sin|0.094238|0.07916486|0.01650599|0.012224429|
+|surplus_kgha|0.08251482|0.045589216|0.045546863|0.026790848|
+|Alfalfa|0.07451176|0.054614205|0.04032609|0.026725668|
+|fuel_moisture_1000h|0.08867031|0.066864304|0.01905361|0.01341497|
+|Hay_Pasture|0.05714686|0.038934518|0.049053963|0.032066096|
+|Fallow|0.055297427|0.03526352|0.03380804|0.024121955|
+|nroll_14|nan|nan|0.015195641|0.05004419|
+|max_dist_to_sensor|nan|0.02680685|nan|0.02831629|
+|doy_cos|0.041378617|0.02952687|0.012264336|0.009864915|
+|Small_Grains|0.03975418|0.019321827|0.023054123|0.009923806|
+
+#### Exp 8 Feature Importance Col Shuffle
+(Top 12 kept for each column)
+|features|A|A_static|D|D_static|
+|-|-|-|-|-|
+|nroll_3|nan|nan|1.4893375182987214|1.4783946036269957|
+|doy_sin|0.371966795098915|0.4124852020792638|0.0227268899123975|0.0221608426985568|
+|fuel_moisture_1000h|0.3384378570610317|0.3064780777368816|0.0672844930755833|0.0686989690197908|
+|rest_of_state_nitrate_lag2|nan|nan|0.1071343491045942|0.0892298149901184|
+|rest_of_state_nitrate_lag3|nan|nan|0.0663404231931406|0.0540660944010484|
+|doy_cos|0.0766645032719817|0.1218633301617758|0.0107028237800351|0.0115100374427202|
+|lon|nan|0.0218029924443825|nan|0.0364058204234908|
+|nroll_7|nan|nan|0.0089982695759479|0.0313914400467556|
+|Fallow|0.0206109815349966|0.033702382620069|0.0087496026477465|0.0084663138363013|
+|min_rel_humidity|0.0138557037779576|0.0077659275974934|0.0045755690712106|0.0005970149886586|
+|min_temp|0.0120403367005123|0.011527896183908|-0.0007431671404778|0.001986099121306|
+|rest_of_state_nitrate_lag1|nan|nan|0.0056183209457504|0.0049429317927438|
+|Nonag|0.0339138762537576|-0.002364333497311|-0.0104129255287786|-0.0005320461109863|
+|max_temp|0.0030108725885239|0.004216441698797|0.0052473776692737|0.0019865032057973|
+|evapotranspiration|0.0109118254705145|0.0020170483774506|0.0017413743342641|-0.0006078815669887|
+|precip_in_1d|0.0047322048895281|0.0049100042789258|0.001827496372056|0.0016381095360533|
+|Other|-0.0039506539413672|0.0129300659399317|-0.0070807138589613|0.0069823162413639|
+|max_rel_humidity|0.0034776189905945|0.003369037643428|0.0001612825981185|0.0001680250887277|
+|vpd|0.0052927992244777|0.0021263789147634|-0.000296889863924|-0.0008444497685663|
+|total_kg_N|-0.0161638861327799|-0.0038993428807888|0.0005838364505184|0.0128139820651015|
+|Small_Grains|0.0042922456732702|-0.0044936031431681|-0.0064850277259274|-0.0010811289966153|
+|Alfalfa|-0.0039067705401288|0.0176338598806294|-0.0226407803980383|2.0070065225912676e-05|
+
+#### Exp 8c Feature Importance XGBoost
+(Top 12 kept for each column)
+|features|A|A_static|D|D_static|
+|-|-|-|-|-|
+|lon|nan|0.16930398|nan|0.13420968|
+|nroll_3|nan|nan|0.15302536|0.12209072|
+|lat|nan|0.10188367|nan|0.06550708|
+|nroll_7|nan|nan|0.08435271|0.052936446|
+|Nonag|0.088553995|0.042955182|0.07415793|0.030708263|
+|doy_sin|0.09470312|0.07067478|0.026330655|0.021901894|
+|Corn|0.08045186|0.044560485|0.052489527|0.028414065|
+|Hay_Pasture|0.06414907|0.04433845|0.055393416|0.03763581|
+|Soybeans|0.07271389|0.0405345|0.053070135|0.03113929|
+|Alfalfa|0.07303938|0.045292564|0.048905496|0.030025885|
+|max_dist_to_sensor|nan|0.04772903|nan|0.039253674|
+|total_kg_N|0.05916667|0.029242486|0.048716635|0.025504287|
+|Fallow|0.057064462|0.030636853|0.040993102|0.028307125|
+|fuel_moisture_1000h|0.06105565|0.045730785|0.026635963|0.021164488|
+|Small_Grains|0.05913367|0.029695436|0.034761533|0.02107497|
+|surplus_kgha|0.04382018|0.032087594|0.037759632|0.020136636|
+|mean_dist_to_sensor|nan|0.035656888|nan|0.03086086|
+|nroll_14|nan|nan|0.024131158|0.041902117|
+|doy_cos|0.05054622|0.037416495|0.020275135|0.017116476|
+
+#### Exp 8c Feature Importance Col Shuffle
+(Top 12 kept for each column)
+|features|A|A_static|D|D_static|
+|-|-|-|-|-|
+|nroll_3|nan|nan|0.3226577522755027|0.2970714587348766|
+|doy_sin|0.1933106937114455|0.1930574233804297|0.0427636080223977|0.04771461696009|
+|fuel_moisture_1000h|0.0697204833410749|0.0777576252430614|0.0223367757141101|0.0225909533166921|
+|doy_cos|0.0492104248998975|0.0623376024209878|0.0050411484261875|0.0090109039550773|
+|nroll_7|nan|nan|0.0238899034146237|0.0229343951984793|
+|lon|nan|0.0198042753546629|nan|0.0149281828865967|
+|nroll_14|nan|nan|0.007539238371299|0.0092717345834847|
+|nroll_30|nan|nan|0.0042994684728417|0.003241603826933|
+|Fallow|0.004295299182205|0.0052675981097116|0.0025243592378805|0.0017018880068546|
+|rest_of_state_nitrate_lag1|nan|nan|0.001275284680334|0.004261803618104|
+|evapotranspiration|0.0036615781833361|0.003584557524578|0.0014483998886665|0.0013355830848664|
+|min_rel_humidity|0.0020033564993969|0.0021566511044548|0.0006470912659155|0.0007511117950993|
+|min_temp|0.0021961814736668|0.0012255727019422|0.0008739746318553|0.0010129122874257|
+|vpd|0.0021036409703158|0.0019478390454478|0.0004402834562267|0.0004865922555147|
+|solar_rad|0.0018482797176942|0.0012381277588151|-4.682902013286138e-05|0.0001863914531036|
+|precip_in_1d|0.0010775249675352|0.0010224704997568|0.0004276611852741|0.0005293553408629|
+|max_temp|0.0013450415173267|0.0009539743580635|1.3621290054475197e-05|-0.0003959089989205|
+|max_rel_humidity|0.0008373902179999|0.0003708982761317|0.0001834094618838|0.0005006042727252|
+|Small_Grains|0.0001999463715127|-0.0012312584777153|0.0017617991285007|-0.0006681743227762|
+
+#### Exp 9 Feature Importance XGBoost
+(Top 12 kept for each column)
+|features|A_exp_lam2k|A_exp_lam5k|A_exp_lam10k|A_exp_lam20k|B_buck_5k_v0.3|B_buck_5k_v0.8|B_buck_10k_v0.3|B_buck_10k_v0.8|B_buck_5k-15k_v0.3|B_buck_5k-15k_v0.8|
+|-|-|-|-|-|-|-|-|-|-|-|
+|lon|0.14217785|0.13650557|0.1328535|0.1386543|0.101528004|0.10344783|0.08616755|0.08665978|0.052502453|0.04909367|
+|lat|0.123294614|0.11556931|0.11708011|0.12533206|0.084564894|0.084363006|0.09833683|0.10121769|0.05959505|0.063554786|
+|fuel_moisture_1000h|0.07086194|0.07272557|0.07338873|0.06990834|nan|nan|nan|nan|nan|nan|
+|doy_sin|0.07687397|0.075637445|0.076253116|0.072379075|0.052646816|0.05316157|0.0553446|0.053931516|0.038665842|0.037701715|
+|surplus_kgha|0.055670153|0.061159056|0.057985723|0.05478387|nan|nan|nan|nan|nan|nan|
+|Hay_Pasture|0.051639546|0.05029259|0.050022542|0.06253661|nan|nan|nan|nan|nan|nan|
+|total_kg_N|0.049191143|0.0463353|0.045081474|0.047445618|nan|nan|nan|nan|nan|nan|
+|surplus_kgha_b0|nan|nan|nan|nan|0.050008357|0.04954281|0.032613136|0.033033617|0.054121025|0.054758113|
+|fuel_moisture_1000h_b1|nan|nan|nan|nan|0.05160425|0.051346432|0.06279509|0.059320897|0.01696367|0.015825141|
+|fuel_moisture_1000h_b2|nan|nan|nan|nan|nan|nan|nan|nan|0.042785756|0.03954301|
+|Hay_Pasture_b2|nan|nan|nan|nan|nan|nan|nan|nan|0.041473906|0.038016982|
+|Nonag_b0|nan|nan|nan|nan|0.037606604|0.035887927|0.055811573|0.052664112|0.025625518|0.027561959|
+|Nonag|0.04273845|0.03891974|0.042550214|0.029462894|nan|nan|nan|nan|nan|nan|
+|Other|0.039227147|0.039600186|0.039028518|0.035135023|nan|nan|nan|nan|nan|nan|
+|total_kg_N_b0|nan|nan|nan|nan|0.039176606|0.039746463|0.037692573|0.032806847|0.03850972|0.0380703|
+|Corn|0.02904899|0.039140143|0.04690401|0.03502941|nan|nan|nan|nan|nan|nan|
+|Hay_Pasture_b1|nan|nan|nan|nan|0.042544886|0.04532189|0.04677788|0.045867644|0.019457063|0.017776886|
+|Alfalfa|0.031068435|0.035777487|0.03941872|0.035254855|nan|nan|nan|nan|nan|nan|
+|Soybeans|0.030982967|0.041916765|0.030667555|0.033648364|nan|nan|nan|nan|nan|nan|
+|doy_cos|0.037982415|0.039014492|0.03886486|0.037939467|0.027799765|0.02593207|0.031022966|0.028830487|0.020610267|0.018766137|
+|Other_b0|nan|nan|nan|nan|0.031468656|0.03220611|0.029162165|0.029775316|0.021039445|0.02361897|
+|max_dist_to_sensor|0.03364198|0.032053374|0.026376143|0.03912008|0.021465097|0.011588096|0.028874317|0.04054653|0.012093977|0.01838037|
+|Nonag_b1|nan|nan|nan|nan|0.018418424|0.018436262|0.017368872|0.016215533|0.042836502|0.042202502|
+|log_basin_area|0.02856857|0.028071795|0.031552482|0.035323046|0.02404466|0.022647828|0.020495499|0.02110742|0.017932098|0.015654774|
+|Alfalfa_b0|nan|nan|nan|nan|0.020525753|0.022134688|0.032516982|0.03265271|0.017173976|0.018039936|
+|Alfalfa_b1|nan|nan|nan|nan|0.02723381|0.028065035|0.021745373|0.022896247|0.015149154|0.015114663|
+|fuel_moisture_1000h_b0|nan|nan|nan|nan|0.027166251|0.027431985|0.015005198|0.0146353245|0.022848312|0.021588644|
+|Hay_Pasture_b0|nan|nan|nan|nan|0.018198006|0.017715411|0.03159275|0.030030126|0.015198031|0.015152899|
+|Other_b1|nan|nan|nan|nan|0.017230254|0.019416505|0.015022015|0.015015793|0.024530966|0.022874871|
+|Soybeans_b1|nan|nan|nan|nan|0.012938088|0.014259681|0.01146896|0.01194627|0.021053981|0.02181968|
+
+#### Exp 9 Feature Importance Col Shuffle
+(Top 12 kept for each column)
+|features|A_exp_lam2k|A_exp_lam5k|A_exp_lam10k|A_exp_lam20k|B_buck_5k_v0.3|B_buck_5k_v0.8|B_buck_10k_v0.3|B_buck_10k_v0.8|B_buck_5k-15k_v0.3|B_buck_5k-15k_v0.8|
+|-|-|-|-|-|-|-|-|-|-|-|
+|doy_sin|0.3532545540914698|0.3661315840363016|0.3609443704435701|0.375580455480139|0.371385266281419|0.3798230181820022|0.3361312586255272|0.3374187239680954|0.3463228796270332|0.3322815285603823|
+|fuel_moisture_1000h|0.2741749946529944|0.2836936000638047|0.2810811925787133|0.2786342296882335|nan|nan|nan|nan|nan|nan|
+|fuel_moisture_1000h_b2|nan|nan|nan|nan|nan|nan|nan|nan|0.1785694628350626|0.2367394970695847|
+|fuel_moisture_1000h_b1|nan|nan|nan|nan|0.1773719303639414|0.2421176172207507|0.1951939908515593|0.2496665787481423|0.0013023641488591|0.000426342990203|
+|Other|0.1079833229445906|0.1229568919433999|0.1534708670231088|0.0937030296845479|nan|nan|nan|nan|nan|nan|
+|doy_cos|0.0927569397992307|0.0754475896121306|0.0838976008433313|0.081134142394968|0.0567391458895621|0.0565591309996907|0.0836064298804076|0.0910621080911096|0.0282029442551804|0.0222942198502671|
+|Alfalfa|0.0659316480160883|-0.0162465826864219|0.0988657646714233|0.0835535855052734|nan|nan|nan|nan|nan|nan|
+|total_kg_N|0.0376496222410164|0.0280035895963378|0.0494744154008082|0.0707084254994179|nan|nan|nan|nan|nan|nan|
+|lon|0.0433786682381367|0.0545722510308415|0.0519027323140756|0.0670080977876972|0.0075699213721109|0.0265037926469193|-0.0024876310752816|0.0052236587694356|0.0505122100370662|0.0560065323023484|
+|Alfalfa_b2|nan|nan|nan|nan|nan|nan|nan|nan|0.0277063634564475|0.0419524645780017|
+|Other_b1|nan|nan|nan|nan|0.0436177548458944|0.0290760917734415|0.0235656833022506|0.0293239706977988|0.0160000273528168|0.01873244780387|
+|Other_b0|nan|nan|nan|nan|0.0270996502096042|0.0231477974041006|0.0316730315717212|0.0341961049691827|0.0187334850397052|0.0249061015101126|
+|Fallow|0.0157280887352568|0.0133294237247159|0.0271672031299707|0.0285808056755029|nan|nan|nan|nan|nan|nan|
+|fuel_moisture_1000h_b0|nan|nan|nan|nan|0.0276891788654739|0.0148204700704898|0.0099706335709504|0.0006763681510804|0.0335239808433487|0.0335586365924353|
+|Other_b2|nan|nan|nan|nan|nan|nan|nan|nan|0.0186504457407171|0.0209473513513372|
+|surplus_kgha|0.0168220124364775|0.0173227880451334|0.0167405987511695|0.0153095248621809|nan|nan|nan|nan|nan|nan|
+|Fallow_b2|nan|nan|nan|nan|nan|nan|nan|nan|0.0165939947158847|0.0140538164712638|
+|Fallow_b1|nan|nan|nan|nan|0.0179266647107404|0.0238192253658448|0.0140696296258698|0.012764149292593|0.008924472564038|0.0113114586996481|
+|Alfalfa_b0|nan|nan|nan|nan|-0.0246909140129996|-0.0093098088850738|0.0548179428266931|0.0470232959910902|0.0007795021049553|0.0080418484904926|
+|log_basin_area|0.0138801613065116|0.0175574743182315|0.0131702348590868|0.0088836264458439|0.0143539480355593|0.0131953457050312|0.0174778251746027|0.0185201299638225|-0.0081258030873602|0.0176888172861442|
+|Soybeans|0.0125871508511567|0.029588467597279|-0.0080556547321876|0.0163482121179758|nan|nan|nan|nan|nan|nan|
+|Hay_Pasture|0.0307074753392862|-0.0090550004390971|0.0269885417195397|-0.0038686990862741|nan|nan|nan|nan|nan|nan|
+|vpd|0.0115303452864176|0.0072599295337407|0.0088177284701132|0.0031382767170752|nan|nan|nan|nan|nan|nan|
+|Small_Grains|0.0816418282556314|-0.0052902435666027|-0.0255516243141866|-0.0226750682398074|nan|nan|nan|nan|nan|nan|
+|total_kg_N_b0|nan|nan|nan|nan|-0.0022696586390425|-0.0024390742437433|0.0063684874380945|0.0082883481405697|0.0112079916022195|0.0135213234869247|
+|min_temp_b0|nan|nan|nan|nan|0.0042989155144082|0.0027835802379238|-0.0008043691433618|0.0003524746755473|0.0029291721450649|0.0178499331087473|
+|Alfalfa_b1|nan|nan|nan|nan|-0.0032506517779516|0.004142218439906|0.0029948951922274|0.0008674548439314|0.0113479170026805|0.0052914883190485|
+|precip_in_1d|0.003125105392547|0.0029288340606088|0.0023844910160861|0.0041781577582543|nan|nan|nan|nan|nan|nan|
+|mean_dist_to_sensor|0.0062190634770063|-0.0027590750426011|0.0061785868186067|0.0026967659630796|0.0020337739606264|0.0050749817978476|0.0029014930644539|0.000516328565813|-0.0093110404083779|-0.0021306234359092|
+|vpd_b0|nan|nan|nan|nan|0.0094768249035665|0.003366304271779|0.0040811075952538|0.0005572113223848|0.0023279948420167|-0.0131995262739868|
+|surplus_kgha_b1|nan|nan|nan|nan|-0.0035444789989306|-0.0014949127029487|0.0070216076784719|-0.0041438445953914|0.0002389796877793|-0.0006734599845515|
+|Corn_b0|nan|nan|nan|nan|-0.0095915014141338|-0.0077758117308831|0.0059957830921926|0.0109807801550784|-0.0014289167902482|-0.0067246790049611|
+|Nonag_b0|nan|nan|nan|nan|0.0111105337255398|0.0084361089009422|0.0056685357306361|0.029817340148514|-0.0633247740905179|-0.0638279692709534|
+|lat|-0.0080256511991321|-0.0465270652550184|-0.0243883561108894|-0.0221451837166844|0.0089773467143528|0.0187653310351663|-0.0089774357547076|0.0033408356387141|-0.0376397919288323|-0.0405076412491337|
+|Corn_b1|nan|nan|nan|nan|-0.0115368679460938|-0.0061890642537292|0.0106729205715939|0.0131738673516571|-0.1840386781254745|-0.1764967321218767|
+
+#### Exp 9c Feature Importance XGBoost
+(Top 12 kept for each column)
+|features|A_exp_lam2k|A_exp_lam5k|A_exp_lam10k|A_exp_lam20k|B_buck_5k_v0.3|B_buck_5k_v0.8|B_buck_10k_v0.3|B_buck_10k_v0.8|B_buck_5k-15k_v0.3|B_buck_5k-15k_v0.8|
+|-|-|-|-|-|-|-|-|-|-|-|
+|lon|0.15055254|0.14598209|0.13302001|0.14280821|0.0935587|0.09874155|0.08518497|0.08505952|0.056713343|0.05688116|
+|surplus_kgha|0.062042408|0.062216163|0.06560986|0.06852948|nan|nan|nan|nan|nan|nan|
+|lat|0.07787132|0.06863531|0.068463765|0.07661273|0.054458432|0.053694893|0.05180968|0.051499575|0.033732332|0.03270577|
+|doy_sin|0.06716198|0.06766947|0.06619831|0.067492604|0.048873886|0.048770547|0.048329573|0.048852786|0.03455168|0.03459557|
+|total_kg_N|0.050245117|0.050161056|0.049229316|0.051097464|nan|nan|nan|nan|nan|nan|
+|Hay_Pasture|0.05772381|0.045588814|0.043089114|0.03913973|nan|nan|nan|nan|nan|nan|
+|fuel_moisture_1000h|0.04516436|0.04629535|0.04304544|0.046060137|nan|nan|nan|nan|nan|nan|
+|Nonag_b0|nan|nan|nan|nan|0.042357933|0.041623242|0.059702486|0.05701362|0.03448809|0.034442406|
+|Nonag|0.043492977|0.046799056|0.048107766|0.040344417|nan|nan|nan|nan|nan|nan|
+|Other|0.041487228|0.040897828|0.04077421|0.042396333|nan|nan|nan|nan|nan|nan|
+|Alfalfa|0.029640421|0.040036637|0.043456536|0.04677791|nan|nan|nan|nan|nan|nan|
+|Corn|0.031171877|0.03614586|0.04466609|0.04102386|nan|nan|nan|nan|nan|nan|
+|Soybeans|0.02924348|0.041229967|0.035526358|0.038192682|nan|nan|nan|nan|nan|nan|
+|doy_cos|0.043231525|0.04407345|0.043894783|0.044460744|0.03155992|0.031348117|0.035286255|0.034763437|0.024333566|0.02386698|
+|total_kg_N_b0|nan|nan|nan|nan|0.038710345|0.035547175|0.037604623|0.035719324|0.026004672|0.02860635|
+|surplus_kgha_b0|nan|nan|nan|nan|0.03404806|0.038320296|0.030514535|0.031898074|0.032465328|0.029358704|
+|Fallow|0.0324255|0.029746387|0.029688817|0.03278311|nan|nan|nan|nan|nan|nan|
+|Nonag_b1|nan|nan|nan|nan|0.021780474|0.02187485|0.023178289|0.023670515|0.049702488|0.04601492|
+|Alfalfa_b1|nan|nan|nan|nan|0.04250714|0.040111095|0.030006051|0.030679394|0.02149948|0.021233937|
+|total_kg_N_b1|nan|nan|nan|nan|0.031440485|0.029724484|0.033068698|0.03384704|0.023412187|0.0220097|
+|surplus_kgha_b2|nan|nan|nan|nan|nan|nan|nan|nan|0.029254371|0.027381852|
+|surplus_kgha_b1|nan|nan|nan|nan|0.03073079|0.03156028|0.03742545|0.034623824|0.015267271|0.0152467545|
+|fuel_moisture_1000h_b1|nan|nan|nan|nan|0.031156832|0.03184964|0.03448709|0.033842962|0.013299142|0.013716847|
+|Alfalfa_b2|nan|nan|nan|nan|nan|nan|nan|nan|0.027015667|0.025192704|
+|max_dist_to_sensor|0.04986758|0.044992127|0.04516152|0.02729994|0.016771723|0.018869948|0.013559334|0.01563271|0.010373822|0.010826474|
+|Hay_Pasture_b0|nan|nan|nan|nan|0.0230109|0.022987638|0.03393337|0.032719888|0.017996846|0.017552856|
+|Hay_Pasture_b1|nan|nan|nan|nan|0.030065581|0.030766567|0.02382219|0.024205828|0.020007193|0.018090907|
+|total_kg_N_b2|nan|nan|nan|nan|nan|nan|nan|nan|0.024536707|0.022599744|
+|mean_dist_to_sensor|0.029772807|0.02759206|0.03895989|0.026931476|0.013648642|0.013794059|0.03009184|0.026740115|0.011991067|0.013584912|
+|Other_b1|nan|nan|nan|nan|0.020794194|0.02152576|0.018942319|0.019248938|0.022301305|0.023453917|
+
+#### Exp 9c Feature Importance Col Shuffle
+(Top 12 kept for each column)
+|features|A_exp_lam2k|A_exp_lam5k|A_exp_lam10k|A_exp_lam20k|B_buck_5k_v0.3|B_buck_5k_v0.8|B_buck_10k_v0.3|B_buck_10k_v0.8|B_buck_5k-15k_v0.3|B_buck_5k-15k_v0.8|
+|-|-|-|-|-|-|-|-|-|-|-|
+|doy_sin|0.1715994747906328|0.1718132952399453|0.1728779019177151|0.1674976362760371|0.166256847471515|0.1644807219258126|0.1608481277732719|0.1595170457082772|0.1574948751450025|0.1544158966107469|
+|fuel_moisture_1000h|0.0699349916094049|0.0712671468746368|0.0728356265918006|0.070283913141575|nan|nan|nan|nan|nan|nan|
+|doy_cos|0.0595687884083582|0.0580092683029059|0.061228544815803|0.0625218373146429|0.0560000249444602|0.0611787536472388|0.0574762890003935|0.0637881488179938|0.0605735648649636|0.0642875407913589|
+|fuel_moisture_1000h_b2|nan|nan|nan|nan|nan|nan|nan|nan|0.0356407025308996|0.0612153736424543|
+|fuel_moisture_1000h_b1|nan|nan|nan|nan|0.038797676916211|0.0605138674475144|0.0420278980142599|0.0688228342115212|0.0022206232219071|0.0013837407361521|
+|lon|0.0317281570955856|0.036708135760201|0.034514438844474|0.0339888339954371|0.0140414883837873|0.0152847519896377|0.027211656930212|0.0274303732440032|0.0191811637456161|0.0174880038572173|
+|Other|0.0139554314041185|0.0156450096750793|0.0178161103985692|0.0135118570768582|nan|nan|nan|nan|nan|nan|
+|Nonag_b0|nan|nan|nan|nan|0.0171054275403067|0.0165170566861452|0.0192426177541699|0.0195023593824193|0.0044814395807838|0.0051099720039404|
+|total_kg_N|0.0070137378028576|0.0072551747714821|0.0103659613448682|0.0143011700983793|nan|nan|nan|nan|nan|nan|
+|Fallow|0.0055127594824817|0.0068595946074434|0.0119794714580852|0.0111975582695906|nan|nan|nan|nan|nan|nan|
+|fuel_moisture_1000h_b0|nan|nan|nan|nan|0.0097814252555405|0.0045750314919742|0.0072034349346253|0.0021415610599215|0.0057155063229397|0.0024965800755546|
+|Nonag|0.0071262263225501|0.0066400449630786|0.009711162452973|-0.0031896802420722|nan|nan|nan|nan|nan|nan|
+|lat|0.0097640373680262|0.0102763521825967|0.0081808914301119|0.0093542940451037|0.0030177601892533|0.0020436716469176|0.0037822789456187|0.0034636441359686|0.0007098249030902|-6.416746012475982e-05|
+|Fallow_b1|nan|nan|nan|nan|0.0071121329844417|0.0063097193396548|0.0049408972078922|0.0042458539699397|0.0038574958993031|0.0037735913978982|
+|Other_b0|nan|nan|nan|nan|0.0047207257549021|0.0045758543786965|0.0078502268954976|0.0068787421380032|0.0013727866731292|0.001430310376691|
+|total_kg_N_b1|nan|nan|nan|nan|0.0041039130472467|0.0037353613520344|0.0058707966427161|0.0059387313120797|0.0026906727139531|0.0026664510623483|
+|surplus_kgha|0.0028226354811489|0.0031014478371273|0.0050914821697684|0.0048862814660102|nan|nan|nan|nan|nan|nan|
+|Fallow_b2|nan|nan|nan|nan|nan|nan|nan|nan|0.0040988712187326|0.0037782229586414|
+|Other_b1|nan|nan|nan|nan|0.0007897716863427|0.0004961955246289|0.002353335154711|0.0025624246765225|0.0061481773736449|0.0055097040660958|
+|total_kg_N_b0|nan|nan|nan|nan|0.0019378621463178|0.0018984625606979|0.0033935231802227|0.002947229966496|0.0039089738554916|0.002325297696606|
+|min_temp|0.0021936426715716|0.002209324270301|0.0020130302982644|0.0019490046640347|nan|nan|nan|nan|nan|nan|
+|Fallow_b0|nan|nan|nan|nan|0.0017422005611823|0.0022607159579048|0.0026653751273467|0.0019560573337656|0.0004617858290062|0.0002755085698536|
+|Hay_Pasture|0.0028896538883942|0.0016058431017292|0.0024667242324767|-0.0008102529312029|nan|nan|nan|nan|nan|nan|
+|solar_rad|0.0008780345732925|0.0003863335262586|0.0006236438118526|0.0010583202228494|nan|nan|nan|nan|nan|nan|
+|Alfalfa_b0|nan|nan|nan|nan|-0.0019220013313574|-0.0013456225693417|0.0046697383540128|0.0035733835714404|-0.0013158430061091|-0.0011898899112731|
+|Nonag_b1|nan|nan|nan|nan|-0.0017313487442412|-0.0020256580129071|-0.0001319874805117|-0.0003346878956085|0.0029518263345246|0.0028358074548767|
+|Hay_Pasture_b0|nan|nan|nan|nan|-0.0007860656144766|-0.0013560908409122|0.0039541087801349|0.0038107444149888|-0.0024518025658247|-0.0025986944892237|
+|Soybeans|-0.0008457998002365|0.0027687525926319|-0.00217572067462|-0.0001465830308035|nan|nan|nan|nan|nan|nan|
+|Alfalfa|-0.0070850737262546|-0.0021074152867666|0.000481743598841|0.0029238173466455|nan|nan|nan|nan|nan|nan|
+|Corn|-0.0024070184222339|-0.0054196736312525|0.0028511288842542|-0.0018874449849698|nan|nan|nan|nan|nan|nan|

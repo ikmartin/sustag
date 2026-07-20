@@ -1,0 +1,41 @@
+name: sustag
+channels:
+  - conda-forge
+dependencies:
+  # ── core data / modelling ──
+  - python=3.12
+  - pandas
+  - numpy
+  - scipy
+  - scikit-learn
+  - xgboost
+  - statsmodels
+  - networkx            # basin-containment graph / LOFO split (src.splits.conflict_graph)
+  # ── geospatial ──
+  - geopandas
+  - shapely
+  - rasterio
+  - pyproj
+  - pyarrow
+  # ── weather (gridMET NetCDF) ──
+  - xarray
+  - netcdf4
+  # ── viz / notebooks ──
+  - matplotlib
+  - seaborn
+  - plotly
+  - pillow
+  - jupyterlab
+  - ipykernel
+  # ── http ──
+  - requests
+  - pip
+  - pip:
+    # data-acquisition clients not reliably packaged on conda-forge
+    - dataretrieval        # USGS NWIS water data
+    - pygridmet            # gridMET weather (HyRiver)
+    - pynhd                # USGS NLDI basin delineation (HyRiver)
+    # interactive widget
+    - dash
+    - dash-leaflet>=1.0
+    - dash-extensions       # widget map JS helpers (dash_extensions.javascript.assign)

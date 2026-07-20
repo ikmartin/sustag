@@ -1,0 +1,68 @@
+# Build-time configuration for the pipeline builders (water, basins, grid, weather, crops,
+# surplus, map_overlays). Read it through src.build.config.get_config() (+ get_region_bbox)
+# rather than opening this file directly.
+#
+# NOTE: this file holds build KNOBS only. The equal-area CRS invariant that the runtime read
+# path also needs lives in src/data/crs.py as a constant (EQUAL_AREA_CRS), not here.
+
+# ── region of interest ───────────────────────────────────────────────────────
+# Shared by crops, surplus, and weather. WGS84 lon/lat, [min_lon, min_lat, max_lon, max_lat].
+# Generous box around Iowa + basins reaching into neighbouring states, with margin so small
+# basin edits don't fall outside it. Iowa proper spans ~lon -96.65..-90.01, lat 40.33..43.59.
+[region]
+bbox_wgs84 = [-97.6, 39.8, -89.5, 44.5]
+
+# ── crops pipeline ───────────────────────────────────────────────────────────
+[crops]
+# Inclusive year span to attempt (CropScape covers 2000-2025 for Iowa).
+year_start = 2000
+year_end = 2025
+# Crops kept as their own column when aggregating CDL pixels onto the grid. Every CDL class
+# not listed here is bucketed into "other". Names must match src/data/cdl_legend.py exactly
+# (this defines the crops_global OUTPUT schema; the two live on opposite sides of the
+# build/data split, so keep them in sync).
+agg_crops = ["Corn", "Soybeans"]
+
+# ── surplus pipeline ─────────────────────────────────────────────────────────
+[surplus]
+# Inclusive year span of the Iowa nitrogen-surplus grid dataset.
+year_start = 2000
+year_end = 2017
+
+# ── weather pipeline ─────────────────────────────────────────────────────────
+# (renamed from [rain]; the rain/ package was renamed weather/.)
+[weather]
+# Sites whose basin overlaps the IEM data footprint by less than this fraction are skipped
+# (basins extending too far outside Iowa).
+coverage_threshold = 0.75
+
+# ── map_overlays pipeline ────────────────────────────────────────────────────
+[map_overlays]
+# Keep NHD flowlines at or above this Strahler stream order.
+min_stream_order = 3
+
+# ── water pipeline ───────────────────────────────────────────────────────────
+# The curated USGS site list lives in the water builder (USGS_SITE_LIST), not here --
+# tuning it requires understanding that script's logic.
+[iwqis]
+sparsity_cutoff = 0.5
+lifespan_cutoff = 3.92
+
+[site_filters]
+known_bad = [
+    "WQS0113",
+    "WQS9901",
+    "WQS9903",
+    "WQS9904",
+    "WQS9902",
+    "WQS0091",
+    "WQS0088",
+    "WQS0090",
+    "WQS0045",
+    "WQS0075",
+]
+big_basin = [
+    "USGS-05474500",
+    "WQS0020",
+    "USGS-05420500",
+]
