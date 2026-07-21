@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 
-from widget.components import forecast_panel, info_panel
+from components import forecast_panel, info_panel
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
