@@ -4,11 +4,9 @@ A collection of transformations applied to features or targets in the data.
 
 import pandas as pd
 import numpy as np
-from pathlib import Path
 
-from src.data.access import get_data, get_site_ids, get_grid
+from src.data.access import get_data
 
-_THIS_DIR = Path(__file__).resolve().parent
 _DEFAULT_DIST_EDGES_M = []
 _VEL = 1.0
 
@@ -31,16 +29,12 @@ def _bucket_map(site_uid="", site_data=None, edges=_DEFAULT_DIST_EDGES_M):
     return pd.Series(b.values, index=grid["node_id"], name="bucket")
 
 
-def bucket_lags(site_uid="", site_data=None, water_velocity=_VEL, edges=_DEFAULT_DIST_EDGES_M, max_lag_days=None):
-    """Per-bucket travel-time lag in days (= median cell distance / water speed).
-
-    Returns a Series: bucket -> lag_days, optionally capped at ``max_lag_days``.
-    """
+def bucket_lags(site_uid="", site_data=None, water_velocity=_VEL, edges=_DEFAULT_DIST_EDGES_M):
+    """Per-bucket travel-time lag in days (= median cell distance / water speed). Series: bucket -> lag_days."""
     grid = _resolve_data(site_data=site_data, site_uid=site_uid).grid
     b = grid["node_id"].map(_bucket_map(site_uid=site_uid, site_data=site_data, edges=edges))
     med = grid["dist_to_sensor"].groupby(b).median()
-    lag = (med / (water_velocity * 86400)).round().astype(int)  # days = metres / (m/s * s/day)
-    return lag.clip(upper=max_lag_days) if max_lag_days else lag  # Series: bucket -> lag_days
+    return (med / (water_velocity * 86400)).round().astype(int)  # days = metres / (m/s * s/day)
 
 
 def lag_buckets(weather_b, lags, cols=None, date_col="date", bucket_col="bucket"):
@@ -307,50 +301,3 @@ def merge_on_date(dfs, spine=None):
     if dups:
         raise ValueError(f"duplicate feature columns after merge: {dups} — rename before merging")
     return out
-
-
-# seasonal-position extractors: how to turn a date into the index a seasonal
-# series is keyed on (matches nitrate_avg_seasonal's "D"/"W"/"M").
-_SEASON_POS = {
-    "doy": lambda d: d.dt.dayofyear,
-    "week": lambda d: d.dt.isocalendar().week.astype("int64"),
-    "month": lambda d: d.dt.month,
-}
-_SEASON_ALIAS = {"D": "doy", "W": "week", "M": "month"}
-
-
-def match_seasonal(dates, seasonal, freq=None):
-    """Map a seasonal Series (indexed by doy / week / month) onto a column of dates.
-
-    `seasonal` is a lookup keyed on a seasonal position -- day-of-year, ISO
-    week-of-year, or month (e.g. from nitrate_avg_seasonal). This computes that
-    position from each date and looks it up, returning one value per date.
-
-    Parameters
-    ----------
-    dates : Series | array-like | DatetimeIndex
-        Reference dates (e.g. a DataFrame's "date" column). If a Series, the
-        result keeps its index so it can be assigned straight back onto the frame.
-    seasonal : Series
-        Seasonal lookup indexed by position. Its index name ("doy"/"week"/"month")
-        selects the position automatically unless `freq` is given.
-    freq : optional
-        Override the position: "D"/"doy", "W"/"week", or "M"/"month". Needed only
-        if `seasonal.index.name` is missing.
-
-    Returns
-    -------
-    Series of matched values aligned to `dates` (named like `seasonal`).
-    """
-    key = _SEASON_ALIAS.get(freq, freq) or seasonal.index.name
-    if key not in _SEASON_POS:
-        raise ValueError(
-            f"could not determine seasonal position (freq={freq!r}, "
-            f"seasonal.index.name={seasonal.index.name!r}); pass freq as one of "
-            f"D/W/M (or doy/week/month)"
-        )
-    dt = pd.to_datetime(dates)
-    if isinstance(dt, pd.DatetimeIndex):
-        dt = pd.Series(dt, index=dt)
-    pos = _SEASON_POS[key](dt)
-    return pos.map(seasonal).rename(seasonal.name)

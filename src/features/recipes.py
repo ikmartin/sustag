@@ -9,9 +9,6 @@ from src.features.features import (
     site_static,
     nitrate_daily_rolling,
     nitrate_violations_rolling,
-    nitrate_anomaly_z,
-    nitrate_spike,
-    lagged_sensor_nitrate,
 )
 from src.features.transformers import flatten_buckets, merge_on_date
 from functools import lru_cache
@@ -75,11 +72,24 @@ def _rolling_weather(wb, windows):
     return frames
 
 
+# ── uid-memoized block dispatch: cache on a hashable uid, run a SiteData (unhashable) fresh ──
+@lru_cache(maxsize=None)
+def _by_uid(compute, site_uid, args):
+    return compute(site_uid, *args)
+
+
+def _site_cached(compute, site, *args):
+    """Memoize `compute(site, *args)` on a hashable uid string; run fresh for a SiteData. `edges` must
+    be a tuple (not a list) so the args are hashable on the cached path. Replaces the per-block
+    _compute / @lru_cache _cached / isinstance-dispatch trios."""
+    return _by_uid(compute, site, args) if isinstance(site, str) else compute(site, *args)
+
+
 def _agg_block_compute(site, edges, vel, lam):
-    """The expensive, window-INDEPENDENT spatial aggregations (weather-with-lag, exp-decay crop,
-    exp-decay surplus) for a site_uid OR a SiteData (via _site_kwargs). `edges` is a tuple of
-    bucket boundaries (m). Returned frames are READ-ONLY -- callers copy (_rolling_weather,
-    merge_on_date never mutate their inputs)."""
+    """The window-INDEPENDENT spatial aggregations (weather-with-lag, exp-decay crop, exp-decay
+    surplus) for a site_uid OR a SiteData (via _site_kwargs). `edges` is a tuple of bucket boundaries
+    (m). Returned frames are READ-ONLY -- callers copy (_rolling_weather / merge_on_date never mutate
+    their inputs)."""
     kw = _site_kwargs(site)
     e = list(edges)
     wb = flatten_buckets(agg_weather_w_lag(**kw, edges=e, exp=False, water_velocity=vel))
@@ -88,21 +98,10 @@ def _agg_block_compute(site, edges, vel, lam):
     return wb, cb, sb
 
 
-@lru_cache(maxsize=None)
-def _agg_block_cached(site, edges, vel, lam):
-    """Memoized per (site_uid, edges, vel, lam) -- the args are hashable (site_uid str, edges
-    tuple, scalars) unlike the raw agg_* which take an unhashable `edges` list. window/min_obs
-    never touch these, so a window x min_obs sweep reuses one computation per site across all its
-    recipes. Only reachable from the site_uid path (see _agg_block)."""
-    return _agg_block_compute(site, edges, vel, lam)
-
-
 def _agg_block(site, edges, vel, lam):
-    """Dispatch: use the site_uid lru_cache when `site` is a (hashable) string, else compute
-    directly for an unhashable SiteData (a virtual site is built once, so no caching needed)."""
-    if isinstance(site, str):
-        return _agg_block_cached(site, edges, vel, lam)
-    return _agg_block_compute(site, edges, vel, lam)
+    """The window-independent aggregation block, memoized per (site_uid, edges, vel, lam) so a
+    window x min_obs sweep reuses one computation per site."""
+    return _site_cached(_agg_block_compute, site, edges, vel, lam)
 
 
 def _cross_site_nitrate_compute(site):
@@ -114,19 +113,9 @@ def _cross_site_nitrate_compute(site):
     return lagged_avgs, rolling_avg_not_this
 
 
-@lru_cache(maxsize=None)
-def _cross_site_nitrate_cached(site):
-    """Window- AND geometry-independent cross-site nitrate features, memoized per site_uid (they
-    depend only on the site, not on edge/vel/lam/window). Only reachable from the site_uid path
-    (see _cross_site_nitrate). Read-only, like _agg_block_cached."""
-    return _cross_site_nitrate_compute(site)
-
-
 def _cross_site_nitrate(site):
-    """Dispatch: site_uid lru_cache when possible, else compute directly for a SiteData."""
-    if isinstance(site, str):
-        return _cross_site_nitrate_cached(site)
-    return _cross_site_nitrate_compute(site)
+    """Window- and geometry-independent cross-site nitrate features, memoized per site_uid."""
+    return _site_cached(_cross_site_nitrate_compute, site)
 
 
 def _covariate_block(site, n, edges, vel, lam, window, roll_nitrate_windows=(7, 14, 30, 60)):
@@ -199,19 +188,18 @@ def build_feature_frame(site, task="reg", spine=None, window=1):
 
 
 def _target_maker(site, task="reg", window=1, min_obs=1):
-    n = daily_nitrate(**_site_kwargs(site)).rename("nitrate_con")
+    spine = daily_nitrate(**_site_kwargs(site)).index  # the gauged daily timeline; values unused here
     if task == "reg":
         target = nitrate_daily_rolling(**_site_kwargs(site), window=window, min_obs=min_obs).rename("nitrate_con")
     elif task == "clf":
         target = nitrate_violations_rolling(**_site_kwargs(site), window=window, min_obs=min_obs).rename("violation")
     else:
         raise ValueError(f"Expected 'reg' or 'clf', got {task}")
-    return _assemble(site, task, spine=n.index, window=window, target=target)
+    return _assemble(site, task, spine=spine, window=window, target=target)
 
 
-# BEST PARAMETERS WINDOW=1, MIN_OBS=1.
-# THESE PARAMETERS FROM OLD EXPERIMENT (13)
-# KEPT FOR BACKWARDS COMPATABILITY
+# The shipped recipes. window=1 / min_obs=1 is the best geometry (exp13); recipe_maker is the
+# parameterized factory experiments use for window sweeps, recipe_REG/recipe_CLF the fixed shipped pair.
 def recipe_maker(task, window=1, min_obs=1):
     if task not in ("reg", "clf"):
         raise ValueError(f"Expected 'reg' or 'clf', got {task}")
@@ -222,69 +210,9 @@ def recipe_maker(task, window=1, min_obs=1):
     return recipe
 
 
-# default is window=1, min_obs=1
-# this is also the best version of the recipe to date
 def recipe_REG(site, window=1, min_obs=1):
     return _target_maker(site, task="reg", window=window, min_obs=min_obs)
 
 
-# default is window=1, min_obs=1
-# the default is the best version of the recipe to date
 def recipe_CLF(site, window=1, min_obs=1):
     return _target_maker(site, task="clf", window=window, min_obs=min_obs)
-
-
-# ── spike recipes: target = deviation from the site's own trailing baseline ──────────────────
-SPIKE_WINDOW, SPIKE_K, SPIKE_MIN_OBS = 21, 2.0, 5  # baseline window (days), z-threshold, min baseline obs
-
-
-SPIKE_AR_LAGS = (1, 2, 3, 7, 14)  # own-nitrate autoregression lags for the gauged-site spike variant
-
-
-def _spike_target_maker(site, task="reg", window=SPIKE_WINDOW, k=SPIKE_K, min_obs=SPIKE_MIN_OBS, own_ar_lags=()):
-    """Same feature scaffold as recipe_REG/_CLF (at window=1), but the target is a deviation from
-    the site's OWN trailing rolling-mean baseline: REG -> the continuous standardized anomaly z(t),
-    CLF -> the binary spike (z >= k). Site-relative by construction, so it targets within-site
-    dynamics rather than the between-site level the rolling-max / violation targets struggle with.
-
-    `own_ar_lags` appends the site's OWN past nitrate at those day-lags (autoregression). Empty by
-    default (recipe_SPIKE, transfer-safe); recipe_SPIKE_AR turns it on for gauged-site modelling."""
-    n = daily_nitrate(site).rename("nitrate_con")
-    if task == "reg":
-        feat = _best_features_REG(site, n)
-        target = nitrate_anomaly_z(site, window=window, min_obs=min_obs).rename("nitrate_con")
-    elif task == "clf":
-        feat = _best_features_CLF(site, n)
-        target = nitrate_spike(site, window=window, k=k, min_obs=min_obs).rename("violation")
-    else:
-        raise ValueError(f"Expected 'reg' or 'clf', got {task}")
-    if own_ar_lags:  # the site's own past nitrate -- causal under chronological CV, gauged-site only
-        feat = [*feat, *(lagged_sensor_nitrate([site], shift=L) for L in own_ar_lags)]
-    return _add_static(site, merge_on_date([target, *feat], spine=n.index))
-
-
-def recipe_SPIKE(task, window=SPIKE_WINDOW, k=SPIKE_K, min_obs=SPIKE_MIN_OBS):
-    """Factory (mirrors recipe_maker): returns a site -> frame recipe with the spike target baked
-    in. task='reg' -> z(t) anomaly target; task='clf' -> binary spike target (k is the z-threshold,
-    unused for reg since z is continuous). No own-history -> transfer-safe (see recipe_SPIKE_AR)."""
-    if task not in ("reg", "clf"):
-        raise ValueError(f"Expected 'reg' or 'clf', got {task}")
-
-    def recipe(site):
-        return _spike_target_maker(site, task=task, window=window, k=k, min_obs=min_obs)
-
-    return recipe
-
-
-def recipe_SPIKE_AR(task, window=SPIKE_WINDOW, k=SPIKE_K, min_obs=SPIKE_MIN_OBS, own_ar_lags=SPIKE_AR_LAGS):
-    """recipe_SPIKE PLUS the site's own past nitrate (autoregression at `own_ar_lags`). For
-    GAUGED-site / individual modelling (evaluate with cook_one / compare_fleet, chronological CV):
-    own history is the strongest signal (cf. exp7 recipe_B, median R2 ~0.88), but it assumes a
-    sensor at the site, so -- unlike recipe_SPIKE -- it does NOT transfer to ungauged virtual sites."""
-    if task not in ("reg", "clf"):
-        raise ValueError(f"Expected 'reg' or 'clf', got {task}")
-
-    def recipe(site):
-        return _spike_target_maker(site, task=task, window=window, k=k, min_obs=min_obs, own_ar_lags=own_ar_lags)
-
-    return recipe

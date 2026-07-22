@@ -18,9 +18,6 @@ from src.features.features import (
     nitrate_violations,
     nitrate_avg_except_this,
     lagged_sensor_nitrate,
-    nitrate_rolling,
-    nitrate_avg_seasonal,
-    nitrate_avg_calendar,
     doy_climatology_pure_signal,
     site_static,
     daily_nitrate,
@@ -36,7 +33,7 @@ from src.features.recipes import _rolling_weather, _weather_windows
 from src.data.access import get_site_ids
 
 from functools import lru_cache
-from src.features.transformers import flatten_buckets, merge_on_date, match_seasonal
+from src.features.transformers import flatten_buckets, merge_on_date
 from src.data.access import get_site_ids
 
 
