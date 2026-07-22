@@ -21,15 +21,17 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 
-_DATA = Path(__file__).resolve().parent               # src/data
+_DATA = Path(__file__).resolve().parent  # src/data
 _INTERIM = _DATA / "interim"
 _PROC_WATER = _DATA / "processed" / "water"
 _PROC_BASINS = _DATA / "processed" / "basins"
 _PROC_AUX = _DATA / "processed" / "aux"
 _PROC_MAP = _DATA / "processed" / "map_overlays"
+_PROC = _DATA / "processed"
 
 
 # ── water: dirs (new processed/ layout, else legacy) ──────────────────────────
+
 
 def _water_data_dir() -> Path:
     """Per-site nitrate parquets."""
@@ -43,9 +45,16 @@ def _water_meta_dir() -> Path:
 
 # ── water: metadata + site list ───────────────────────────────────────────────
 
+
 @lru_cache(maxsize=1)
 def get_metadata() -> pd.DataFrame:
-    """Full site location metadata (site_uid, longitude, latitude, state, ...)."""
+    """Full site metadata on the USGS-standard schema.
+
+    Contract columns: site_uid, latitude, longitude (WGS84). Then USGS-standard descriptive fields
+    (monitoring_location_name, agency_code, site_type, state_code/state_name, county_name,
+    hydrologic_unit_code, drainage_area in SQUARE MILES, altitude in FEET) and an iwqis_* supplement.
+    Built by src/build/util/site_metadata.py.
+    """
     return pd.read_csv(_water_meta_dir() / "site_location_metadata.csv")
 
 
@@ -60,7 +69,67 @@ def get_location(site_uid: str) -> list:
     return df[df["site_uid"] == site_uid][["longitude", "latitude"]].values[0].tolist()
 
 
+def get_location_desc(site_uid: str) -> str | None:
+    """Human-readable location for a site, best available. None if nothing is known.
+
+    Falls back in descending order of authority:
+      1. monitoring_location_name -- the official USGS name. Populated for USGS sites only, by
+         design: site_metadata.py never synthesizes one for IWQIS.
+      2. "<river> at <town>, <state>" composed from the iwqis_* columns, mirroring the USGS naming
+         convention. Covers every IWQIS site today (river and town are both fully populated).
+      3. iwqis_description -- narrative prose, not a name, so it is a late fallback and can be long.
+      4. iwqis_nickname -- an NWS/AHPS gage handle like "slki4". Opaque, but better than nothing.
+
+    Raises KeyError for an unknown site_uid, so a typo is not silently rendered as a blank label.
+    """
+    df = get_metadata()
+    rows = df[df["site_uid"] == site_uid]
+    if rows.empty:
+        raise KeyError(f"Unknown site_uid: {site_uid!r}")
+    r = rows.iloc[0]
+
+    def _val(col):
+        v = r.get(col)
+        return v.strip() if isinstance(v, str) and v.strip() else None
+
+    if name := _val("monitoring_location_name"):
+        return name
+
+    river, town, state = _val("iwqis_river"), _val("iwqis_town"), _val("state_name")
+    if river or town:
+        where = " at ".join(p for p in (river, town) if p)
+        return f"{where}, {state}" if state else where
+
+    return _val("iwqis_description") or _val("iwqis_nickname")
+
+
+def get_site_desc(site_uid: str):
+    df = get_metadata()
+    rows = df[df["site_uid"] == site_uid]
+    if rows.empty:
+        raise KeyError(f"Unknown site_uid: {site_uid!r}")
+    r = rows.iloc[0]
+
+    def _val(col):
+        # Not string-only: drainage_area is float64, so a `isinstance(v, str)` guard would drop it
+        # silently. Blank strings still count as missing.
+        v = r.get(col)
+        if v is None or pd.isna(v):
+            return None
+        return (v.strip() or None) if isinstance(v, str) else v
+
+    desc = {
+        "location": get_location_desc(site_uid),
+        "drainage_area (mi^2)": _val("drainage_area"),
+        "site_type": _val("site_type"),
+        "agency": _val("agency_code"),
+    }
+
+    return desc
+
+
 # ── water: nitrate time series ────────────────────────────────────────────────
+
 
 def get_water(site_uid: str) -> pd.DataFrame:
     """The site's full nitrate time series (datetime-indexed, UTC-aware)."""
@@ -85,6 +154,7 @@ def aggregate_by_interval(site_uid=None, df=None, value_col="nitrate_con", inter
 
 # ── water: statistics ─────────────────────────────────────────────────────────
 
+
 @lru_cache(maxsize=1)
 def _stats_df() -> pd.DataFrame:
     path = _water_meta_dir() / "site_statistics.csv"
@@ -105,6 +175,7 @@ def get_stats(site_uid: str) -> pd.DataFrame:
 
 # ── basins: dirs (new processed/ layout, else legacy) ─────────────────────────
 
+
 def _basins_data_dir() -> Path:
     return _PROC_BASINS / "data"
 
@@ -114,6 +185,7 @@ def _basins_meta_dir() -> Path:
 
 
 # ── basins: read ──────────────────────────────────────────────────────────────
+
 
 @lru_cache(maxsize=1)
 def get_basin_metadata() -> pd.DataFrame:
@@ -129,7 +201,12 @@ def get_basin_metadata() -> pd.DataFrame:
 
 
 def get_basin(site_uid: str, type: int = 0) -> gpd.GeoDataFrame:
-    """Basin polygon for site_uid. type=0 -> preferred (via preferred_basin.csv); 1/2/3/4 -> that version."""
+    """Basin polygon for site_uid. type=0 -> PREFERRED (via preferred_basin.csv); 1/2/3/4 -> that version.
+
+    NOTE: type=0 is reserved for "preferred" and does NOT address the basin0 (auth) parquet directly.
+    basin0 is only ever the preferred file for a site, so it is reached through the type=0 path via
+    its basin_name; there is deliberately no way to fetch basin0 when it is not preferred.
+    """
     if type == 0:
         row = get_basin_metadata()
         row = row[row["site_uid"] == site_uid]
@@ -187,6 +264,7 @@ def update_basin(site_uid: str, params: dict = None, basin_geom=None) -> None:
                 gdf = gpd.GeoDataFrame.from_features(basin_geom["features"], crs="EPSG:4326")
             else:
                 from shapely.geometry import shape
+
                 gdf = gpd.GeoDataFrame(geometry=[shape(basin_geom)], crs="EPSG:4326")
         else:
             gdf = basin_geom
@@ -207,12 +285,14 @@ def update_basin(site_uid: str, params: dict = None, basin_geom=None) -> None:
 
 # ── aux: basin-containment graph ──────────────────────────────────────────────
 
+
 def get_basin_graph(immediate_only: bool = False):
     """Basin-containment DiGraph: edge child -> parent means child's sensor lies inside parent's
     basin. Every site is a node; edges (with a parent_area attr) come from
     processed/aux/basin_containment_graph.parquet. immediate_only keeps only each child's smallest
     enclosing parent (an immediate-parent forest)."""
     import networkx as nx
+
     edges = pd.read_parquet(_PROC_AUX / "basin_containment_graph.parquet")
     if immediate_only and not edges.empty:
         edges = edges.loc[edges.groupby("child")["parent_area"].idxmin()]
@@ -224,6 +304,7 @@ def get_basin_graph(immediate_only: bool = False):
 
 
 # ── map_overlays: NHD flowlines + waterbodies (widget) ────────────────────────
+
 
 @lru_cache(maxsize=1)
 def get_flowlines() -> gpd.GeoDataFrame:
@@ -239,6 +320,7 @@ def get_waterbodies() -> gpd.GeoDataFrame:
 
 # ── global-grain tables (interim, cached) ─────────────────────────────────────
 
+
 @lru_cache(maxsize=1)
 def _crops_global() -> pd.DataFrame:
     return pd.read_parquet(_INTERIM / "crops_global.parquet")
@@ -249,8 +331,48 @@ def _surplus_global() -> pd.DataFrame:
     return pd.read_parquet(_INTERIM / "surplus_global.parquet")
 
 
+# ── COMID-keyed static basin attributes (processed, cached) ───────────────────
+# One row per NHDPlus reach; tot_* = upstream-accumulated (the between-site model feature),
+# cat_* = local incremental (carried for reach-level choropleth / diagnostics). Built by
+# src/build/_make_comid_attrs.py, joined by the basin's outlet COMID.
+_COMID_ATTR_COLS = ["cat_tiles92", "tot_tiles92", "cat_bfi", "tot_bfi", "cat_contact", "tot_contact"]
+
+
+@lru_cache(maxsize=1)
+def _comid_attrs() -> pd.DataFrame:
+    return pd.read_parquet(_PROC / "comid_attrs.parquet").set_index("comid")
+
+
+def _basin_comid(basin) -> int | None:
+    """Outlet COMID from a basin gdf (the authoritative carrier), or None. Works for a real site's
+    stored basin and a pin's snapped basin -- both stamp `comid` into that column."""
+    if basin is None or "comid" not in getattr(basin, "columns", []):
+        return None
+    vals = basin["comid"].dropna().unique()
+    return int(vals[0]) if len(vals) else None
+
+
+def get_comid_attributes(comid) -> dict:
+    """Static COMID attributes as a dict of scalars. All-NaN if comid is None/absent (edge of
+    region, or a reach not in the table) or the table isn't built -- never raises, so a missing
+    COMID degrades to NaN features rather than breaking feature-building."""
+    nan = {c: float("nan") for c in _COMID_ATTR_COLS}
+    if comid is None or (isinstance(comid, float) and pd.isna(comid)):
+        return nan
+    try:
+        df = _comid_attrs()
+    except FileNotFoundError:
+        return nan
+    key = int(comid)
+    if key not in df.index:
+        return nan
+    row = df.loc[key]
+    return {c: float(row[c]) for c in _COMID_ATTR_COLS}
+
+
 def _weather_global_files() -> dict:
     import re
+
     out = {}
     for p in _INTERIM.glob("weather_global_*.parquet"):
         m = re.search(r"weather_global_(\d{4})\.parquet$", p.name)
@@ -261,11 +383,13 @@ def _weather_global_files() -> dict:
 
 # ── per-site live views (grid_global + global tables joined to a site_view) ────
 
+
 @lru_cache(maxsize=128)
 def get_grid(site_uid: str) -> gpd.GeoDataFrame:
     """The site's grid, built live over grid_global (node_id, global_node_id, x, y, lat, lon,
     cell_area, dist_to_sensor, frac_cell_in_basin, geometry). Cached; treat as read-only."""
     from src.data import site_view
+
     lon, lat = get_location(site_uid)
     return site_view.build_site_view(get_basin(site_uid), lat, lon, label=site_uid)
 
@@ -279,8 +403,35 @@ def get_basin_area(site_uid: str) -> float:
 def _crops_for_grid(grid) -> pd.DataFrame:
     """crops_global sliced to a grid's cells (+ node_id). Grid-taking core shared by the real
     (get_crops) and virtual (build_virtual_site_data) paths."""
-    return grid[["node_id", "global_node_id"]].merge(_crops_global(), on="global_node_id").sort_values(
-        ["year", "node_id"], ignore_index=True)
+    return (
+        grid[["node_id", "global_node_id"]]
+        .merge(_crops_global(), on="global_node_id")
+        .sort_values(["year", "node_id"], ignore_index=True)
+    )
+
+
+@lru_cache(maxsize=1)
+def _agtile_global() -> pd.DataFrame:
+    return pd.read_parquet(_INTERIM / "agtile_global.parquet")
+
+
+def _agtile_for_grid(grid) -> pd.DataFrame:
+    """agtile_global (tile_cells, cell_px) sliced to a grid's cells (+ node_id). left join keeps
+    cells with no AgTile coverage as NaN rather than dropping them. Shared core, real + virtual."""
+    return grid[["node_id", "global_node_id"]].merge(_agtile_global(), on="global_node_id", how="left")
+
+
+def get_agtile(site_uid: str) -> pd.DataFrame:
+    return _agtile_for_grid(get_grid(site_uid))
+
+
+def _try_agtile_for_grid(grid):
+    """agtile slice, or None if the (manually-built) agtile_global.parquet is absent -- so a virtual
+    site still builds before AgTile is downloaded/built."""
+    try:
+        return _agtile_for_grid(grid)
+    except FileNotFoundError:
+        return None
 
 
 def get_crops(site_uid: str) -> pd.DataFrame:
@@ -290,8 +441,11 @@ def get_crops(site_uid: str) -> pd.DataFrame:
 
 def _surplus_for_grid(grid) -> pd.DataFrame:
     """surplus_global sliced to a grid's cells (+ node_id). Grid-taking core."""
-    return grid[["node_id", "global_node_id"]].merge(_surplus_global(), on="global_node_id").sort_values(
-        ["year", "node_id"], ignore_index=True)
+    return (
+        grid[["node_id", "global_node_id"]]
+        .merge(_surplus_global(), on="global_node_id")
+        .sort_values(["year", "node_id"], ignore_index=True)
+    )
 
 
 def get_surplus(site_uid: str) -> pd.DataFrame:
@@ -301,8 +455,18 @@ def get_surplus(site_uid: str) -> pd.DataFrame:
 
 _WEATHER_PAD = pd.Timedelta(days=60)  # legacy per-site weather padded the nitrate span by 60d
 _WEATHER_COLS = [
-    "date", "node_id", "global_node_id", "precip_in_1d", "max_temp", "min_temp",
-    "max_rel_humidity", "min_rel_humidity", "vpd", "solar_rad", "evapotranspiration", "fuel_moisture_1000h",
+    "date",
+    "node_id",
+    "global_node_id",
+    "precip_in_1d",
+    "max_temp",
+    "min_temp",
+    "max_rel_humidity",
+    "min_rel_humidity",
+    "vpd",
+    "solar_rad",
+    "evapotranspiration",
+    "fuel_moisture_1000h",
 ]
 
 
@@ -349,9 +513,11 @@ def get_weather(site_uid: str, start=None, end=None) -> pd.DataFrame:
 
 # ── SiteData + get_data ───────────────────────────────────────────────────────
 
+
 @dataclass
 class SiteData:
     """All available data for a site, same schema as the legacy get_data() result."""
+
     site_uid: str
     basin: object = None
     crops: object = None
@@ -359,6 +525,8 @@ class SiteData:
     surplus: object = None
     water: object = None
     weather: object = None
+    agtile: object = None
+    comid_attrs: dict | None = None  # get_comid_attributes(outlet COMID); tot_*/cat_* static attrs
     basin_area: float = None
     sensor_location: tuple = None
 
@@ -372,6 +540,7 @@ class SiteData:
 def get_data(site_uid: str) -> SiteData:
     """Assemble a SiteData for a real site: live views joined to the global tables. Fields that
     fail to build (missing basin, no water, etc.) come back None rather than raising."""
+
     def _try(fn, *a):
         try:
             return fn(*a)
@@ -379,21 +548,25 @@ def get_data(site_uid: str) -> SiteData:
             return None
 
     loc = _try(get_location, site_uid)
+    basin = _try(get_basin, site_uid)
     return SiteData(
         site_uid=site_uid,
-        basin=_try(get_basin, site_uid),
+        basin=basin,
         crops=_try(get_crops, site_uid),
         grid=_try(get_grid, site_uid),
         surplus=_try(get_surplus, site_uid),
         water=_try(get_water, site_uid),
         weather=_try(get_weather, site_uid),
+        agtile=_try(get_agtile, site_uid),
+        comid_attrs=get_comid_attributes(_basin_comid(basin)),
         basin_area=_try(get_basin_area, site_uid),
         sensor_location=tuple(loc) if loc is not None else None,
     )
 
 
-def build_virtual_site_data(basin, sensor_lat, sensor_lon, *, weather_start=None, weather_end=None,
-                            site_uid="VIRTUAL") -> SiteData:
+def build_virtual_site_data(
+    basin, sensor_lat, sensor_lon, *, weather_start=None, weather_end=None, site_uid="VIRTUAL"
+) -> SiteData:
     """Assemble a SiteData for a virtual (ungauged) site from an in-memory basin + pin location.
 
     The re-grained build_virtual_basin: build_site_view over grid_global, then join the SAME global
@@ -413,6 +586,8 @@ def build_virtual_site_data(basin, sensor_lat, sensor_lon, *, weather_start=None
         surplus=_surplus_for_grid(grid),
         water=None,
         weather=_weather_for_grid(grid, weather_start, weather_end),
+        agtile=_try_agtile_for_grid(grid),
+        comid_attrs=get_comid_attributes(_basin_comid(basin)),
         basin_area=basin_area,
         sensor_location=(sensor_lon, sensor_lat),
     )

@@ -23,6 +23,24 @@ year_end = 2025
 # build/data split, so keep them in sync).
 agg_crops = ["Corn", "Soybeans"]
 
+# ── COMID-keyed static attributes ────────────────────────────────────────────
+# ScienceBase items staged as COMID-keyed static basin attributes (CAT_ + TOT_ each). The builder's
+# ATTR_SOURCES registry (src/build/_make_comid_attrs.py) is the code-side authority; this block
+# documents the active set. Adding an attribute = one ATTR_SOURCES row + one _COMID_ATTR_COLS entry.
+[comid_attrs]
+sources = [
+    { name = "tiles92", item = "57067469e4b03f95a075ad3e", zip = "TILES92_CONUS.zip" },  # subsurface tile drainage %, 1992
+    { name = "bfi",     item = "5669a8e3e4b08895842a1d4f", zip = "BFI_CONUS.zip" },       # base-flow index %
+    { name = "contact", item = "56f96fc5e4b0a6037df06b12", zip = "CONTACT_CONUS.zip" },   # subsurface contact time, days
+]
+
+# ── AgTile-US tile-drainage raster ───────────────────────────────────────────
+# 30 m binary tile-drained cropland (Valayamkunnath et al. 2020, CC-BY 4.0). Single vintage 2017.
+# National tif is manually downloaded to raw/agtile/national/AgTile-US.tif (14.9 GB CONUS); the
+# build clips to [region].bbox_wgs84 and skips if the source is absent.
+[agtile]
+vintage = 2017
+
 # ── surplus pipeline ─────────────────────────────────────────────────────────
 [surplus]
 # Inclusive year span of the Iowa nitrogen-surplus grid dataset.
@@ -65,4 +83,11 @@ big_basin = [
     "USGS-05474500",
     "WQS0020",
     "USGS-05420500",
+]
+# Groundwater / karst sites: no surface drainage basin, so they can't be delineated or featured
+# like a stream site (filter_sites also drops them via the is_groundwater flag). The USGS ones are
+# skipped at FETCH in usgs.py to avoid a wasted pull, like big_basin. USGS-415959091441301 is the
+# well (site_type=Well); the IWQIS groundwater sites (Big Spring WQS0031, etc.) never enter here.
+groundwater = [
+    "USGS-415959091441301",
 ]

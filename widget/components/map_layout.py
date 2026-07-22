@@ -709,7 +709,8 @@ def layout():
                             dl.LayerGroup(id="basin1-layer"),
                             dl.LayerGroup(id="basin2-layer"),
                             dl.LayerGroup(id="basin3-layer"),
-                            dl.LayerGroup(id="pin-basin-layer"),
+                            dl.LayerGroup(id="pin-basin-layer"),  # v1 pin (nearest-flowline snap)
+                            dl.LayerGroup(id="pin-basin-v2-layer"),  # v2 pin (containing catchment)
                             dl.LayerGroup(id="pin-basin-v3-layer"),
                             dl.LayerGroup(id="iwqis-layer"),
                             dl.LayerGroup(id="fake-sites-layer"),  # presentation-only fake sensors

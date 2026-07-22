@@ -340,13 +340,61 @@ def lagged_sensor_nitrate(site_uids, shift, agg_meth="max"):
 def _site_static_impl(d):
     lon, lat = d.sensor_location
     dist = d.grid["dist_to_sensor"]
-    return {
+    out = {
         "lat": float(lat),
         "lon": float(lon),
         "log_basin_area": float(np.log10(d.basin_area)),
         "mean_dist_to_sensor": float(dist.mean()),
         "max_dist_to_sensor": float(dist.max()),
     }
+    # COMID-keyed static basin attributes (tot_* modelled, cat_* carried), assembled into SiteData
+    # by access.get_data/build_virtual_site_data. NaN dict if no/unknown COMID.
+    out.update(getattr(d, "comid_attrs", None) or {})
+    # AgTile tile-drainage fractions (raster/areal). NaN if agtile not built or no ag coverage.
+    out.update(_agtile_fractions(d))
+    return out
+
+
+_PIXEL_M2 = 900.0  # 30 m AgTile / CDL pixel (both rasters are 30 m)
+_AGTILE_CDL_YEAR = 2017  # AgTile-US vintage; the CDL year used for the cropland denominator
+# Cultivated cropland (USDA "cultivated layer" sense): the row/annual crops tile drainage is
+# installed on. Excludes perennial Hay_Pasture and non-ag land (Nonag/Other). See recipes/build.
+_CULTIVATED_CROPS = ("Corn", "Soybeans", "Small_Grains", "Fallow", "Alfalfa")
+
+
+def _agtile_fractions(d):
+    """basin-integrated tile-drainage fractions, weighted by frac_cell_in_basin. AgTile-US is a plain
+    binary 1=tile-drained raster with NO cropland mask, so the two denominators come from ELSEWHERE:
+      tile_frac_basin = tile-drained area / basin area          (geometric, from basin_area)
+      tile_frac_ag    = tile-drained px / cultivated-cropland px (CDL 2017, _CULTIVATED_CROPS)
+    tile_frac_ag can slightly exceed 1 where AgTile tiles land CDL didn't call cultivated.
+    """
+    nan = {"tile_frac_ag": float("nan"), "tile_frac_basin": float("nan")}
+    ag = getattr(d, "agtile", None)
+    if ag is None or "tile_cells" not in getattr(ag, "columns", []):
+        return nan
+    w = d.grid.set_index("node_id")["frac_cell_in_basin"]
+    weight = ag.set_index("node_id")["tile_cells"]
+    tile = float(np.nansum(weight.to_numpy() * w.reindex(weight.index).fillna(0.0).to_numpy()))
+    frac_basin = (tile * _PIXEL_M2) / d.basin_area if d.basin_area else float("nan")
+    cult = _cultivated_cropland_px(d)
+    frac_ag = tile / cult if cult > 0 else float("nan")
+    return {"tile_frac_ag": frac_ag, "tile_frac_basin": frac_basin}
+
+
+def _cultivated_cropland_px(d):
+    """Basin-weighted cultivated-cropland pixel count from CDL year _AGTILE_CDL_YEAR -- the ag
+    denominator for tile_frac_ag. 0 if crops absent or that year has no cells (-> NaN fraction)."""
+    crops = getattr(d, "crops", None)
+    if crops is None or "year" not in getattr(crops, "columns", []):
+        return 0.0
+    yr = crops[crops["year"] == _AGTILE_CDL_YEAR]
+    cols = [c for c in _CULTIVATED_CROPS if c in yr.columns]
+    if yr.empty or not cols:
+        return 0.0
+    cult = yr.set_index("node_id")[cols].sum(axis=1)
+    w = d.grid.set_index("node_id")["frac_cell_in_basin"]
+    return float(np.nansum(cult.to_numpy() * w.reindex(cult.index).fillna(0.0).to_numpy()))
 
 
 @lru_cache(maxsize=None)

@@ -1,35 +1,59 @@
-"""Compute drainage basins (v1, v2, v3) per site and select a preferred basin.
+"""Compute drainage basins (v0-v3) per site and select a preferred basin.
 
-Faithful port of data/basins/make_basins.py. The D8 raster primitives (direction500m.png loader,
-pixel mapping, geo-referencing) now live in src/data/d8.py (shared with the runtime site_view), so
-this builder imports them from there. NOT a re-grain -- basins port unchanged in logic.
+The D8 raster primitives (direction500m.png loader, pixel mapping, geo-referencing) live in
+src/data/d8.py (shared with the runtime site_view), so this builder imports them from there.
 
-basin1 : NLDI position snap (any CONUS site).
-basin2 : authoritative -- NLDI nwissite (USGS) or IWQIS KMZ (WQS).
-basin3 : D8 raster BFS flood-fill (IWQIS web-app algorithm; cross-check).
-preferred: USGS with basin2 -> basin2, else basin1.
+basin0 : NWIS authoritative -- NLDI nwissite, addressed by uid. USGS SITES ONLY. Real COMID.
+basin1 : NEAREST-FLOWLINE SNAP. Find the closest NHD reach to the sensor, then take that COMID's
+         upstream basin. The default for everything without a basin0. Real COMID.
+basin2 : CONTAINING CATCHMENT -- NLDI /comid/position, i.e. whatever catchment polygon the point
+         falls inside. Kept as a cross-check only; see below for why it is not the default.
+basin3 : D8 raster BFS flood-fill. Cross-check only -- never selected by the auto rule.
+preferred: basin0 if eligible and present, else basin1.
 
-NOTE (deviation from legacy): the archive incremental machinery is SIMPLIFIED. The archive
-(.preferred_basin_archive.csv) is still consulted to OVERRIDE preferred-basin selection in
-_build_preferred_csv, but the legacy "archive matches -> nothing to do" early-exit and the
-missing-parquet reconstruct-from-archive restore path were dropped. This builder recomputes any
-missing {1,2,3} parquet (respecting --force) and always rewrites preferred_basin.csv. Since the
-basins data is already built + relocated, this is a rebuild path, not a hot loop.
+WHY basin1 IS THE SNAP AND NOT /comid/position:
+    /comid/position returns the catchment polygon CONTAINING the point, not the nearest stream. In
+    NHDPlus, mainstem reaches through divergences carry AreaSqKM = 0 -- no catchment of their own --
+    so a sensor sitting ON such a mainstem falls inside a neighbouring tributary's catchment and the
+    service returns the tributary. WQS0061 is the worked example: the Soldier River (order 5,
+    1057 km2) is 4 m away, but /comid/position returned an unnamed order-2 reach 510 m away with
+    15.6 km2, understating the basin by 98.5% -- silently. 2% of Iowa reaches have zero-area
+    catchments, 305 of them at order >= 4, so this is a live hazard for any mainstem pin.
 
-Outputs: processed/basins/data/{uid}_basin{1,2,3}.parquet, processed/basins/meta/preferred_basin.csv.
-Rivers cache -> raw/basins/cache/rivers.gpkg. Site coords <- processed/water/meta/site_location_metadata.csv.
+WHY basin0 STILL EXISTS: where a site has an NWIS id, the authority's own delineation beats
+inferring one from coordinates.
+
+COMID is the join key for the pre-accumulated USGS/EPA attribute tables (TOT_/CAT_/ACC_ prefixes:
+tile drainage, base-flow index, subsurface contact time, SPARROW yields). It is a property of the
+sensor's snapped reach, not of the polygon, so it must always come from the authority (NLDI) and
+never be copied between delineations.
+
+THE ARCHIVE (.preferred_basin_archive.csv) is a read-only cache of reviewed selections. It is
+consulted to OVERRIDE the auto rule in _build_preferred_csv; nothing in this repo writes it, so it
+is refreshed by hand after a review pass. --recalculate deliberately ignores it: that is a HARD
+RESET, re-picking every site from the auto rule so the sites can be re-reviewed and the cache
+rewritten. Dropping manual basin3/basin4 selections is the intent, not a failure mode.
+
+The legacy "archive matches -> nothing to do" early-exit and the reconstruct-from-archive restore
+path were dropped. This builder recomputes any missing {0,1,2,3} parquet (respecting --force) and
+always rewrites preferred_basin.csv. It is a rebuild path, not a hot loop.
+
+Outputs: processed/basins/data/{uid}_basin{0,1,2,3}.parquet, processed/basins/meta/preferred_basin.csv.
+Site coords <- processed/water/meta/site_location_metadata.csv.
+BOTH basin1 and flag_river read processed/map_overlays/iowa_flowlines.parquet, so make_data.py runs
+_make_map_overlays BEFORE this builder. A missing layer disables flag_river with a warning, but
+basin1 RAISES -- silently degrading the default delineation to the weaker /comid/position method is
+exactly the failure this redesign exists to prevent.
 
 Usage
 -----
-    python -m src.build._make_basins [--force] [--recalculate] [--usgs-only] [--iwqis-only]
+    python -m src.build._make_basins [--force] [--recalculate] [--usgs-only] [--wqs-only]
+                                     [--report-auto]
 """
 
 import argparse
-import io
 import math
-import re
 import sys
-import zipfile
 from collections import deque
 from pathlib import Path
 
@@ -52,52 +76,119 @@ _BASIN_DATA_DIR = _SRC / "data" / "processed" / "basins" / "data"
 _META_DIR = _SRC / "data" / "processed" / "basins" / "meta"
 _PREFERRED_CSV = _META_DIR / "preferred_basin.csv"
 _ARCHIVE_CSV = _META_DIR / ".preferred_basin_archive.csv"
-_CACHE_DIR = _SRC / "data" / "raw" / "basins" / "cache"  # rivers.gpkg (raster handled by d8)
 
-_KEY_COLS = ["basin_name", "basin_type", "selection_mode", "reviewed"]
+# Relative area disagreement above which a site is flagged for manual review. Both checks are
+# |other - basin1| / area(basin1), because basin1 (the nearest-flowline snap) is the default
+# delineation and therefore the natural reference.
+#   flag_area_mismatch_v2 -- basin1 vs the containing catchment. Fires when /comid/position picked
+#                            a different reach, which is the WQS0061 lateral-snap failure.
+#   flag_area_mismatch_v3 -- basin1 vs the D8 raster. An independent check that shares no code or
+#                            data with NHDPlus, so it catches errors common to both vector methods.
+# basin3 is a 500 m raster against NHDPlus vector, so a few percent of v3 disagreement is
+# measurement artifact rather than delineation error.
+AREA_FLAG_MISMATCH_RATIO = 0.04
+
+# Tie tolerance for the nearest-flowline snap: among reaches whose distance to the sensor is within
+# this many metres of the closest one, prefer the largest upstream drainage area. Resolves
+# confluences toward the mainstem without dragging a genuine tributary sensor onto it.
+SNAP_TIE_TOLERANCE_M = 25.0
+
+# When a site has an operator-reported drainage area, disambiguate among reaches within this radius
+# by matching that area instead of taking the strictly nearest reach. Fixes sensors that sit a few
+# hundred metres from the mainstem they monitor but a few metres from a parallel tributary (WQS0023
+# is 38 m from a 50 km2 reach, 497 m from the 6091 km2 Wapsipinicon it actually gauges). ONLY used
+# when a reported area exists, so an arbitrary map pin (deploy path) always gets pure-nearest.
+SNAP_AREA_MATCH_RADIUS_M = 600.0
+# A reported area this far (in log-ratio) from every nearby reach is treated as unmatchable -- the
+# coordinates are probably wrong -- so the snap falls back to nearest and lets flag_area_mismatch_v3
+# surface it for manual review rather than confidently snapping to the wrong reach.
+SNAP_AREA_MATCH_MAX_LOGERR = 0.69  # ~2x
+
+# flag_river: the sensor sits within RIVER_FLAG_SEARCH_KM of a flowline whose TOTAL UPSTREAM
+# drainage area exceeds RIVER_FLAG_DA_KM2. This is a PROXIMITY RISK flag, not a correctness test.
+#
+# It exists for the case internal-consistency checks cannot see: a sensor on a small inlet running
+# into a large river, where basin1 AND basin3 both snap to the large river. They then agree with
+# each other (no flag_area_mismatch_v3) and with the river's own drainage area, so every self-check
+# passes while the delineation is wrong. WQS0065 and WQS0066 are the worked examples.
+# Expect legitimate mainstem-monitoring sites to flag too; that is the intended trade.
+#
+# The RADIUS matters as much as the threshold. WQS0065 and WQS0066 sit 1.82 km and 2.12 km from the
+# Missouri River, so the 1 km window the old Natural Earth flag used missed both of them while
+# their basin1 delineations had already snapped to the Missouri (765,000 km2). 3 km is the smallest
+# radius that catches both. Flagged counts at DA > 10,000 km2 across the current 85 sites:
+#   1 km -> 10 (misses both)   2 km -> 13 (misses both)   3 km -> 18   4 km -> 20   5 km -> 21
+RIVER_FLAG_DA_KM2 = 10_000
+RIVER_FLAG_SEARCH_KM = 3.0
+
+# Every flag column written to preferred_basin.csv. The widget derives its filter and label lists
+# from the `flag_` prefix, so adding one here is enough -- see widget/components/basin_editor.py.
+FLAG_COLS = [
+    "flag_area",
+    "flag_river",
+    "flag_not_contained",
+    "flag_basin1_over_basin0",
+    "flag_area_mismatch_v2",
+    "flag_area_mismatch_v3",
+]
 
 
 def _metadata_path() -> Path:
     return _SRC / "data" / "processed" / "water" / "meta" / "site_location_metadata.csv"
 
 
-# ── Basin 1: NLDI position snap ───────────────────────────────────────────────
+# ── Basins 0-2: NLDI-derived (uid lookup / nearest-flowline snap / containing catchment) ──────
 
 _NLDI_BASE = "https://api.water.usgs.gov/nldi/linked-data"
 
 
-def _compute_basin1(uid: str, lat: float, lon: float, timeout: int = 60) -> gpd.GeoDataFrame:
-    """NLDI position-snap basin for a single site."""
-    pos = requests.get(
-        f"{_NLDI_BASE}/comid/position", params={"coords": f"POINT({lon} {lat})", "f": "json"}, timeout=timeout
-    )
-    pos.raise_for_status()
-    feats = pos.json().get("features", [])
+def _basin0_eligible(uid: str) -> bool:
+    """Whether basin0 (NWIS authoritative, addressed by uid) can exist for this site at all."""
+    return uid.startswith("USGS-")
+
+
+def _fetch_site_comid(uid: str, timeout: int = 60) -> int | None:
+    """COMID of the reach an NWIS site is registered on.
+
+    The /basin endpoint returns empty properties, so the comid needs this separate GET against the
+    site endpoint. Returns None rather than raising if the site is absent from NLDI -- a basin with
+    a missing comid still beats no basin.
+    """
+    resp = requests.get(f"{_NLDI_BASE}/nwissite/{uid}", params={"f": "json"}, timeout=timeout)
+    resp.raise_for_status()
+    feats = resp.json().get("features", [])
     if not feats:
-        raise ValueError(f"No NHDPlus catchment near ({lat}, {lon}) for {uid}.")
-    comid = feats[0]["properties"]["comid"]
+        return None
+    comid = feats[0].get("properties", {}).get("comid")
+    return int(comid) if comid is not None else None
+
+
+def _basin_for_comid(uid: str, comid: int, timeout: int = 60) -> gpd.GeoDataFrame:
+    """Upstream basin polygon for a COMID, in the canonical 4-column schema."""
     resp = requests.get(
         f"{_NLDI_BASE}/comid/{comid}/basin", params={"f": "json", "simplified": "true"}, timeout=timeout
     )
     resp.raise_for_status()
     gdf = gpd.GeoDataFrame.from_features(resp.json()["features"], crs="EPSG:4326")
     if gdf.empty:
-        raise ValueError(f"NLDI returned empty basin for COMID {comid} ({uid}).")
+        raise ValueError(f"NLDI returned an empty basin for COMID {comid} ({uid}).")
     gdf = gdf[["geometry"]].copy()
     gdf["site_uid"] = uid
-    gdf["comid"] = comid
+    gdf["comid"] = int(comid)  # int, not object -- these frames get concatenated in access.py
     gdf["area_km2"] = gdf.to_crs(EQUAL_AREA_CRS).area / 1e6
     return gdf[["site_uid", "comid", "area_km2", "geometry"]]
 
 
-# ── Basin 2: NLDI nwissite (USGS) or IWQIS KMZ (WQS) ─────────────────────────
+def _compute_basin0(uid: str, lat: float, lon: float, timeout: int = 60) -> gpd.GeoDataFrame | None:
+    """Authoritative NWIS basin, addressed by site uid. USGS only; None for anything else.
 
-_IWQIS_BASE = "https://iowawis.org/layers/basins"
-_IWQIS_STATIONS_URL = "https://iwqis.iowawis.org/app/inc/inc_get_object.php?id=0&subid=0"
-_SEARCH_RADIUS_DEG = 0.03
+    Returning None (rather than raising) for non-USGS uids means _build_type logs a skip and never
+    writes, so no non-USGS basin0 parquet can be created even under --force.
+    """
+    if not _basin0_eligible(uid):
+        return None
 
-
-def _fetch_basin_nwissite(uid: str, timeout: int = 60) -> gpd.GeoDataFrame:
+    # Geometry first, comid second: if the comid GET fails we still keep the polygon.
     resp = requests.get(
         f"{_NLDI_BASE}/nwissite/{uid}/basin", params={"f": "json", "simplified": "true"}, timeout=timeout
     )
@@ -107,110 +198,120 @@ def _fetch_basin_nwissite(uid: str, timeout: int = 60) -> gpd.GeoDataFrame:
         raise ValueError(f"NLDI returned no features for {uid}.")
     gdf = gpd.GeoDataFrame.from_features(features, crs="EPSG:4326")
     if gdf.empty:
-        raise ValueError(f"NLDI returned empty basin for {uid}.")
+        raise ValueError(f"NLDI returned an empty basin for {uid}.")
+
+    try:
+        comid = _fetch_site_comid(uid, timeout=timeout)
+    except requests.RequestException as e:
+        print(f"  {uid}: basin fetched but comid lookup failed ({e}) -- writing comid=None.")
+        comid = None
+
     gdf = gdf[["geometry"]].copy()
     gdf["site_uid"] = uid
-    gdf["comid"] = None
+    gdf["comid"] = comid
     gdf["area_km2"] = gdf.to_crs(EQUAL_AREA_CRS).area / 1e6
     return gdf[["site_uid", "comid", "area_km2", "geometry"]]
 
 
-def _load_iwqis_station_list() -> pd.DataFrame:
-    resp = requests.get(_IWQIS_STATIONS_URL, timeout=120)
-    resp.raise_for_status()
-    stations = re.findall(r"\[(\d+),([-\d.]+),([-\d.]+),\d+", resp.text)
-    df = pd.DataFrame(stations, columns=["id", "lat", "lon"])
-    df["id"] = df["id"].astype(int)
-    df["lat"] = df["lat"].astype(float)
-    df["lon"] = df["lon"].astype(float)
-    return df
+def snap_comid(
+    lat: float, lon: float, flowlines: gpd.GeoDataFrame, sindex=None, reported_area_km2: float | None = None
+) -> tuple[int, float, str]:
+    """COMID of the NHD reach the sensor sits on. Returns (comid, distance_m, name).
+
+    Base rule -- nearest by distance, then among reaches within SNAP_TIE_TOLERANCE_M of the closest,
+    the largest upstream drainage area (resolves confluences toward the mainstem).
+
+    Area refinement -- when reported_area_km2 is given, disambiguate among reaches within
+    SNAP_AREA_MATCH_RADIUS_M by matching that area in log-space instead of taking the strictly
+    nearest reach, UNLESS the best match is worse than SNAP_AREA_MATCH_MAX_LOGERR (probable bad
+    coordinates -> fall back to nearest and let flag_area_mismatch_v3 flag it). Reported areas only
+    exist for known sites, so a deploy-path map pin (reported_area_km2=None) always gets the base
+    rule -- the two paths stay identical wherever no area is available.
+
+    Reaches with TotDASqKM == 0 (NHDPlus divergence artifacts with no catchment) are never valid
+    targets and are excluded first -- they are the reaches /comid/position kept mis-snapping to.
+
+    Raises ValueError outside the flowlines extent. Falling back to /comid/position there would
+    silently reintroduce the lateral-snap bug this function exists to fix.
+    """
+    pt = gpd.GeoDataFrame(geometry=[Point(lon, lat)], crs="EPSG:4326").to_crs(EQUAL_AREA_CRS).geometry.iloc[0]
+    sindex = sindex if sindex is not None else flowlines.sindex
+
+    # sindex positions index into `flowlines`; take those rows FIRST, then drop the zero-drainage
+    # divergence artifacts. Filtering flowlines before .iloc would misalign the positions.
+    hits = gpd.GeoDataFrame()
+    for radius_m in (500, 2_000, 10_000):
+        hits = flowlines.iloc[list(sindex.query(pt.buffer(radius_m), predicate="intersects"))]
+        if "TotDASqKM" in hits:
+            hits = hits[hits["TotDASqKM"] > 0]
+        if not hits.empty:
+            break
+    if hits.empty:
+        raise ValueError(
+            f"No NHD flowline within 10 km of ({lat}, {lon}) -- outside the cached flowlines extent. "
+            "Rebuild src/data/processed/map_overlays/iowa_flowlines.parquet over a wider geometry."
+        )
+
+    d = hits.geometry.distance(pt)
+
+    if reported_area_km2 and reported_area_km2 > 0 and "TotDASqKM" in hits:
+        cand = hits[d <= SNAP_AREA_MATCH_RADIUS_M]
+        if not cand.empty:
+            logerr = (cand["TotDASqKM"] / reported_area_km2).apply(lambda x: abs(math.log(x)))
+            if logerr.min() <= SNAP_AREA_MATCH_MAX_LOGERR:
+                best = cand.loc[logerr.idxmin()]
+                return int(best["COMID"]), float(d[best.name]), str(best.get("GNIS_NAME", "") or "").strip()
+
+    near = hits[d <= d.min() + SNAP_TIE_TOLERANCE_M]
+    best = near.loc[near["TotDASqKM"].idxmax()] if "TotDASqKM" in near else hits.loc[d.idxmin()]
+    return int(best["COMID"]), float(d.min()), str(best.get("GNIS_NAME", "") or "").strip()
 
 
-def _try_kmz(station_id: int, timeout: int = 30) -> gpd.GeoDataFrame | None:
-    resp = requests.get(f"{_IWQIS_BASE}/p{station_id}.kmz", timeout=timeout)
-    if not resp.ok:
-        return None
-    try:
-        with zipfile.ZipFile(io.BytesIO(resp.content)) as zf:
-            kml_name = next((n for n in zf.namelist() if n.endswith(".kml")), None)
-            if not kml_name:
-                return None
-            gdf = gpd.read_file(io.BytesIO(zf.read(kml_name)), driver="KML")
-    except Exception:
-        return None
-    if gdf.empty:
-        return None
-    gdf["geometry"] = gdf["geometry"].buffer(0)
-    return gdf[~gdf["geometry"].is_empty]
+def _compute_basin1(
+    uid: str,
+    lat: float,
+    lon: float,
+    flowlines: gpd.GeoDataFrame | None = None,
+    sindex=None,
+    reported_area_km2: float | None = None,
+    timeout: int = 60,
+) -> gpd.GeoDataFrame:
+    """NEAREST-FLOWLINE SNAP basin -- the default delineation.
+
+    Snaps to the closest NHD reach and takes that COMID's upstream basin, instead of trusting
+    /comid/position to pick the right reach. See the module docstring for why (WQS0061).
+
+    reported_area_km2, when known, refines reach selection (see snap_comid). It is passed for known
+    sites and left None for an arbitrary map pin, so the deploy path always gets the pure-nearest
+    rule.
+    """
+    if flowlines is None:
+        flowlines = _load_flowlines()
+    if flowlines is None:
+        raise RuntimeError(
+            "basin1 needs the NHD flowlines layer; run `python -m src.build._make_map_overlays` first."
+        )
+    comid, dist_m, name = snap_comid(lat, lon, flowlines, sindex, reported_area_km2=reported_area_km2)
+    if dist_m > 250:
+        print(f"  {uid}: nearest reach is {dist_m:.0f} m away ({name or 'unnamed'}) -- check the coordinates.")
+    return _basin_for_comid(uid, comid, timeout=timeout)
 
 
-def _fetch_basin_iwqis(uid, lat, lon, station_df, v3_area_km2=None, timeout=30) -> gpd.GeoDataFrame:
-    numeric_id = int(uid.replace("WQS", ""))
-    dist = ((station_df["lat"] - lat) ** 2 + (station_df["lon"] - lon) ** 2) ** 0.5
-    nearby = station_df[dist < _SEARCH_RADIUS_DEG].copy()
-    nearby["dist"] = dist[nearby.index]
-    nearby = nearby.sort_values("dist")
-    candidate_ids = list(nearby["id"])
-    if numeric_id not in candidate_ids:
-        candidate_ids.append(numeric_id)
+def _compute_basin2(uid: str, lat: float, lon: float, timeout: int = 60) -> gpd.GeoDataFrame:
+    """CONTAINING-CATCHMENT basin -- NLDI /comid/position. Cross-check only, never the default.
 
-    best_gdf, best_score, site_pt = None, float("inf"), Point(lon, lat)
-    for sid in candidate_ids:
-        raw = _try_kmz(sid, timeout=timeout)
-        if raw is None:
-            continue
-        proj = raw.to_crs(EQUAL_AREA_CRS)
-        area = proj.area.sum() / 1e6
-        if raw.geometry.union_all().distance(site_pt) > 0.15:
-            continue
-        centroid = proj.centroid.to_crs("EPSG:4326").iloc[0]
-        centroid_dist = ((centroid.y - lat) ** 2 + (centroid.x - lon) ** 2) ** 0.5
-        if v3_area_km2 and v3_area_km2 > 1.0:
-            ratio = area / v3_area_km2
-            if ratio < 0.05 or ratio > 20.0:
-                continue
-            score = centroid_dist * max(ratio, 1.0 / ratio)
-        else:
-            score = centroid_dist
-        if score < best_score:
-            best_score, best_gdf = score, raw
-    if best_gdf is None:
-        raise ValueError(f"Basin 2 not possible for {uid}.")
-    best_gdf = best_gdf[["geometry"]].copy()
-    best_gdf["site_uid"] = uid
-    best_gdf["comid"] = None
-    best_gdf["area_km2"] = best_gdf.to_crs(EQUAL_AREA_CRS).area / 1e6
-    return best_gdf[["site_uid", "comid", "area_km2", "geometry"]]
-
-
-def _compute_basin2(uid, lat, lon, station_df, v3_area_km2, timeout=60) -> gpd.GeoDataFrame:
-    """Authoritative basin: NLDI nwissite (USGS) or IWQIS KMZ (WQS)."""
-    if uid.startswith("USGS-"):
-        try:
-            return _fetch_basin_nwissite(uid, timeout=timeout)
-        except requests.HTTPError:
-            pos = requests.get(
-                f"{_NLDI_BASE}/comid/position", params={"coords": f"POINT({lon} {lat})", "f": "json"}, timeout=timeout
-            )
-            pos.raise_for_status()
-            feats = pos.json().get("features", [])
-            if not feats:
-                raise ValueError(f"No NHD catchment near ({lat}, {lon}) for {uid}.")
-            comid = feats[0]["properties"]["comid"]
-            resp = requests.get(
-                f"{_NLDI_BASE}/comid/{comid}/basin", params={"f": "json", "simplified": "true"}, timeout=timeout
-            )
-            resp.raise_for_status()
-            gdf = gpd.GeoDataFrame.from_features(resp.json()["features"], crs="EPSG:4326")
-            if gdf.empty:
-                raise ValueError(f"NLDI returned empty basin for COMID {comid} ({uid}).")
-            gdf = gdf[["geometry"]].copy()
-            gdf["site_uid"] = uid
-            gdf["comid"] = comid
-            gdf["area_km2"] = gdf.to_crs(EQUAL_AREA_CRS).area / 1e6
-            return gdf[["site_uid", "comid", "area_km2", "geometry"]]
-    else:
-        return _fetch_basin_iwqis(uid, lat, lon, station_df, v3_area_km2, timeout=timeout)
+    Returns whichever catchment polygon the point falls inside, which is NOT necessarily the reach
+    the sensor sits on: mainstem reaches at divergences have no catchment of their own, so a point
+    on the mainstem resolves to a neighbouring tributary.
+    """
+    pos = requests.get(
+        f"{_NLDI_BASE}/comid/position", params={"coords": f"POINT({lon} {lat})", "f": "json"}, timeout=timeout
+    )
+    pos.raise_for_status()
+    feats = pos.json().get("features", [])
+    if not feats:
+        raise ValueError(f"No NHDPlus catchment near ({lat}, {lon}) for {uid}.")
+    return _basin_for_comid(uid, feats[0]["properties"]["comid"], timeout=timeout)
 
 
 # ── Basin 3: D8 raster BFS flood-fill (uses src/data/d8) ─────────────────────
@@ -274,7 +375,7 @@ def _compute_basin3(uid: str, lat: float, lon: float, direction: np.ndarray) -> 
     return gdf[["site_uid", "area_km2", "geometry"]]
 
 
-# ── helpers: distance, rivers ─────────────────────────────────────────────────
+# ── helpers: distance, flowlines ─────────────────────────────────────────────────
 
 
 def _dist_km(lat: float, lon: float, gdf: gpd.GeoDataFrame) -> float:
@@ -283,117 +384,77 @@ def _dist_km(lat: float, lon: float, gdf: gpd.GeoDataFrame) -> float:
     return pt.distance(poly) / 1000.0
 
 
-_RIVERS_URL = "https://naciscdn.org/naturalearth/10m/physical/ne_10m_rivers_lake_centerlines.zip"
-_RIVERS_CACHE = _CACHE_DIR / "rivers.gpkg"
+_FLOWLINES_PATH = _SRC / "data" / "processed" / "map_overlays" / "iowa_flowlines.parquet"
 
 
-def _load_river_geometry() -> gpd.GeoDataFrame:
-    """Mississippi + Missouri centerlines (EPSG:5070), cached locally."""
-    if not _RIVERS_CACHE.exists():
-        print("  Downloading Natural Earth 10m rivers...")
-        _CACHE_DIR.mkdir(parents=True, exist_ok=True)
-        tmp = _CACHE_DIR / "_ne_rivers_tmp.zip"
-        resp = requests.get(_RIVERS_URL, timeout=120)
-        resp.raise_for_status()
-        tmp.write_bytes(resp.content)
-        rivers = gpd.read_file(f"/vsizip/{tmp}")
-        rivers[rivers["name"].isin(["Mississippi", "Missouri"])].to_file(_RIVERS_CACHE, driver="GPKG")
-        tmp.unlink()
-    return gpd.read_file(_RIVERS_CACHE).to_crs(EQUAL_AREA_CRS)
+def _load_flowlines() -> gpd.GeoDataFrame | None:
+    """NHD flowlines with TotDASqKM, projected to equal-area. None if unavailable.
+
+    Built by _make_map_overlays.py, which make_data.py runs BEFORE basins for this reason. The
+    layer is currently clipped to Iowa (streamorde >= 3); to generalize, re-run that builder over
+    a wider geometry -- pynhd's NHD("flowline_mr").bygeom works anywhere. A site outside the cached
+    extent simply finds no flowlines and flag_river comes out False, so coverage gaps degrade to a
+    missing warning rather than a wrong answer.
+    """
+    if not _FLOWLINES_PATH.exists():
+        print(f"  flag_river: {_FLOWLINES_PATH.name} not found -- flag will be False for every site.")
+        print("              Run `python -m src.build._make_map_overlays` first to enable it.")
+        return None
+    fl = gpd.read_parquet(_FLOWLINES_PATH)
+    if "TotDASqKM" not in fl.columns:
+        print("  flag_river: flowlines layer has no TotDASqKM column -- flag will be False.")
+        return None
+    return fl.to_crs(EQUAL_AREA_CRS)
 
 
-# ── archive helpers ───────────────────────────────────────────────────────────
-
-
-def _archive_check_parquets(archive: pd.DataFrame) -> list[tuple[str, str]]:
-    return [
-        (r["site_uid"], r["basin_name"])
-        for _, r in archive.iterrows()
-        if not (_BASIN_DATA_DIR / r["basin_name"]).exists()
-    ]
-
-
-def _archive_print_divergences(archive: pd.DataFrame) -> int:
-    current = pd.read_csv(_PREFERRED_CSV)
-    merged = archive.merge(current, on="site_uid", suffixes=("_arch", "_curr"), how="inner")
-    diffs: dict[str, list] = {}
-    for col in _KEY_COLS:
-        a_col, c_col = f"{col}_arch", f"{col}_curr"
-        if a_col not in merged.columns or c_col not in merged.columns:
-            continue
-        for _, r in merged[merged[a_col].astype(str) != merged[c_col].astype(str)].iterrows():
-            diffs.setdefault(r["site_uid"], []).append(f"{col}: archive={r[a_col]!r} current={r[c_col]!r}")
-    if diffs:
-        print(f"\n{len(diffs)} site(s) diverge from the archive:")
-        for uid, changes in diffs.items():
-            print(f"  {uid}: " + "; ".join(changes))
-        print("  -> Review; run --recalculate to rebuild from scratch.")
-    return len(diffs)
-
-
-def _reconstruct_parquet(uid, basin_type, basin_name, lat, lon, direction, station_df) -> bool:
-    out = _BASIN_DATA_DIR / basin_name
-    try:
-        if basin_type == 1:
-            gdf = _compute_basin1(uid, lat, lon)
-        elif basin_type == 2:
-            v3_path = _BASIN_DATA_DIR / f"{uid}_basin3.parquet"
-            v3_area = float(gpd.read_parquet(v3_path)["area_km2"].iloc[0]) if v3_path.exists() else None
-            gdf = _compute_basin2(uid, lat, lon, station_df, v3_area)
-        elif basin_type == 3:
-            gdf = _compute_basin3(uid, lat, lon, direction)
-            if gdf is None:
-                print(f"  {uid}: outside Iowa domain, cannot reconstruct basin3.")
-                return False
-        else:
-            print(f"  {uid}: basin_type {basin_type} cannot be reconstructed automatically.")
-            return False
-        gdf.to_parquet(out)
-        return True
-    except Exception as e:
-        print(f"  {uid}: reconstruction failed — {e}")
-        return False
-
-
-def _restore_from_archive(archive, meta, direction, station_df) -> None:
-    coords = meta.set_index("site_uid")[["latitude", "longitude"]].to_dict("index")
-    rows = []
-    for _, ar in archive.iterrows():
-        uid, basin_name, basin_type = ar["site_uid"], ar["basin_name"], int(ar["basin_type"])
-        if not (_BASIN_DATA_DIR / basin_name).exists():
-            print(f"  Reconstructing {uid} (basin{basin_type})...")
-            if uid not in coords:
-                print(f"  {uid}: not in site metadata — skipping.")
-                continue
-            lat, lon = coords[uid]["latitude"], coords[uid]["longitude"]
-            if not _reconstruct_parquet(uid, basin_type, basin_name, lat, lon, direction, station_df):
-                fb_type = 2 if uid.startswith("USGS-") and (_BASIN_DATA_DIR / f"{uid}_basin2.parquet").exists() else 1
-                fb_name = f"{uid}_basin{fb_type}.parquet"
-                if (_BASIN_DATA_DIR / fb_name).exists():
-                    print(f"  {uid}: falling back to basin{fb_type} (auto).")
-                    ar = ar.copy()
-                    ar["basin_name"], ar["basin_type"], ar["selection_mode"], ar["reviewed"] = (
-                        fb_name,
-                        fb_type,
-                        "auto",
-                        False,
-                    )
-                else:
-                    print(f"  {uid}: no fallback parquet — skipping.")
-                    continue
-        rows.append(ar.to_dict())
-    pd.DataFrame(rows).to_csv(_PREFERRED_CSV, index=False)
-    print(f"Restored preferred_basin.csv with {len(rows)} entries.")
+def _nearby_river(lat: float, lon: float, flowlines, sindex) -> tuple[float, str]:
+    """(drainage area km2, name) of the largest river within RIVER_FLAG_SEARCH_KM of the site."""
+    if flowlines is None:
+        return float("nan"), ""
+    pt = gpd.GeoDataFrame(geometry=[Point(lon, lat)], crs="EPSG:4326").to_crs(EQUAL_AREA_CRS).geometry.iloc[0]
+    hits = flowlines.iloc[list(sindex.query(pt.buffer(RIVER_FLAG_SEARCH_KM * 1000), predicate="intersects"))]
+    if hits.empty or hits["TotDASqKM"].isna().all():
+        return float("nan"), ""
+    top = hits.loc[hits["TotDASqKM"].idxmax()]
+    return float(top["TotDASqKM"]), str(top.get("GNIS_NAME", "") or "").strip()
 
 
 # ── preferred basin metadata ──────────────────────────────────────────────────
 
 
-def _build_preferred_csv(meta, rivers_proj, archive=None) -> None:
+def _area_mismatch(base: float, other: float) -> bool:
+    """Whether `other` differs from `base` by more than AREA_FLAG_MISMATCH_RATIO.
+
+    Always relative to `base` (basin1, the default delineation). NaN or a zero base -> False, so
+    a missing cross-check reads as "nothing to say" rather than as a flag.
+    """
+    if math.isnan(base) or math.isnan(other) or base <= 0:
+        return False
+    return abs(other - base) / base > AREA_FLAG_MISMATCH_RATIO
+
+
+def _preferred_area(basin_type: int, basin_name: str, area: dict) -> float:
+    """Area of the selected basin. Types 0-3 come from the scan; type 4 is read off disk.
+
+    basin4 files are written by the widget (access.update_basin), which does a bare to_parquet on a
+    frame that may carry geometry ALONE -- so area_km2 cannot be assumed present.
+    """
+    if basin_type in (0, 1, 2, 3):
+        return area[basin_type]
+    p4 = _BASIN_DATA_DIR / basin_name
+    if not p4.exists():
+        return float("nan")
+    b4 = gpd.read_parquet(p4)
+    if "area_km2" in b4.columns:
+        return float(b4["area_km2"].sum())
+    return float(b4.to_crs(EQUAL_AREA_CRS).area.sum()) / 1e6
+
+
+def _build_preferred_csv(meta, flowlines=None, archive=None, report_auto=False) -> None:
     """Select preferred basin per site, compute distances/areas/flags, write CSV."""
-    rivers_union = rivers_proj.geometry.union_all()
+    fl_sindex = flowlines.sindex if flowlines is not None else None
     arch_lookup = {} if archive is None else archive.set_index("site_uid").to_dict("index")
-    rows = []
+    rows, auto_divergences = [], []
     for _, site_row in meta.iterrows():
         uid = site_row["site_uid"]
         lat, lon = float(site_row["latitude"]), float(site_row["longitude"])
@@ -403,55 +464,86 @@ def _build_preferred_csv(meta, rivers_proj, archive=None) -> None:
                 if (_BASIN_DATA_DIR / f"{uid}_basin{t}.parquet").exists()
                 else None
             )
-            for t in (1, 2, 3)
+            for t in (0, 1, 2, 3)
         }
         nan = float("nan")
-        area = {t: float(gdf[t]["area_km2"].sum()) if gdf[t] is not None else nan for t in (1, 2, 3)}
-        dist = {t: _dist_km(lat, lon, gdf[t]) if gdf[t] is not None else nan for t in (1, 2, 3)}
+        area = {t: float(gdf[t]["area_km2"].sum()) if gdf[t] is not None else nan for t in (0, 1, 2, 3)}
+        dist = {t: _dist_km(lat, lon, gdf[t]) if gdf[t] is not None else nan for t in (0, 1, 2, 3)}
+
+        # Auto rule: prefer the authority (basin0), else the nearest-flowline snap (basin1).
+        # basin2 and basin3 are cross-checks and are deliberately unreachable from here -- they can
+        # only become preferred via the archive or the widget.
+        auto_type = 0 if (_basin0_eligible(uid) and gdf[0] is not None) else 1
 
         if uid in arch_lookup:
             ar = arch_lookup[uid]
             basin_type, basin_name = int(ar["basin_type"]), ar["basin_name"]
             sel_mode, reviewed = ar["selection_mode"], ar["reviewed"]
+            if report_auto and basin_type != auto_type:
+                auto_divergences.append(f"  {uid}: archive=basin{basin_type}  auto_would_pick=basin{auto_type}")
         else:
-            basin_type = 2 if (uid.startswith("USGS-") and gdf[2] is not None) else 1
+            basin_type = auto_type
             basin_name, sel_mode, reviewed = f"{uid}_basin{basin_type}.parquet", "auto", False
 
-        if basin_type in (1, 2, 3):
-            pref_area = area[basin_type]
-        else:
-            p4 = _BASIN_DATA_DIR / basin_name
-            pref_area = float(gpd.read_parquet(p4)["area_km2"].sum()) if p4.exists() else nan
+        pref_area = _preferred_area(basin_type, basin_name, area)
 
-        pt_proj = gpd.GeoDataFrame(geometry=[Point(lon, lat)], crs="EPSG:4326").to_crs(EQUAL_AREA_CRS).geometry.iloc[0]
+        river_da, river_name = _nearby_river(lat, lon, flowlines, fl_sindex)
         existing_dists = [d for d in dist.values() if not math.isnan(d)]
         rows.append(
             dict(
                 site_uid=uid,
                 basin_name=basin_name,
                 basin_type=basin_type,
+                dist_to_0=dist[0],
                 dist_to_1=dist[1],
                 dist_to_2=dist[2],
                 dist_to_3=dist[3],
+                area0=area[0],
                 area1=area[1],
                 area2=area[2],
                 area3=area[3],
                 selection_mode=sel_mode,
                 reviewed=reviewed,
+                river_da_km2=river_da,
+                river_name=river_name,
                 flag_area=(not math.isnan(pref_area)) and pref_area > 50_000,
-                flag_river=pt_proj.distance(rivers_union) < 1_000,
+                # Proximity RISK, not a correctness test -- see RIVER_FLAG_DA_KM2 above.
+                flag_river=(not math.isnan(river_da)) and river_da > RIVER_FLAG_DA_KM2,
                 flag_not_contained=bool(existing_dists) and all(d > 0 for d in existing_dists),
-                flag_basin1_over_basin2=gdf[2] is not None and basin_type == 1,
+                # The authority exists but a human chose the snap over it.
+                flag_basin1_over_basin0=gdf[0] is not None and basin_type == 1,
+                # Both checks are against basin1, the default delineation, and are computed even
+                # when basin0 is preferred: they compare delineation METHODS, so a disagreement is
+                # informative regardless of which basin was selected. NaN-safe -> False.
+                flag_area_mismatch_v2=_area_mismatch(area[1], area[2]),
+                flag_area_mismatch_v3=_area_mismatch(area[1], area[3]),
             )
         )
     df = pd.DataFrame(rows)
     df.to_csv(_PREFERRED_CSV, index=False)
-    n_flagged = df[["flag_area", "flag_river", "flag_not_contained", "flag_basin1_over_basin2"]].any(axis=1).sum()
+    n_flagged = df[FLAG_COLS].any(axis=1).sum()
     print(f"preferred_basin.csv: {len(df)} sites, {n_flagged} flagged.")
+    r = f"{AREA_FLAG_MISMATCH_RATIO:.0%}"
+    print(f"  flag_area_mismatch_v2 (|area2-area1|/area1 > {r}): {int(df.flag_area_mismatch_v2.sum())}")
+    print(f"  flag_area_mismatch_v3 (|area3-area1|/area1 > {r}): {int(df.flag_area_mismatch_v3.sum())}")
+    print(
+        f"  flag_river (river > {RIVER_FLAG_DA_KM2:,} km2 within {RIVER_FLAG_SEARCH_KM} km): {int(df.flag_river.sum())}"
+    )
+    if report_auto:
+        if auto_divergences:
+            print(f"\n{len(auto_divergences)} site(s) where the archive overrides the auto rule:")
+            print("\n".join(auto_divergences))
+        else:
+            print("\nAuto rule agrees with the archive on every site.")
 
 
 def _build_type(uids, coords, basin_type, compute, force=False) -> None:
-    label = {1: "Basin 1 (NLDI position snap)", 2: "Basin 2 (authoritative)", 3: "Basin 3 (D8 raster)"}[basin_type]
+    label = {
+        0: "Basin 0 (NWIS authoritative, USGS only)",
+        1: "Basin 1 (nearest-flowline snap)",
+        2: "Basin 2 (containing catchment)",
+        3: "Basin 3 (D8 raster)",
+    }[basin_type]
     print(f"── {label} — {len(uids)} sites ──")
     ok = skip = fail = 0
     for i, uid in enumerate(uids, 1):
@@ -473,45 +565,66 @@ def _build_type(uids, coords, basin_type, compute, force=False) -> None:
     print(f"Basin{basin_type}: {ok} saved, {skip} skipped, {fail} failed.\n")
 
 
-def main(api_keys=None, force=False, usgs_only=False, iwqis_only=False, recalculate=False) -> None:
+def main(api_keys=None, force=False, usgs_only=False, wqs_only=False, recalculate=False, report_auto=False) -> None:
     _BASIN_DATA_DIR.mkdir(parents=True, exist_ok=True)
     _META_DIR.mkdir(parents=True, exist_ok=True)
 
     meta = pd.read_csv(_metadata_path())
     coords = meta.set_index("site_uid")[["latitude", "longitude"]].to_dict("index")
 
+    # Operator-reported drainage area (sq mi -> km2) refines the basin1 snap for known sites; absent
+    # for a deploy-path map pin, so the two paths agree wherever no area exists.
+    KM2_PER_SQMI = 2.58999
+    reported_area = {
+        uid: (float(a) * KM2_PER_SQMI if pd.notna(a) else None)
+        for uid, a in meta.set_index("site_uid").get("drainage_area", pd.Series(dtype=float)).items()
+    }
+
     all_uids = sorted(meta["site_uid"])
-    if iwqis_only:
+    if wqs_only:
         uids = [u for u in all_uids if u.startswith("WQS")]
     elif usgs_only:
         uids = [u for u in all_uids if u.startswith("USGS-")]
     else:
         uids = all_uids
 
-    print("Will attempt to build basin1, basin2 and basin3 for all sites.")
-    print("  - basin1: get nearest USGS basin")
-    print("  - basin2: lookup by site_uid (DOES NOT EXIST FOR ALL SITES)")
-    print("  - basin3: build basin from D8 tif")
+    # basin0 is USGS-only regardless of the CLI filters. Belt and braces with _compute_basin0's
+    # None return, so a non-USGS basin0 parquet cannot be written even under --force.
+    usgs_uids = [u for u in uids if _basin0_eligible(u)]
+
+    flowlines = _load_flowlines()
+    if flowlines is None:
+        raise RuntimeError(
+            "basin1 (nearest-flowline snap) needs processed/map_overlays/iowa_flowlines.parquet.\n"
+            "Run `python -m src.build._make_map_overlays` first. Refusing to fall back to the\n"
+            "containing-catchment method, which is the delineation bug this snap exists to fix."
+        )
+    sindex = flowlines.sindex
+
+    print(f"Building basins for {len(uids)} site(s).")
+    print(f"  - basin0: NLDI nwissite, authoritative (USGS only -- {len(usgs_uids)} site(s))")
+    print("  - basin1: nearest-flowline snap (all sites; THE DEFAULT)")
+    print("  - basin2: NLDI containing catchment (all sites; cross-check, never auto-selected)")
+    print("  - basin3: D8 raster flood-fill (all sites; cross-check, never auto-selected)")
     direction = d8.load_direction_array()
-    station_df = None
-    if not usgs_only:
-        print("Fetching IWQIS station registry...")
-        station_df = _load_iwqis_station_list()
 
-    # basin3 first (used by basin2 IWQIS validation), then basin1, basin2
+    _build_type(usgs_uids, coords, 0, lambda uid, lat, lon: _compute_basin0(uid, lat, lon), force=force)
+    _build_type(
+        uids,
+        coords,
+        1,
+        lambda uid, lat, lon: _compute_basin1(uid, lat, lon, flowlines, sindex, reported_area.get(uid)),
+        force=force,
+    )
+    _build_type(uids, coords, 2, lambda uid, lat, lon: _compute_basin2(uid, lat, lon), force=force)
     _build_type(uids, coords, 3, lambda uid, lat, lon: _compute_basin3(uid, lat, lon, direction), force=force)
-    _build_type(uids, coords, 1, lambda uid, lat, lon: _compute_basin1(uid, lat, lon), force=force)
-
-    def _b2(uid, lat, lon):
-        v3 = _BASIN_DATA_DIR / f"{uid}_basin3.parquet"
-        v3_area = float(gpd.read_parquet(v3)["area_km2"].iloc[0]) if v3.exists() else None
-        return _compute_basin2(uid, lat, lon, station_df, v3_area)
-
-    _build_type(uids, coords, 2, _b2, force=force)
 
     print("── Building preferred_basin.csv ──")
     archive = pd.read_csv(_ARCHIVE_CSV) if (_ARCHIVE_CSV.exists() and not recalculate) else None
-    _build_preferred_csv(meta, _load_river_geometry(), archive=archive)
+    if archive is None:
+        print("  Hard reset: archive ignored, every site re-picked by the auto rule (basin0/basin1).")
+        print("  Any basin2/basin3/basin4 selection is dropped -- re-review, then refresh the archive.")
+    _build_preferred_csv(meta, flowlines, archive=archive, report_auto=report_auto)
 
 
 if __name__ == "__main__":
@@ -519,11 +632,23 @@ if __name__ == "__main__":
     parser.add_argument("--force", action="store_true", help="Rewrite existing parquets.")
     parser.add_argument("--recalculate", action="store_true", help="Recompute all, ignoring the archive.")
     parser.add_argument("--usgs-only", action="store_true")
-    parser.add_argument("--iwqis-only", action="store_true")
+    parser.add_argument(
+        "--wqs-only",
+        "--iwqis-only",
+        dest="wqs_only",
+        action="store_true",
+        help="Build only WQS sites. --iwqis-only is a deprecated alias.",
+    )
+    parser.add_argument(
+        "--report-auto",
+        action="store_true",
+        help="Print sites where the archive overrides what the auto rule would pick.",
+    )
     args = parser.parse_args()
     main(
         force=args.force or args.recalculate,
         recalculate=args.recalculate,
         usgs_only=args.usgs_only,
-        iwqis_only=args.iwqis_only,
+        wqs_only=args.wqs_only,
+        report_auto=args.report_auto,
     )

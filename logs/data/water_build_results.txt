@@ -1,0 +1,13 @@
+=== Water build ===
+
+[1] Candidates
+  166 candidates: 26 USGS + 140 IWQIS (WQS####)
+  groundwater-flagged: 5 (USGS-415959091441301, WQS0029, WQS0030, WQS0031, WQS9931)
+
+[3] Filter
+  USGS candidates: 26; with data (on disk): 24; no data: ['USGS-05420500', 'USGS-05474500']
+  IWQIS candidates: 140; passing sparsity/lifespan: 67
+  excluded (known_bad/big_basin): ['WQS0020', 'WQS0075', 'WQS0088', 'WQS0091', 'WQS0113', 'WQS9901']
+  excluded (groundwater): ['USGS-415959091441301', 'WQS0031']
+  pruned parquets: 76
+  KEPT: 83 = 23 USGS + 60 IWQIS

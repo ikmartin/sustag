@@ -5,7 +5,6 @@ from pathlib import Path
 
 import geopandas as gpd
 import pandas as pd
-import requests
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # repo root on path
 from src.data import access
@@ -13,27 +12,32 @@ from src.data.access import SiteData
 
 TARGET_YEAR = 2017
 _BUFFER = pd.DateOffset(months=2)  # weather lead-in/out for trailing rolling/lag features
-_NLDI_BASE = "https://api.water.usgs.gov/nldi/linked-data"
+
+_FLOWLINES = None
+
+
+def _flowlines():
+    global _FLOWLINES
+    if _FLOWLINES is None:
+        from src.build._make_basins import _load_flowlines
+
+        _FLOWLINES = _load_flowlines()
+        if _FLOWLINES is None:
+            raise RuntimeError("NHD flowlines layer missing; run `python -m src.build._make_map_overlays`.")
+    return _FLOWLINES
 
 
 def delineate_basin_for_pin(lat: float, lon: float, timeout: int = 60) -> gpd.GeoDataFrame:
-    """Upstream NLDI basin polygon for an arbitrary (lat, lon). Two requests: resolve the pin to the enclosing NHDPlus COMID, then fetch its upstream basin. Raises ValueError off-network."""
-    pos = requests.get(
-        f"{_NLDI_BASE}/comid/position", params={"coords": f"POINT({lon} {lat})", "f": "json"}, timeout=timeout
-    )
-    pos.raise_for_status()
-    feats = pos.json().get("features", [])
-    if not feats:
-        raise ValueError(f"No NHDPlus catchment near ({lat}, {lon}); off-network or outside CONUS.")
-    comid = feats[0]["properties"]["comid"]
-    resp = requests.get(
-        f"{_NLDI_BASE}/comid/{comid}/basin", params={"f": "json", "simplified": "true"}, timeout=timeout
-    )
-    resp.raise_for_status()
-    gdf = gpd.GeoDataFrame.from_features(resp.json()["features"], crs="EPSG:4326")
-    if gdf.empty:
-        raise ValueError(f"NLDI returned an empty basin for COMID {comid}.")
-    return gdf
+    """Upstream basin for an arbitrary (lat, lon), delineated by the SAME nearest-flowline snap as
+    training sites (not /comid/position, which mis-snaps mainstem pins to a neighbouring tributary).
+
+    Returns `[site_uid, comid, area_km2, geometry]` carrying the authoritative COMID -- required for
+    the COMID-keyed static features (features._basin_comid). No reported area at a pin, so pure
+    nearest. Raises ValueError outside the flowlines extent (no silent lateral-snap fallback).
+    """
+    from src.build._make_basins import _compute_basin1
+
+    return _compute_basin1("pin", lat, lon, flowlines=_flowlines(), timeout=timeout)
 
 
 def build_virtual_basin(lat: float, lon: float, target_year: int = TARGET_YEAR, timeout: int = 60) -> SiteData:

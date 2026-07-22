@@ -1,0 +1,110 @@
+{
+  "n_sites": 80,
+  "n_pairs": 2456,
+  "raw": {
+    "connected": {
+      "n": 548,
+      "mean": 0.5785,
+      "median": 0.624
+    },
+    "disconnected": {
+      "n": 1908,
+      "mean": 0.4837,
+      "median": 0.5272
+    },
+    "excess_mean": 0.0948
+  },
+  "resid": {
+    "connected": {
+      "n": 548,
+      "mean": 0.0686,
+      "median": 0.0458
+    },
+    "disconnected": {
+      "n": 1908,
+      "mean": 0.0087,
+      "median": -0.0042
+    },
+    "excess_mean": 0.0599
+  },
+  "by_hop_resid_excess": {
+    "1": 0.2099,
+    "2": 0.0044
+  },
+  "by_hop": {
+    "1": {
+      "raw": {
+        "n": 148,
+        "mean": 0.682,
+        "median": 0.7162
+      },
+      "resid": {
+        "n": 148,
+        "mean": 0.2186,
+        "median": 0.1586
+      }
+    },
+    "2": {
+      "raw": {
+        "n": 400,
+        "mean": 0.5401,
+        "median": 0.5873
+      },
+      "resid": {
+        "n": 400,
+        "mean": 0.0131,
+        "median": -0.0025
+      }
+    }
+  },
+  "distance_matched": {
+    "0-25": {
+      "conn_resid_mean": 0.3709,
+      "disc_resid_mean": 0.6425,
+      "conn_raw_mean": 0.6709,
+      "disc_raw_mean": 0.6365,
+      "n_conn": 54,
+      "n_disc": 8
+    },
+    "25-50": {
+      "conn_resid_mean": 0.1996,
+      "disc_resid_mean": 0.3084,
+      "conn_raw_mean": 0.6154,
+      "disc_raw_mean": 0.5707,
+      "n_conn": 74,
+      "n_disc": 38
+    },
+    "50-100": {
+      "conn_resid_mean": 0.081,
+      "disc_resid_mean": 0.1555,
+      "conn_raw_mean": 0.5917,
+      "disc_raw_mean": 0.5954,
+      "n_conn": 149,
+      "n_disc": 174
+    },
+    "100-150": {
+      "conn_resid_mean": -0.0125,
+      "disc_resid_mean": 0.0928,
+      "conn_raw_mean": 0.5472,
+      "disc_raw_mean": 0.5157,
+      "n_conn": 136,
+      "n_disc": 375
+    },
+    "150-250": {
+      "conn_resid_mean": -0.0616,
+      "disc_resid_mean": -0.0945,
+      "conn_raw_mean": 0.533,
+      "disc_raw_mean": 0.4727,
+      "n_conn": 125,
+      "n_disc": 689
+    },
+    "250+": {
+      "conn_resid_mean": 0.0151,
+      "disc_resid_mean": 0.0049,
+      "conn_raw_mean": 0.6023,
+      "disc_raw_mean": 0.4383,
+      "n_conn": 10,
+      "n_disc": 624
+    }
+  }
+}

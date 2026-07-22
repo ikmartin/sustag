@@ -235,14 +235,27 @@ def params_from_meta(site_id: str, meta) -> int:
     return max(1, sub["parameter_code"].nunique())
 
 
-def main(api_keys, extra_filter=None):
-    """Build the USGS data site by site (incremental). api_keys must contain 'usgs' (a PAT)."""
+def main(api_keys):
+    """Build the USGS data site by site (incremental). api_keys must contain 'usgs' (a PAT).
+
+    STEP 2a of the water build. Filtering was extracted to filter_sites.py, with a deliberate
+    exception kept here: the big_basin and groundwater USGS sites are excluded from the FETCH rather
+    than pulled-then-pruned, to avoid wasteful network + parquet churn (a redesign can re-centralize
+    this later). filter_sites still drops both categories independently.
+    """
     import os
 
-    extra_filter = extra_filter or []
+    from src.build.config import get_config
+
     os.environ["API_USGS_PAT"] = api_keys["usgs"]
 
-    site_list = _load_usgs_site_list()
+    # Skip sites we know we won't keep, at fetch time (the filters that stay here -- see docstring):
+    #   big_basin   -- oversized basins removed by filter_sites
+    #   groundwater -- karst/well sites with no surface basin (also caught by is_groundwater)
+    sf = get_config()["site_filters"]
+    skip = {u for u in (sf["big_basin"] + sf.get("groundwater", [])) if u.startswith("USGS-")}
+    site_list = [u for u in _load_usgs_site_list() if u not in skip]
+
     try:
         meta = pd.read_csv(_metadata_file(), dtype={"parameter_code": str})
         if set(meta["monitoring_location_id"].unique()) != set(site_list):
@@ -251,10 +264,7 @@ def main(api_keys, extra_filter=None):
         meta = generate_metadata()
 
     print(f"\n{meta.monitoring_location_id.nunique()} sites in metadata\n")
-    site_ids = (
-        meta[meta["monitoring_location_id"].isin(site_list) & ~meta["monitoring_location_id"].isin(extra_filter)]
-        ["monitoring_location_id"].unique().tolist()
-    )
+    site_ids = meta[meta["monitoring_location_id"].isin(site_list)]["monitoring_location_id"].unique().tolist()
 
     completed = []
     for site_id in site_ids:

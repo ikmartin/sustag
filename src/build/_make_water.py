@@ -6,7 +6,7 @@ orchestrates the two sources and the combiner:
 
     usgs   (network, dataretrieval)     -> processed/water/data/USGS-*.parquet + usgs metadata
     iwqis  (offline chunk reassembly)   -> processed/water/data/WQS*.parquet  + iwqis metadata
-    site_locations (combine)            -> processed/water/meta/site_location_metadata.csv
+    site_metadata (combine)             -> processed/water/meta/site_location_metadata.csv
     gen_statistics                      -> processed/water/meta/site_statistics.csv
 
 The per-site parquets under processed/water are the DURABLE source of truth (IWQIS is not
@@ -28,8 +28,7 @@ _THIS_DIR = Path(__file__).resolve().parent  # src/build/
 _SRC = _THIS_DIR.parent  # src/
 sys.path.insert(0, str(_SRC.parent))  # repo root on path
 
-from src.build.config import get_config
-from src.build.util import iwqis, site_locations, usgs
+from src.build.util import filter_sites, iwqis, site_metadata, usgs
 from src.build.util._water_paths import meta_dir
 
 
@@ -58,19 +57,22 @@ def gen_statistics() -> pd.DataFrame:
 
 
 def main(api_keys=None, force: bool = False) -> None:
+    """Water build chain: metadata -> usgs+iwqis -> filter -> stats.
+
+    1. site_metadata builds the candidate universe (site_candidates.csv) off direct sources.
+    2. usgs + iwqis pull nitrate for candidates (no filtering).
+    3. filter_sites narrows to the kept set, writes the contract site_location_metadata.csv, prunes.
+    4. gen_statistics summarises the kept parquets.
+    """
     if api_keys is None:
         api_keys = get_api_keys()
 
-    cfg = get_config()
-    all_filtered = cfg["site_filters"]["known_bad"] + cfg["site_filters"]["big_basin"]
-    usgs_filter = [uid for uid in all_filtered if uid.startswith("USGS")]
-    iwqis_filter = [uid for uid in all_filtered if uid.startswith("WQ")]
+    site_metadata.build_candidates(force=force)  # 1
+    usgs.main(api_keys)  # 2a
+    iwqis.main(api_keys)  # 2b
+    filter_sites.filter_final()  # 3  -- writes site_location_metadata.csv, prunes, clears cache
 
-    usgs.main(api_keys, extra_filter=usgs_filter)
-    iwqis.main(api_keys, extra_filter=iwqis_filter)
-    site_locations.create_site_locations()
-
-    stats = gen_statistics()
+    stats = gen_statistics()  # 4
     stats_path = meta_dir() / "site_statistics.csv"
     stats.to_csv(stats_path, index=False)
     print(f"Saved site statistics to {stats_path}")
