@@ -24,7 +24,6 @@ import matplotlib.pyplot as plt
 
 from src.eval.cook import compare_many, FAST_XGB, _pool, _features, _target, _grouped_models, basin_groups
 from src.features.recipes import recipe_REG, recipe_CLF  # noqa: F401  (re-exported for the notebook)
-from src.features.recipes import _rolling_weather, _weather_windows
 from src.data.access import get_site_ids
 from src.features.features import (
     daily_nitrate,

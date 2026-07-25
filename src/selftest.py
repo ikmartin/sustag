@@ -177,8 +177,8 @@ def test_features() -> Result:
             has = (
                 len(fr) > 0
                 and {"date", "doy_sin", "doy_cos"} <= cols
-                and any(c.startswith("precip_in_1d") for c in cols)  # weather family
-                and any("Corn" in c for c in cols)  # crop family
+                and any(c.startswith("fuel_moisture_1000h") for c in cols)  # weather family (the one live weather var)
+                and (task != "reg" or any("Corn" in c for c in cols))  # crop family (REG only; CLF drops crops)
                 and any(c.startswith("rest_of_state_nitrate_lag") for c in cols)  # neighbour
             )
             if not has:

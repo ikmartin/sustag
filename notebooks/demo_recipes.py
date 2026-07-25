@@ -29,7 +29,6 @@ from src.features.features import (
     site_static,
 )
 
-from src.features.recipes import _rolling_weather, _weather_windows
 from src.data.access import get_site_ids
 
 from functools import lru_cache
@@ -110,7 +109,7 @@ def preet_recipe(site, lam: int = PREET_LAM, roll_window: int = PREET_ROLL_WINDO
     cb = flatten_buckets(agg_crops(**kw, edges=(), lam=lam, exp=True))
     sb = flatten_buckets(agg_surplus(**kw, edges=(), lam=lam, exp=True))
     doy = doy_climatology_pure_signal(n)
-    feats = [wb, cb, sb, doy, *_rolling_weather(wb, _weather_windows(roll_window))]
+    feats = [wb, cb, sb, doy]  # rolling-weather ladder removed (exp6 showed lagged/rolling weather adds nothing)
     target = nitrate_violations_rolling(**kw, window=1, min_obs=1).rename("violation")
     frame = merge_on_date([target, *feats], spine=n.index)
     for k, v in site_static(**kw).items():

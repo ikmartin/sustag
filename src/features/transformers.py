@@ -110,13 +110,21 @@ def _agg_dicts(land_use_func, weather_func):
     w_dict = {
         # weather columns
         "precip_in_1d": weather_func,
+        "precip_gridmet": weather_func,
         "max_temp": weather_func,
         "min_temp": weather_func,
         "max_rel_humidity": weather_func,
         "min_rel_humidity": weather_func,
+        "specific_humidity": weather_func,
         "vpd": weather_func,
         "solar_rad": weather_func,
+        "wind_speed": weather_func,
+        "wind_direction": weather_func,
         "evapotranspiration": weather_func,
+        "ref_et_alfalfa": weather_func,
+        "burning_index": weather_func,
+        "energy_release": weather_func,
+        "fuel_moisture_100h": weather_func,
         "fuel_moisture_1000h": weather_func,
     }
 
@@ -151,20 +159,6 @@ def _exp_curry(site_data, lam):
     return _exp_decay_weighting
 
 
-def _exp_curry_norm(site_data, lam):
-    """Aggregator: distance-decay-weighted mean (the normalised `_exp_curry`)."""
-    grid = site_data.grid
-    cell_w = pd.Series(
-        grid.frac_cell_in_basin.values * np.exp(-grid.dist_to_sensor.values / lam),
-        index=grid.node_id,
-    )
-
-    def _exp_decay_weighting(values):
-        return float(np.average(values, weights=cell_w.loc[values.index]))
-
-    return _exp_decay_weighting
-
-
 def _standard_agg_dicts(site_data):
     """Agg dicts: plain sum for land-use, basin-area-weighted mean for weather."""
     func1 = sum
@@ -173,15 +167,11 @@ def _standard_agg_dicts(site_data):
     return _agg_dicts(func1, func2)
 
 
-def _exp_decay_agg_dicts(site_data, lam, normalize=False):
-    """Agg dicts using exp distance-decay weights (`lam`): normalize -> mean, else sum."""
+def _exp_decay_agg_dicts(site_data, lam):
+    """Agg dicts using exp distance-decay-weighted sums (`lam`). (The normalized-mean variant was
+    dropped -- exp9/10 found it no better than the sum.)"""
     sumfunc = _exp_curry(site_data=site_data, lam=lam)
-    avgfunc = _exp_curry_norm(site_data=site_data, lam=lam)
-
-    if normalize:
-        return _agg_dicts(avgfunc, avgfunc)
-    else:
-        return _agg_dicts(sumfunc, sumfunc)
+    return _agg_dicts(sumfunc, sumfunc)
 
 
 def flatten_buckets(df, bucket_col="bucket", value_cols=None):

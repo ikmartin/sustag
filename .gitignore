@@ -1,5 +1,4 @@
 # Data artifacts live under src/data/ but must never be committed (large / regenerable).
-# keep the raw water folder, needed
 src/data/raw/basins
 src/data/raw/crops
 src/data/raw/surplus

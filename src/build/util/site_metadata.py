@@ -194,14 +194,12 @@ def _site_clean() -> pd.DataFrame:
 
 
 def _usgs_candidate_ids() -> list[str]:
-    """USGS candidates = the curated USGS_SITE_LIST. Kept in usgs.py (tied to its pcode/QA logic),
-    imported here so there is one source of truth. Filtering to the kept set is filter_sites.py."""
+    """USGS candidates = the curated USGS_SITE_LIST. Kept in usgs.py (tied to its pcode/QA logic), imported here so there is one source of truth. Filtering to the kept set is filter_sites.py."""
     return sorted(USGS_SITE_LIST)
 
 
 def _iwqis_candidate_ids(clean: pd.DataFrame) -> list[str]:
-    """IWQIS candidates = registry uids matching WQS\\d+ (drops junk: JIMTEST, UNKNOWN, bare numeric,
-    USGS-station duplicates). Quality filtering (sparsity/lifespan) is filter_sites.py."""
+    """IWQIS candidates = registry uids matching WQS\\d+ (drops junk: JIMTEST, UNKNOWN, bare numeric, USGS-station duplicates). Quality filtering is filter_sites.py."""
     return sorted(clean.loc[clean["uid"].str.match(r"WQS\d+", na=False), "uid"].unique())
 
 

@@ -15,7 +15,6 @@ Spatial covariate aggregates (per site, binned by each cell's distance to the se
 
 Antecedent-weather integrators (basin-wide rolling sums; capture catchment wetness)
   rolling_precip(site, windows)    Antecedent precipitation index: trailing rolling sum of basin-mean daily precip.
-  water_balance(site, windows)     Trailing rolling sum of basin-mean (precip - PET) in mm: a PDSI-lite wetness/drought integrator.
 
 Static & neighbour features
   site_static(site)                Time-invariant site descriptors: sensor lat/lon, log basin area, cell-distance spread.
@@ -30,6 +29,11 @@ import pandas as pd
 import numpy as np
 from functools import lru_cache
 from pathlib import Path
+
+import sys
+
+_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(_ROOT))  # repo root on path
 
 from src.data.access import get_data, get_water, get_weather, get_site_ids
 from src.features.transformers import (
@@ -64,45 +68,121 @@ def _uid_or_data(impl, loader, pick, site_uid, site_data, **kw):
     return _uid_cache(impl, loader, site_uid, tuple(sorted(kw.items())))
 
 
-def _agg_covariate(slot, attr, keys, site_uid, site_data, edges, lam, normalize, exp):
-    """Aggregate one covariate frame (`d.<attr>`) to (`keys`, bucket). `slot` selects the crops/
-    surplus/weather column dict; `exp` -> distance-decay weights, else the standard (sum / area-mean)."""
+def _agg_covariate(slot, attr, keys, site_uid, site_data, edges, lam, exp):
+    """Aggregate one covariate frame (`d.<attr>`) to (`keys`, bucket). `slot` selects the crops/surplus/weather column dict; `exp` -> distance-decay weights, else the standard (sum / area-mean)."""
     d = _resolve_data(site_data=site_data, site_uid=site_uid)
-    dicts = _exp_decay_agg_dicts(site_data=d, lam=lam, normalize=normalize) if exp else _standard_agg_dicts(site_data=d)
+    dicts = _exp_decay_agg_dicts(site_data=d, lam=lam) if exp else _standard_agg_dicts(site_data=d)
     mapping = _bucket_map(site_data=d, edges=edges)
     return agg_grid_to_buckets(getattr(d, attr), mapping, keys=keys, col_agg=dicts[slot])
 
 
-def agg_crops(site_uid="", site_data=None, edges=_DEFAULT_DIST_EDGES_M, lam=10_000, normalize=False, exp=False):
+def _bucket_mean_intensity(site_uid, site_data, edges):
+    """Per-(year, bucket) basin-membership-weighted MEAN of surplus_kgha (kg N/ha): Sum(surplus_kgha *
+    frac) / Sum(frac) over the cells mapped to that bucket. surplus_kgha is already an intensity, so
+    its size-invariant aggregation is a weighted MEAN of it, NOT a sum (a sum scales with basin size).
+    Each cell is weighted by its basin-membership fraction (partial edge cells count partially).
+    Returns [year(, bucket), surplus_kgha]; a single bucket (edges=()) drops the bucket column to
+    match agg_surplus. Empty bucket -> NaN."""
+    d = _resolve_data(site_data=site_data, site_uid=site_uid)
+    mapping = _bucket_map(site_data=d, edges=edges)  # node_id -> bucket (categorical)
+    frac = pd.Series(d.grid.frac_cell_in_basin.values, index=d.grid.node_id)
+    s = d.surplus[["node_id", "year", "surplus_kgha"]]
+    nid = s["node_id"].to_numpy()
+    w = frac.loc[nid].to_numpy()  # basin-membership weight per (cell, year) row
+    agg = pd.DataFrame(
+        {
+            "year": s["year"].to_numpy(),
+            "_wsum": s["surplus_kgha"].to_numpy() * w,  # intensity weighted by membership
+            "_w": w,
+        }
+    )
+    keys = ["year"]
+    if mapping.cat.categories.size > 1:
+        agg["bucket"] = mapping.loc[nid].to_numpy()
+        keys = ["year", "bucket"]
+    g = agg.groupby(keys, observed=True)[["_wsum", "_w"]].sum()
+    g["surplus_kgha"] = g["_wsum"] / g["_w"].where(g["_w"] > 0)
+    return g.reset_index()[keys + ["surplus_kgha"]]
+
+
+def agg_crops(site_uid="", site_data=None, edges=_DEFAULT_DIST_EDGES_M, lam=10_000, exp=True):
     """Annual crop areas aggregated to (year, bucket). `exp` -> distance-decay weights, else sum."""
-    return _agg_covariate(0, "crops", ["year"], site_uid, site_data, edges, lam, normalize, exp)
+    return _agg_covariate(0, "crops", ["year"], site_uid, site_data, edges, lam, exp)
 
 
-def agg_surplus(site_uid="", site_data=None, edges=_DEFAULT_DIST_EDGES_M, lam=10_000, normalize=False, exp=False):
+def agg_crops_normalized(site_uid="", site_data=None, edges=_DEFAULT_DIST_EDGES_M):
+    """agg_crops as land-cover COMPOSITION shares: each class divided by the total over all classes
+    in its (year, bucket), so every column becomes a fraction in [0, 1] (the classes sum to 1 per
+    bucket) -- a size-invariant crop MIX. Columns are renamed `pct_<class>` (lower-cased), so after
+    flatten_buckets they read pct_corn_b0, pct_soybeans_b2, ...  A bucket with no crop pixels -> NaN.
+    Always a plain pixel-count composition -- no exp/lam distance weighting."""
+    frame = agg_crops(site_uid, site_data, edges, exp=False)  # plain pixel-count sum, no exp weighting
+    val_cols = [c for c in frame.columns if c not in ("year", "bucket")]
+    total = frame[val_cols].sum(axis=1)
+    out = frame.copy()
+    out[val_cols] = frame[val_cols].div(total.where(total != 0), axis=0)  # NaN where the bucket is crop-empty
+    return out.rename(columns={c: f"pct_{c.lower()}" for c in val_cols})
+
+
+def agg_surplus(site_uid="", site_data=None, edges=_DEFAULT_DIST_EDGES_M, lam=10_000, exp=True):
     """Annual N surplus aggregated to (year, bucket). `exp` -> distance-decay weights, else sum."""
-    return _agg_covariate(1, "surplus", ["year"], site_uid, site_data, edges, lam, normalize, exp)
+    return _agg_covariate(1, "surplus", ["year"], site_uid, site_data, edges, lam, exp)
 
 
-def agg_weather(site_uid="", site_data=None, edges=_DEFAULT_DIST_EDGES_M, lam=10_000, normalize=False, exp=False):
+def agg_surplus_normalized(site_uid="", site_data=None, edges=_DEFAULT_DIST_EDGES_M):
+    """Per-bucket area-weighted MEAN N-surplus intensity (kg N/ha): each distance ring's total N mass
+    / its area (surplus_kgha_b0 = mass in b0 / area of b0). surplus_kgha is an intensity, so its
+    size-invariant normalization is a MEAN, not a sum-over-cells / area (the old form mismatched units
+    and left a residual basin-size correlation). Output column: surplus_kgha. No exp/lam distance
+    weighting -- a mean is already scale-free."""
+    return _bucket_mean_intensity(site_uid, site_data, edges)
+
+
+def agg_weather(site_uid="", site_data=None, edges=_DEFAULT_DIST_EDGES_M, lam=10_000, exp=True):
     """Daily weather aggregated to (date, bucket) by area-weighted mean (or exp-decay if `exp`)."""
-    return _agg_covariate(2, "weather", ["date"], site_uid, site_data, edges, lam, normalize, exp)
+    return _agg_covariate(2, "weather", ["date"], site_uid, site_data, edges, lam, exp)
 
 
 def agg_weather_w_lag(
-    site_uid="",
-    site_data=None,
-    edges=_DEFAULT_DIST_EDGES_M,
-    lam=10_000,
-    normalize=False,
-    exp=False,
-    water_velocity=_VEL,
+    site_uid="", site_data=None, edges=_DEFAULT_DIST_EDGES_M, lam=10_000, exp=False, water_velocity=_VEL
 ):
     """`agg_weather` with each bucket shifted back by its travel-time lag (see bucket_lags)."""
     d = _resolve_data(site_data=site_data, site_uid=site_uid)
-    wb = agg_weather(site_data=d, edges=edges, lam=lam, normalize=normalize, exp=exp)
+    wb = agg_weather(site_data=d, edges=edges, lam=lam, exp=exp)
     lags = bucket_lags(site_data=d, water_velocity=water_velocity, edges=edges)
     wb = lag_buckets(wb, lags, date_col="date", bucket_col="bucket")
     return wb
+
+
+def agg_weather_normalized(site_uid="", site_data=None, wcols=None, edges=_DEFAULT_DIST_EDGES_M):
+    if wcols is None:
+        raise ValueError("You must pass a specified list of weather value columns to wcols!")
+
+    # get the data and the mapping
+    d = _resolve_data(site_data=site_data, site_uid=site_uid)
+    mapping = _bucket_map(site_data=d, edges=edges)
+    frac = pd.Series(d.grid["frac_cell_in_basin"].values, index=d.grid["node_id"])
+    area = pd.Series(d.grid["cell_area"].values / 1e4, index=d.grid["node_id"]) * frac  # area of cell in basin in ha
+    nid = d.weather["node_id"].to_numpy()
+
+    # ['date', 'node_id', 'global_node_id', 'precip_in_1d', 'precip_gridmet', 'max_temp', 'min_temp', 'max_rel_humidity', 'min_rel_humidity', 'specific_humidity', 'vpd', 'solar_rad', 'wind_speed', 'wind_direction', 'evapotranspiration', 'ref_et_alfalfa', 'burning_index', 'energy_release', 'fuel_moisture_100h', 'fuel_moisture_1000h']
+    # build the intermediate aggregating dataframe
+
+    dct = {col + "_mass": d.weather[col].to_numpy() * frac.loc[nid].to_numpy() for col in wcols}
+    dct["date"] = d.weather["date"]
+    agg = pd.DataFrame(dct)
+    temp_cols = [col + "_mass" for col in wcols]
+
+    keys = ["date"]
+    if mapping.cat.categories.size > 1:
+        agg["bucket"] = mapping.loc[nid].to_numpy()  # get bucket ids
+        keys += ["bucket"]
+
+    g = agg.groupby(keys, observed=True)[temp_cols].mean()
+    for col, temp in zip(wcols, temp_cols):
+        print(g.area)
+        g[col] = g[temp] / g["area"].where(g["area"] > 0)
+    return g.reset_index()[keys + wcols]
 
 
 # ── antecedent-weather integrators (basin-wide rolling sums) ──────────────────
@@ -148,24 +228,6 @@ def rolling_nitrate_avg_except_this(site_to_exclude, windows=(14, 30, 60)):
     return pd.concat(cols, axis=1)
 
 
-def water_balance(site_uid="", site_data=None, windows=(30, 60)):
-    """Antecedent water balance: trailing rolling SUM of basin-mean (precip - PET), in mm.
-
-    Precip (inches) is converted to mm and reference ET (already mm) subtracted, so each day
-    is net water input (+) or loss (-); the rolling sum over the `w` days ending at t is the
-    running catchment surplus/deficit -- a hand-rolled drought/wetness integrator from the
-    columns we already have (a PDSI-lite). Positive = net wetting, negative = net drying.
-
-    Both inputs are exogenous, so today is not leakage. Returns a date-indexed DataFrame, one
-    column per window: 'wbal_roll{w}d'. Accepts a site_uid or a site_data (the basin-daily-
-    weather step is cached on the site_uid path); treat as read-only.
-    """
-    daily = _basin_daily_weather(site_uid=site_uid, site_data=site_data)
-    bal = daily["precip_in_1d"] * 25.4 - daily["evapotranspiration"]  # inches -> mm, minus PET (mm)
-    cols = {f"wbal_roll{w}d": bal.rolling(f"{w}D", min_periods=1).sum() for w in windows}
-    return pd.concat(cols, axis=1)
-
-
 def _daily_nitrate_impl(water, agg_meth="max"):
     # water only -> read the water parquet directly (get_data(uid).water == get_water(uid)) instead of
     # building the whole SiteData (basin/grid/crops/surplus/weather). Big speed-up everywhere.
@@ -197,7 +259,9 @@ def nitrate_daily_rolling(site_uid="", site_data=None, window=7, min_obs=1, agg_
     keeps the most rows but trusts a single day to stand in for the whole window; raise it
     (e.g. 3-4 of 7) for max estimates backed by more coverage.
     """
-    daily = daily_nitrate(site_uid=site_uid, site_data=site_data, agg_meth=agg_meth).asfreq("D")  # contiguous daily index
+    daily = daily_nitrate(site_uid=site_uid, site_data=site_data, agg_meth=agg_meth).asfreq(
+        "D"
+    )  # contiguous daily index
     n_obs = daily.notna().rolling(window, min_periods=1).sum()
     rolled = daily.rolling(window, min_periods=1).max()  # max skips NaN days
     rolled[n_obs < min_obs] = np.nan  # too few observed days -> undecidable
@@ -237,7 +301,9 @@ def nitrate_violations_rolling(site_uid="", site_data=None, window=7, threshold=
     Note: (daily >= threshold) maps NaN days to False, so missing days are masked via
     notna() and never silently counted as non-violations.
     """
-    daily = daily_nitrate(site_uid=site_uid, site_data=site_data, agg_meth=agg_meth).asfreq("D")  # contiguous daily index
+    daily = daily_nitrate(site_uid=site_uid, site_data=site_data, agg_meth=agg_meth).asfreq(
+        "D"
+    )  # contiguous daily index
     obs = daily.notna()
     viol_day = (daily >= threshold) & obs  # True only on OBSERVED violation days
     n_obs = obs.rolling(window, min_periods=1).sum()
@@ -399,16 +465,20 @@ def nitrate_avg_except_this(site_to_exclude, shift=0, force=False):
 def doy_climatology_pure_signal(s):
     """Cyclical (Fourier) calendar encodings of day-of-year.
 
-    Returns sin/cos of the day-of-year angle, which encode where in the annual
-    cycle each timestamp falls in a smooth, wrap-around way (Dec 31 ~ Jan 1). Uses
-    *only the dates* -- never the nitrate values -- so it is completely leakage-free;
-    the model learns the seasonal shape from these two features itself.
+    Returns sin/cos of the day-of-year angle at the fundamental annual frequency plus its first
+    harmonic (twice the frequency, the second Fourier term), which together encode where in the
+    annual cycle each timestamp falls in a smooth, wrap-around way (Dec 31 ~ Jan 1). The harmonic
+    lets the model represent a non-sinusoidal seasonal shape (e.g. a sharp spring peak). Uses
+    *only the dates* -- never the nitrate values -- so it is completely leakage-free.
     """
     doy = s.index.dayofyear
+    ang = 2 * np.pi * doy / 365.25
     return pd.DataFrame(
         {
-            "doy_sin": np.sin(2 * np.pi * doy / 365.25),
-            "doy_cos": np.cos(2 * np.pi * doy / 365.25),
+            "doy_sin": np.sin(ang),
+            "doy_cos": np.cos(ang),
+            "doy_sin2": np.sin(2 * ang),  # first harmonic (2x frequency)
+            "doy_cos2": np.cos(2 * ang),
         },
         index=s.index,
     )

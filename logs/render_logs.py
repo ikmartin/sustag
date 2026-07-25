@@ -62,12 +62,17 @@ def _score_table(score):
 
 
 def _scores_block(key, entry):
+    num_feats = len(entry.get("features", []))
     feats = ", ".join(entry.get("features", [])) or "_(none logged)_"
     return (
-        f"# {_model_type(entry)} Model {key}\n\n"
-        f"Recipe: {entry.get('recipe', '?')}  \n"  # trailing 2 spaces -> markdown hard line break
-        f"Features: {feats}  \n"
-        f"Scores:\n"
+        f"# {_model_type(entry)} Model {key} \n\n"
+        f"| | |\n"
+        f"|-|-|\n"
+        f"| **Timestamp:** | [{entry.get("timestamp", "?")}] | \n"
+        f"|**Recipe:** | {entry.get('recipe', '?')}  |\n"  # trailing 2 spaces -> markdown hard line break
+        f"|**# Features:** | {num_feats}|\n"
+        f"| **List of Features:** | {feats}  | \n\n"
+        f"### Scores:\n"
         f"{_score_table(entry.get('score', {}))}\n"
     )
 
@@ -86,7 +91,7 @@ def _importance_table(entry):
         "perm": [perm[f] if f in perm else "-" for f in feats],
     }
     # transposed: features across the header, a Gain row and a Perm row (missing -> em dash)
-    df = pd.DataFrame(d, index=feats)
+    df = pd.DataFrame(d, index=feats).sort_values(by="perm", ascending=False)
 
     return _make_markdown_table(df, index_label="features")
 

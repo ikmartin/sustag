@@ -11,15 +11,21 @@ For every IEM cell in the region bbox and every day of a year, IEM precip is joi
 interpolated gridMET meteorology on (date, global_node_id). global_node_id is the canonical IEM
 grid row index, so vals[global_node_id] is a direct precip lookup and the per-site joins line up.
 
-Output (src/data/interim/weather_global_{year}.parquet):
-    date, global_node_id, precip_in_1d (in), max_temp (degC), min_temp (degC),
-    max_rel_humidity (%), min_rel_humidity (%), vpd (kPa), solar_rad (W/m^2),
-    evapotranspiration (mm), fuel_moisture_1000h (%).
+Output (src/data/interim/weather_global_{year}.parquet) -- the full gridMET variable set:
+    date, global_node_id,
+    precip_in_1d (in, IEM), precip_gridmet (mm, gridMET),
+    max_temp (degC), min_temp (degC),
+    max_rel_humidity (%), min_rel_humidity (%), specific_humidity (kg/kg),
+    vpd (kPa), solar_rad (W/m^2),
+    wind_speed (m/s), wind_direction (deg),
+    evapotranspiration (mm, grass ref-ET), ref_et_alfalfa (mm, alfalfa ref-ET),
+    burning_index, energy_release (NFDRS indices),
+    fuel_moisture_100h (%), fuel_moisture_1000h (%).
 
-NOTE: this is a heavy NETWORK build (gridMET + IEM downloads across all years). The existing
-legacy files (data/weather/weather_global/global_grid_weather_{year}.parquet) are byte-identical
-in schema, so migrating can be a copy+rename rather than a re-download:
-    for f in .../global_grid_weather_YYYY.parquet -> src/data/interim/weather_global_YYYY.parquet
+NOTE: this is a heavy NETWORK build (gridMET + IEM downloads across all years). The legacy files
+(data/weather/weather_global/global_grid_weather_{year}.parquet) carry only the old 8-variable
+schema, so the copy+rename migration shortcut no longer applies -- the added gridMET variables
+require a genuine re-download (python -m src.build._make_weather --force).
 
 Usage
 -----
@@ -66,22 +72,36 @@ _pgm._check_nans = lambda clm, urls, clm_files, long2abbr: (False, urls)
 ALL_YEARS = list(range(2008, 2027))
 
 _GRIDMET_RENAME = {
-    "tmmx": "max_temp",
-    "tmmn": "min_temp",
-    "rmax": "max_rel_humidity",
-    "rmin": "min_rel_humidity",
-    "vpd": "vpd",
-    "srad": "solar_rad",
-    "pet": "evapotranspiration",
-    "fm1000": "fuel_moisture_1000h",
+    "pr": "precip_gridmet",          # mm  (gridMET precip; distinct from IEM precip_in_1d, inches)
+    "tmmx": "max_temp",              # K -> degC
+    "tmmn": "min_temp",              # K -> degC
+    "rmax": "max_rel_humidity",      # %
+    "rmin": "min_rel_humidity",      # %
+    "sph": "specific_humidity",      # kg/kg
+    "vpd": "vpd",                    # kPa
+    "srad": "solar_rad",             # W/m^2
+    "th": "wind_direction",          # deg clockwise from N
+    "vs": "wind_speed",              # m/s (10 m)
+    "pet": "evapotranspiration",     # mm  (grass reference ET)
+    "etr": "ref_et_alfalfa",         # mm  (alfalfa reference ET)
+    "bi": "burning_index",           # NFDRS index (unitless)
+    "erc": "energy_release",         # NFDRS index (unitless)
+    "fm100": "fuel_moisture_100h",   # %
+    "fm1000": "fuel_moisture_1000h", # %
 }
 _GRIDMET_VARS = list(_GRIDMET_RENAME)
 _TEMP_COLS = ["max_temp", "min_temp"]  # K -> degC
 
 _COLUMN_ORDER = [
-    "date", "global_node_id", "precip_in_1d",
-    "max_temp", "min_temp", "max_rel_humidity", "min_rel_humidity",
-    "vpd", "solar_rad", "evapotranspiration", "fuel_moisture_1000h",
+    "date", "global_node_id",
+    "precip_in_1d", "precip_gridmet",
+    "max_temp", "min_temp",
+    "max_rel_humidity", "min_rel_humidity", "specific_humidity",
+    "vpd", "solar_rad",
+    "wind_speed", "wind_direction",
+    "evapotranspiration", "ref_et_alfalfa",
+    "burning_index", "energy_release",
+    "fuel_moisture_100h", "fuel_moisture_1000h",
 ]
 
 _MAX_TILE_DEG = 5.0
@@ -206,11 +226,25 @@ def _iem_precip_year(year: int, cells: pd.DataFrame, dates: pd.DatetimeIndex, n_
     )
 
 
-def build_year(year: int, cells: pd.DataFrame, bbox: tuple, n_ref: int) -> None:
-    """Build weather_global_{year}.parquet, streaming one month at a time (peak memory ~1 month)."""
+def _existing_precip(out: Path) -> pd.DataFrame:
+    """Reuse IEM precip_in_1d from an existing weather_global_{year}.parquet: a --gridmet-only
+    rebuild re-fetches ONLY gridMET, so the (unchanged) IEM precip is spliced back from the prior
+    file rather than re-downloaded/re-parsed. `out` is not modified until the final tmp.replace(out),
+    so reading it here (before any write) is safe."""
+    prec = pd.read_parquet(out, columns=["date", "global_node_id", "precip_in_1d"])
+    prec["date"] = pd.to_datetime(prec["date"]).dt.normalize()
+    return prec
+
+
+def build_year(year: int, cells: pd.DataFrame, bbox: tuple, n_ref: int, gridmet_only: bool = False) -> None:
+    """Build weather_global_{year}.parquet, streaming one month at a time (peak memory ~1 month).
+
+    gridmet_only re-fetches ONLY the gridMET variables and reuses precip_in_1d from the existing
+    file (no IEM re-download/re-parse); the caller guarantees `out` exists in that mode."""
     cutoff = pd.Timestamp.today().normalize() - pd.DateOffset(months=1)  # gridMET publishes with a lag
     out = _INTERIM_DIR / f"weather_global_{year}.parquet"
     tmp = out.with_suffix(".tmp.parquet")
+    prior_prec = _existing_precip(out) if gridmet_only else None  # read old file before it's replaced
     writer = None
     total = 0
     try:
@@ -223,7 +257,10 @@ def build_year(year: int, cells: pd.DataFrame, bbox: tuple, n_ref: int) -> None:
             if gm.empty:
                 continue
             dates = pd.DatetimeIndex(sorted(gm["date"].unique()))
-            prec = _iem_precip_year(year, cells, dates, n_ref)
+            if prior_prec is not None:
+                prec = prior_prec[prior_prec["date"].isin(set(dates))].reset_index(drop=True)
+            else:
+                prec = _iem_precip_year(year, cells, dates, n_ref)
             df = _assemble(gm, prec)
             table = pa.Table.from_pandas(df, preserve_index=False)
             if writer is None:
@@ -250,8 +287,11 @@ def build_year(year: int, cells: pd.DataFrame, bbox: tuple, n_ref: int) -> None:
     print(f"  {year}: {total:,} rows ({len(cells):,} cells x {total // len(cells)} days) -> {out.name}")
 
 
-def build_weather_global(years: list[int] | None = None, force: bool = False) -> None:
-    """Build/refresh the yearly global weather files (IEM cells in the region bbox)."""
+def build_weather_global(years: list[int] | None = None, force: bool = False, gridmet_only: bool = False) -> None:
+    """Build/refresh the yearly global weather files (IEM cells in the region bbox).
+
+    gridmet_only rebuilds only years that already exist, re-fetching gridMET and reusing their IEM
+    precip_in_1d (no IEM re-download). Years with no existing file are skipped in that mode."""
     _INTERIM_DIR.mkdir(parents=True, exist_ok=True)
 
     all_cells = _iem_cells()  # full IEM grid (global_node_id == IEM row index)
@@ -269,11 +309,14 @@ def build_weather_global(years: list[int] | None = None, force: bool = False) ->
     failed = []
     for year in years:
         out = _INTERIM_DIR / f"weather_global_{year}.parquet"
-        if out.exists() and not force:
+        if gridmet_only and not out.exists():
+            print(f"  {year}: no existing file to reuse IEM precip from, skipping (run a full build first)")
+            continue
+        if out.exists() and not force and not gridmet_only:
             print(f"  {year}: exists, skipping")
             continue
         try:
-            build_year(year, cells, bbox, n_ref)
+            build_year(year, cells, bbox, n_ref, gridmet_only=gridmet_only)
         except Exception as e:
             failed.append(year)
             print(f"  {year}: FAILED ({type(e).__name__}: {str(e)[:90]}) — re-run to fill it in")
@@ -281,13 +324,19 @@ def build_weather_global(years: list[int] | None = None, force: bool = False) ->
         print(f"\n{len(failed)} year(s) failed (likely gridMET outages): {failed}. Re-run to complete them.")
 
 
-def main(force: bool = False, years: list[int] | None = None) -> None:
-    build_weather_global(years=years, force=force)
+def main(force: bool = False, years: list[int] | None = None, gridmet_only: bool = False) -> None:
+    build_weather_global(years=years, force=force, gridmet_only=gridmet_only)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--force", action="store_true", help="Rebuild existing years.")
+    parser.add_argument(
+        "--gridmet-only",
+        action="store_true",
+        help="Rebuild existing years re-fetching ONLY gridMET; reuse cached IEM precip_in_1d from "
+        "the existing parquet (no IEM re-download/re-parse). Years with no existing file are skipped.",
+    )
     parser.add_argument("--year", action="append", type=int, help="Limit to these years (repeatable).")
     args = parser.parse_args()
-    main(force=args.force, years=args.year)
+    main(force=args.force, years=args.year, gridmet_only=args.gridmet_only)
