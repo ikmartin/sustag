@@ -372,39 +372,50 @@ def register_callbacks(app):
     for _bt in (1, 2, 3):
         _register_basin_renderer(_bt)
 
+    def _pin_basin(delineate, method, toggle, region_geom):
+        """Render a pin-drop basin overlay and its area label. Returns (layers, area_text).
+
+        The delineated FeatureCollection already carries area_km2 in its properties (set by the
+        builder), so the label reads it directly rather than recomputing.
+        """
+        if "show" not in toggle or not region_geom or region_geom.get("type") != "Point":
+            return [], ""
+        lng, lat = region_geom["coordinates"]
+        try:
+            geojson = delineate(lat, lng)
+            layers = [dl.GeoJSON(data=geojson, options={"style": colors.pin_basin_style(method)})]
+            props = (geojson.get("features") or [{}])[0].get("properties") or {}
+            area = props.get("area_km2")
+            return layers, (f"{area:,.0f} km²" if isinstance(area, (int, float)) else "")
+        except Exception:
+            return [], ""
+
     @app.callback(
         Output("pin-basin-layer", "children"),
+        Output("pin-basin-v1-area", "children"),
         Input("pin-basin-v1-toggle", "value"),
         Input("region-geom", "data"),
     )
     def render_pin_basin_v1(toggle, region_geom):
-        if "show" not in toggle:
-            return []
-        if not region_geom or region_geom.get("type") != "Point":
-            return []
-        lng, lat = region_geom["coordinates"]
-        try:
-            geojson = delineate_basin_for_pin(lat, lng)
-            return [dl.GeoJSON(data=geojson, options={"style": colors.pin_basin_style("v1")})]
-        except Exception:
-            return []
+        return _pin_basin(delineate_basin_v1_for_pin, "v1", toggle, region_geom)
+
+    @app.callback(
+        Output("pin-basin-v2-layer", "children"),
+        Output("pin-basin-v2-area", "children"),
+        Input("pin-basin-v2-toggle", "value"),
+        Input("region-geom", "data"),
+    )
+    def render_pin_basin_v2(toggle, region_geom):
+        return _pin_basin(delineate_basin_v2_for_pin, "v2", toggle, region_geom)
 
     @app.callback(
         Output("pin-basin-v3-layer", "children"),
+        Output("pin-basin-v3-area", "children"),
         Input("pin-basin-v3-toggle", "value"),
         Input("region-geom", "data"),
     )
     def render_pin_basin_v3(toggle, region_geom):
-        if "show" not in toggle:
-            return []
-        if not region_geom or region_geom.get("type") != "Point":
-            return []
-        lng, lat = region_geom["coordinates"]
-        try:
-            geojson = delineate_basin_v3_for_pin(lat, lng)
-            return [dl.GeoJSON(data=geojson, options={"style": colors.pin_basin_style("v3")})]
-        except Exception:
-            return []
+        return _pin_basin(delineate_basin_v3_for_pin, "v3", toggle, region_geom)
 
     @app.callback(
         Output("grid-color-legend", "children"),
@@ -473,7 +484,7 @@ def register_callbacks(app):
             try:
                 meta = access.get_basin_metadata()
                 df = meta.copy()
-                flag_cols = ["flag_area", "flag_river", "flag_not_contained", "flag_basin1_over_basin2"]
+                flag_cols = [c for c in df.columns if c.startswith("flag_")]  # kept in sync with the builder
                 if "on" in (flagged_only or []):
                     flag_df = df[flag_cols].fillna(False)
                     df = df[flag_df.any(axis=1)]

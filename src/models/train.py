@@ -1,6 +1,7 @@
 import sys
 import json
 import argparse
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -88,6 +89,7 @@ def log_metadata(name, recipe, target_col, task, xgb, scores, file=None):
     imp = scores.attrs.get("importance", {}).get(name)
     imp_perm = scores.attrs.get("importance_perm", {}).get(name)
     model_entry = {
+        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),  # when this run was logged (UTC)
         "name": name,
         "recipe": getattr(recipe, "__name__", str(recipe)),  # a recipe is a function -> store its name
         "features": list(imp.index) if imp is not None else [],  # full feature column list (gain-ranked)
@@ -152,34 +154,54 @@ def build(name, recipe, target_col, task, xgb, final_iters=None, min_rows=500):
         print(f"  wrote {f}")
 
 
+# Per-task training config: the shipped recipe, its target column, hyperparameters, and the default
+# model name. `task` (reg|clf) selects one row; keeps main() a single dispatch instead of a hardcode.
+_TASKS = {
+    "reg": dict(recipe=recipe_REG, target_col="nitrate_con", xgb=REAL_XGB_REG, default_name="recipe_REG2"),
+    "clf": dict(recipe=recipe_CLF, target_col="violation", xgb=REAL_XGB_CLF, default_name="recipe_CLF2"),
+}
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Train + log the shipped recipe(s).")
+    parser = argparse.ArgumentParser(description="Train + log the shipped recipe for one task.")
+    parser.add_argument(
+        "task",
+        type=str.lower,
+        choices=["reg", "clf"],
+        help="Which task to train (REQUIRED): 'reg' (recipe_REG -> nitrate_con) or 'clf' "
+        "(recipe_CLF -> violation). Case-insensitive, so REG/CLF also work.",
+    )
     parser.add_argument(
         "--false-alarm-rate",
         type=float,
         default=None,
         metavar="FAR",
         help="False-alarm-rate (FPR) budget for the recall_at_far metric, in (0, 1) -- e.g. 0.2 for "
-        f"20%%. Default: cook._FAR_BUDGET = {cook._FAR_BUDGET:.2f}.",
+        f"20%%. clf only. Default: cook._FAR_BUDGET = {cook._FAR_BUDGET:.2f}.",
     )
     parser.add_argument(
         "--name",
         type=str,
-        default="recipe_CLF2",
+        default=None,
         help="Name for the trained model: the booster is saved to models/<name>.json and the run is "
-        "logged under this name in fulltrain_logs.json. Default: recipe_CLF2.",
+        "logged under this name in fulltrain_logs.json. Default: recipe_REG2 (reg) / recipe_CLF2 (clf).",
     )
     args = parser.parse_args()
+
+    cfg = _TASKS[args.task]  # argparse `choices` guarantees args.task is a valid key
+    name = args.name or cfg["default_name"]
+
     if args.false_alarm_rate is not None:
+        if args.task != "clf":
+            parser.error("--false-alarm-rate applies to clf only (recall_at_far is a classification metric)")
         if not 0.0 < args.false_alarm_rate < 1.0:
             parser.error("--false-alarm-rate must be in (0, 1)")
         cook._FAR_BUDGET = args.false_alarm_rate  # resolved at call time by _imbalance_suite
         print(f"[cfg] recall_at_far false-alarm budget set to {cook._FAR_BUDGET:.2%}")
 
     # final_iters defaults to None -> build() auto-reads best_iteration from models/lofo_tune.csv
-    # (whatever `python tune.py` last recorded for recipe_REG / recipe_CLF).
-    # build("recipe_REG2", recipe_REG, target_col="nitrate_con", task="reg", xgb=REAL_XGB_REG)
-    build(args.name, recipe_CLF, target_col="violation", task="clf", xgb=REAL_XGB_CLF)
+    # (whatever `python tune.py` last recorded for this recipe).
+    build(name, cfg["recipe"], target_col=cfg["target_col"], task=args.task, xgb=cfg["xgb"])
 
 
 if __name__ == "__main__":

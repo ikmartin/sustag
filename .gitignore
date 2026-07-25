@@ -1,10 +1,11 @@
 # Data artifacts live under src/data/ but must never be committed (large / regenerable).
-# keep the raw water folder, needed
 src/data/raw/basins
 src/data/raw/crops
 src/data/raw/surplus
 src/data/raw/weather
 src/data/raw/water
+src/data/raw/comid_attrs
+src/data/raw/agtile
 src/data/interim/*
 src/data/processed/*
 src/data/cache/*
@@ -37,6 +38,14 @@ src/data/cache/*
 # a fresh clone, so track them so the surplus visuals work without the data download.
 !src/data/processed/surplus/
 !src/data/processed/surplus/**
+
+# EXCEPTION: COMID-keyed static attribute table (~1.5MB, one row per region reach; TOT_/CAT_ tile
+# drainage, base-flow index, contact time). Joined at feature time by the basin's outlet COMID.
+# Built from ScienceBase CSV zips under raw/comid_attrs/ (ignored); the built table is committed so
+# a fresh clone has the features without the downloads. AgTile's interim/agtile_global.parquet is
+# un-ignored below with the other *_global tables.
+!src/data/processed/comid_attrs.parquet
+!src/data/interim/agtile_global.parquet
 
 # EXCEPTION: the basin-containment graph (~4KB). Read at runtime by access.get_basin_graph ->
 # src/splits/conflict_graph.py (the LOFO family splitter), so the honest cross-validation would

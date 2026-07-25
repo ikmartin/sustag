@@ -2,8 +2,9 @@
 
 PECULIAR SOURCE: IWQIS is NOT an API. The original download (iwqis_alldata.csv) was chunked with
 split_csv.py into chunks/ (to fit on GitHub) and its site.csv hand-fixed to site_clean.csv (a
-bad quote on row 63). This reassembles the chunked CSV via the manifest, filters garbage sites
-by sparsity/lifespan, and writes one {uid}_water.parquet per keeper site + the metadata CSVs.
+bad quote on row 63). This reassembles the chunked CSV via the manifest and writes one
+{uid}_water.parquet per data-bearing WQS candidate + the metadata CSVs. Quality filtering
+(sparsity/lifespan) was extracted to filter_sites.py (step 3); this step just materializes data.
 
 Because the raw chunks are 3.1 GB and not re-fetchable, the per-site parquets (processed/water)
 are the durable source of truth; this builder only needs to run when reconstructing from chunks.
@@ -20,7 +21,6 @@ from pathlib import Path
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))  # repo root on path
-from src.build.config import get_config
 from src.build.util._water_paths import data_dir, meta_dir, raw_dir
 
 FULL_DATA = None
@@ -89,73 +89,60 @@ def _get_full_data():
     return full_data
 
 
-def filter_sites(sparsity_cutoff, lifespan_cutoff, source):
-    source = source.copy()
-    source["datetime"] = pd.to_datetime(source["datetime"], utc=True)
-    grouped = source.groupby("site_uid", sort=False)
-    data_count = grouped["nitrate_con"].count() / grouped.size()
-    span = grouped["datetime"].max() - grouped["datetime"].min()
-    lifespan = span.dt.total_seconds() / (365.25 * 24 * 3600)
-    vals = pd.DataFrame({"data_count": data_count, "lifespan": lifespan}).reset_index()
-
-    keep_mask = (vals.data_count >= sparsity_cutoff) & (vals.lifespan >= lifespan_cutoff)
-    keep, remove = vals[keep_mask], vals[~keep_mask]
-    print(f"{keep.shape[0]} (keep) + {remove.shape[0]} (remove) = {vals.shape[0]}")
-    assert keep.shape[0] + remove.shape[0] == vals.shape[0]
-    return keep, remove
+_WQS_RE = r"WQS\d+"
 
 
-def _precheck(extra_filter=()) -> bool:
-    """True if all expected outputs already exist (uses iwqis_site_metadata.csv as a manifest)."""
-    if not _metadata_target().exists():
+def _data_uids(full_data) -> list[str]:
+    """WQS-candidate uids that actually appear in the reassembled data. This is the pull set --
+    quality filtering (sparsity/lifespan) is filter_sites.py, step 3."""
+    uids = pd.Series(full_data["site_uid"].astype(str).unique())
+    return sorted(uids[uids.str.match(_WQS_RE, na=False)])
+
+
+def _precheck() -> bool:
+    """True if the last build's outputs are all present, so we can skip the 3.1 GB reassembly.
+
+    Manifest = iwqis_site_metadata.csv, which now lists the data-bearing WQS candidates (not the
+    kept set -- keeping moved to filter_sites). Skipping is safe: the final kept set is a subset of
+    what is on disk, so filter_sites still prunes to the correct result.
+    """
+    if not (_metadata_target().exists() and _measures_target().exists() and _params_target().exists()):
         return False
-    keeper_uids = [u for u in pd.read_csv(_metadata_target())["uid"].tolist() if u not in extra_filter]
-    all_parquets = all((data_dir() / f"{uid}_water.parquet").exists() for uid in keeper_uids)
-    return all_parquets and _measures_target().exists() and _params_target().exists()
+    manifest = pd.read_csv(_metadata_target(), dtype={"uid": str})["uid"].tolist()
+    return all((data_dir() / f"{uid}_water.parquet").exists() for uid in manifest)
 
 
-def evaluate_uids(sparsity_cutoff, lifespan_cutoff, extra_filter=()):
-    """Return (all keeper uids, uids whose parquet still needs writing)."""
-    current_uids = {f.name[: -len("_water.parquet")] for f in data_dir().glob("WQ*.parquet")}
-    print("Filtering the sites, this may take a minute...", end="", flush=True)
-    keep, _ = filter_sites(sparsity_cutoff, lifespan_cutoff, source=_full_data())
-    keep = keep[keep.site_uid.isin(extra_filter) == False]
-    keep_uids = set(keep.site_uid.unique())
-    missing_uids = list(keep_uids.difference(current_uids))
-    print("done.")
-    return list(keep_uids), missing_uids
+def main(api_keys=None):
+    """Build the IWQIS dataset. STEP 2b. api_keys unused (no network).
 
-
-def main(api_keys=None, extra_filter=()):
-    """Build the IWQIS dataset (per-site parquets + metadata). api_keys unused (no network)."""
-    extra_filter = list(extra_filter)
-    if _precheck(extra_filter):
+    Writes a parquet for EVERY data-bearing WQS candidate (no keep-filter -- that is filter_sites).
+    """
+    if _precheck():
         print("IWQIS data already complete, skipping.")
         return
 
-    _cfg = get_config()["iwqis"]
-    SPARSITY_CUTOFF, LIFESPAN_CUTOFF = _cfg["sparsity_cutoff"], _cfg["lifespan_cutoff"]
     print("---- Building IWQIS Water Data ----")
+    full_data = _full_data()
+    data_uids = _data_uids(full_data)
+    current = {f.name[: -len("_water.parquet")] for f in data_dir().glob("WQ*.parquet")}
+    missing = [u for u in data_uids if u not in current]
+    print(f"{len(data_uids)} WQS candidates with data; {len(missing)} parquet(s) to write.")
 
-    keep_uids, missing_uids = evaluate_uids(SPARSITY_CUTOFF, LIFESPAN_CUTOFF, extra_filter=extra_filter)
-    if not missing_uids:
-        print("No data missing. Writing metadata.")
-    else:
-        full_data = _full_data()
-        for uid in missing_uids:
-            file = data_dir() / f"{str(uid).strip()}_water.parquet"
-            print(f"  Saving {file}...", end="", flush=True)
-            site_df = full_data[full_data.site_uid == uid].copy()
-            site_df["datetime"] = pd.to_datetime(site_df["datetime"], utc=True)
-            site_df = site_df.set_index("datetime")
-            site_df.to_parquet(file)
-            print("done.")
+    for uid in missing:
+        file = data_dir() / f"{uid}_water.parquet"
+        print(f"  Saving {file.name}...", end="", flush=True)
+        site_df = full_data[full_data.site_uid == uid].copy()
+        site_df["datetime"] = pd.to_datetime(site_df["datetime"], utc=True)
+        site_df = site_df.set_index("datetime")
+        site_df.to_parquet(file)
+        print("done.")
 
+    # Manifest = data-bearing WQS candidates (a build manifest, not the kept set).
     site_df = get_site_metadata()
-    site_df[site_df.uid.isin(keep_uids)].to_csv(_metadata_target(), index=False)
+    site_df[site_df.uid.isin(data_uids)].to_csv(_metadata_target(), index=False)
     pd.read_csv(_params_source()).to_csv(_params_target(), index=False)
     pd.read_csv(_measures_source()).to_csv(_measures_target(), index=False)
-    print(f"\nIWQIS data build complete. Kept {len(keep_uids)} sites.")
+    print(f"\nIWQIS data build complete. {len(data_uids)} data-bearing WQS candidates.")
 
 
 if __name__ == "__main__":

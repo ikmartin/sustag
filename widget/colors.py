@@ -9,7 +9,7 @@ interpolation in map_panel stays in the same color space.
 # changes and only flashes a brief, self-clearing "Debug Mode Off" message. Set to False to
 # re-enable the real basin-review confirm action (writes preferred_basin). Default True so a
 # deployed instance can't mutate the dataset from the UI.
-DEBUG_MODE_ON = True
+DEBUG_MODE_OFF = False
 
 HYDRO = {"stroke": "#2563eb", "fill": "#3b82f6"}
 
@@ -18,6 +18,7 @@ BASIN_V2 = {"stroke": "purple", "fill": "purple"}
 BASIN_V3 = {"stroke": "#7c3aed", "fill": "#7c3aed"}
 
 PIN_BASIN_V1 = {"stroke": "#f97316", "fill": "#f97316"}
+PIN_BASIN_V2 = {"stroke": "#db2777", "fill": "#db2777"}
 PIN_BASIN_V3 = {"stroke": "#0891b2", "fill": "#0891b2"}
 
 RAIN_GRID = {"stroke": "#0284c7", "fill": "#38bdf8"}
@@ -52,8 +53,11 @@ def basin_style(kind):
 
 
 def pin_basin_style(method):
-    """Leaflet style for a dropped-pin delineated basin. method: 'v1' (NLDI) or 'v3' (D8)."""
-    c = {"v1": PIN_BASIN_V1, "v3": PIN_BASIN_V3}[method]
+    """Leaflet style for a dropped-pin delineated basin.
+
+    method: 'v1' (nearest-flowline snap), 'v2' (containing catchment), 'v3' (D8 raster).
+    """
+    c = {"v1": PIN_BASIN_V1, "v2": PIN_BASIN_V2, "v3": PIN_BASIN_V3}[method]
     return {
         "pane": "basin-pane",
         "color": c["stroke"],

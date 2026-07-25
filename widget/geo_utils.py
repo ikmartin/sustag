@@ -7,70 +7,73 @@ selection into whatever shape downstream consumers need.
 """
 
 import json
-import requests
-import geopandas as gpd
+import sys
+from pathlib import Path
+
 from shapely.geometry import shape, mapping
 
-_NLDI_BASE = "https://api.water.usgs.gov/nldi/linked-data"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # repo root/, for src.* imports
 
 
-def delineate_basin_for_pin(lat: float, lon: float, timeout: int = 60) -> dict:
-    """Fetch the upstream drainage basin for an arbitrary (lat, lon) pin.
-
-    Makes two NLDI requests:
-      1. Resolve the pin to the nearest NHDPlus COMID.
-      2. Fetch the upstream basin polygon for that COMID.
-
-    Returns a GeoJSON FeatureCollection dict (EPSG:4326) suitable for passing
-    directly to ``dl.GeoJSON(data=...)``.
-
-    Raises ValueError if the point is outside CONUS or off the NHD network.
-    """
-    pos = requests.get(
-        f"{_NLDI_BASE}/comid/position",
-        params={"coords": f"POINT({lon} {lat})", "f": "json"},
-        timeout=timeout,
-    )
-    pos.raise_for_status()
-    feats = pos.json().get("features", [])
-    if not feats:
-        raise ValueError(
-            f"No NHDPlus catchment for (lat={lat}, lon={lon}); "
-            "point may be outside CONUS or off-network."
-        )
-    comid = feats[0]["properties"]["comid"]
-
-    resp = requests.get(
-        f"{_NLDI_BASE}/comid/{comid}/basin",
-        params={"f": "json", "simplified": "true"},
-        timeout=timeout,
-    )
-    resp.raise_for_status()
-    gdf = gpd.GeoDataFrame.from_features(resp.json()["features"], crs="EPSG:4326")
-    if gdf.empty:
-        raise ValueError(f"NLDI returned an empty basin for COMID {comid}.")
-    return json.loads(gdf.to_json())
-
-
+_flowlines = None
 _direction_array = None
 
 
-def delineate_basin_v3_for_pin(lat: float, lon: float) -> dict:
-    """Compute the D8 raster basin for an arbitrary (lat, lon) pin.
+def _get_flowlines():
+    """NHD flowlines layer, loaded once and cached for the nearest-flowline snap."""
+    global _flowlines
+    if _flowlines is None:
+        from src.build._make_basins import _load_flowlines
 
-    Uses the same 500 m IWQIS flow-direction raster and BFS flood-fill as
-    make_basins.py's basin3 method.  The direction array is loaded once and
-    cached in memory for subsequent calls.
+        _flowlines = _load_flowlines()
+        if _flowlines is None:
+            raise RuntimeError("NHD flowlines layer missing; run `python -m src.build._make_map_overlays`.")
+    return _flowlines
 
-    Returns a GeoJSON FeatureCollection dict (EPSG:4326) suitable for passing
-    directly to ``dl.GeoJSON(data=...)``.
 
-    Raises ValueError if the point is outside the Iowa raster domain.
+def delineate_basin_v1_for_pin(lat: float, lon: float, site_uid: str = "pin", timeout: int = 60) -> dict:
+    """v1 -- NEAREST-FLOWLINE SNAP basin for a pin. The delineation the product ships.
+
+    Delegates to the builder's _compute_basin1, so a pin basin is the same artifact as a batch-built
+    basin1: same NLDI basin call, same ``[site_uid, comid, area_km2, geometry]`` schema, same
+    AUTHORITATIVE COMID resolved from the snapped reach. No reported_area is passed -- a map pin has
+    none -- so this is the pure-nearest rule, identical to how a new deploy site would be delineated.
+
+    A COMID must never be inherited between delineations; its TOT_/CAT_ attributes describe its own
+    reach's catchment. Pass the real ``site_uid`` when saving a correction; "pin" is for live preview.
+
+    Returns a GeoJSON FeatureCollection dict (EPSG:4326). Raises ValueError outside the flowlines
+    extent or off the NHD network.
     """
-    import sys
-    from pathlib import Path
-    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # repo root/
+    from src.build._make_basins import _compute_basin1
 
+    gdf = _compute_basin1(site_uid, lat, lon, flowlines=_get_flowlines(), timeout=timeout)
+    return json.loads(gdf.to_json())
+
+
+# Back-compat alias: the confirm handler and map preview import this name.
+delineate_basin_for_pin = delineate_basin_v1_for_pin
+
+
+def delineate_basin_v2_for_pin(lat: float, lon: float, site_uid: str = "pin", timeout: int = 60) -> dict:
+    """v2 -- CONTAINING-CATCHMENT basin for a pin (NLDI /comid/position). Cross-check only.
+
+    Returns whichever catchment polygon the point falls inside, which is NOT necessarily the reach
+    the pin sits on (see _make_basins for the mainstem-divergence failure). Shown alongside v1 so a
+    reviewer can see when the two methods disagree.
+    """
+    from src.build._make_basins import _compute_basin2
+
+    gdf = _compute_basin2(site_uid, lat, lon, timeout=timeout)
+    return json.loads(gdf.to_json())
+
+
+def delineate_basin_v3_for_pin(lat: float, lon: float) -> dict:
+    """v3 -- D8 raster basin for a pin. Cross-check only; carries no COMID.
+
+    Same 500 m flow-direction raster and BFS flood-fill as the builder's basin3. The direction array
+    is loaded once and cached. Raises ValueError outside the Iowa raster domain.
+    """
     from src.data.d8 import load_direction_array
     from src.build._make_basins import _compute_basin3
 

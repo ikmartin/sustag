@@ -40,7 +40,12 @@ from dash_extensions.javascript import assign
 from shapely.geometry import shape, Point
 
 from src.data import access, surplus_viz
-from geo_utils import delineate_basin_for_pin, delineate_basin_v3_for_pin
+from geo_utils import (
+    delineate_basin_for_pin,
+    delineate_basin_v1_for_pin,
+    delineate_basin_v2_for_pin,
+    delineate_basin_v3_for_pin,
+)
 from components import basin_editor
 import colors
 

@@ -1,14 +1,6 @@
-import sys
-from pathlib import Path
-
-from components import forecast_panel, info_panel
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-
+from components import forecast_panel, info_panel, map_panel
+from layout import build_layout
 from dash import Dash
-
-from widget.layout import build_layout
-from widget.components import map_panel
 
 # suppress_callback_exceptions: map_panel's region-selection callback targets
 # "edit-control", which only exists in the layout once area-selection mode

@@ -236,7 +236,7 @@ def plot_violation_balance(sites=None, agg: str = "max", min_days: int = 30):
 
 # fleet-wide seasonality: every site's day-of-year climatology + their average (the all-sites version)
 def plot_fleet_seasonality(sites=None, agg: str = "max", min_days: int = 60):
-    """Average seasonality across ALL sites: each site's day-of-year climatology (faint grey) plus the fleet mean (bold red) -- the shared spring/early-summer peak is the seasonal signal the doy features capture. The all-sites version of plot_seasonality. (nitrate_avg_seasonal() gives the same cross-site cycle as one Series if you want it without the per-site spread.)"""
+    """Average seasonality across ALL sites: each site's day-of-year climatology (faint grey) plus the fleet mean (bold red) -- the shared spring/early-summer peak is the seasonal signal the doy features capture. The all-sites version of plot_seasonality."""
     sites = sites or access.get_site_ids()
     clims = {}
     for s in sites:

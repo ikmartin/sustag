@@ -53,43 +53,54 @@ def _make_markdown_table(df, index_label=None):
 
 def _score_table(score):
     # transposed: metric names across the header, a single row of values
-    return _make_markdown_table(pd.DataFrame([score]))
+    n = 8
+    items = list(score.items())
+    scores = [dict(items[i : i + n]) for i in range(0, len(items), n)]
+    lines = [_make_markdown_table(pd.DataFrame([score])) for score in scores]
+    table = "\n\n".join(lines)
+    return table
 
 
 def _scores_block(key, entry):
+    num_feats = len(entry.get("features", []))
     feats = ", ".join(entry.get("features", [])) or "_(none logged)_"
     return (
-        f"# {_model_type(entry)} Model {key}\n\n"
-        f"Recipe: {entry.get('recipe', '?')}  \n"  # trailing 2 spaces -> markdown hard line break
-        f"Features: {feats}  \n"
-        f"Scores:\n\n"
+        f"# {_model_type(entry)} Model {key} \n\n"
+        f"| | |\n"
+        f"|-|-|\n"
+        f"| **Timestamp:** | [{entry.get("timestamp", "?")}] | \n"
+        f"|**Recipe:** | {entry.get('recipe', '?')}  |\n"  # trailing 2 spaces -> markdown hard line break
+        f"|**# Features:** | {num_feats}|\n"
+        f"| **List of Features:** | {feats}  | \n\n"
+        f"### Scores:\n"
         f"{_score_table(entry.get('score', {}))}\n"
     )
 
 
 def _importance_table(entry):
+    # access the gain of the entry dict safely
+    # falls back to {} when importance key exists but is None
     gain = entry.get("importance", {}) or {}
     perm = entry.get("importance_perm", {}) or {}
     if not gain and not perm:
         return "_(no importances logged)_"
 
     feats = list(gain) + [f for f in perm if f not in gain]  # gain is already gain-ranked
+    d = {
+        "gain": [gain[f] if f in gain else "-" for f in feats],
+        "perm": [perm[f] if f in perm else "-" for f in feats],
+    }
     # transposed: features across the header, a Gain row and a Perm row (missing -> em dash)
-    df = pd.DataFrame(
-        [
-            {f: _fmt(gain[f]) if f in gain else "—" for f in feats},
-            {f: _fmt(perm[f]) if f in perm else "—" for f in feats},
-        ],
-        index=["Gain", "Perm"],
-    )
-    return _make_markdown_table(df, index_label="Feat")
+    df = pd.DataFrame(d, index=feats).sort_values(by="perm", ascending=False)
+
+    return _make_markdown_table(df, index_label="features")
 
 
 def _importances_block(key, entry):
     return (
         f"# {_model_type(entry)} Model {key}\n\n"
-        f"Recipe: {entry.get('recipe', '?')}\n\n"
-        f"Features:  "
+        f"Recipe: {entry.get('recipe', '?')}\n"
+        f"Date: {entry.get('timestamp', '?')}\n"
         f"{_importance_table(entry)}\n"
     )
 
@@ -99,8 +110,9 @@ def render():
         raise SystemExit(f"no training log at {_LOGFILE} -- run a training build first")
     with open(_LOGFILE) as f:
         log = json.load(f)
-    keys = sorted(log, key=int)  # integer order despite JSON's string keys
+    keys = sorted(log, key=int, reverse=True)  # integer order despite JSON's string keys
 
+    print(log["0"].keys())
     _SCORES_MD.write_text("\n---\n\n".join(_scores_block(k, log[k]) for k in keys) + "\n")
     _IMPORTANCES_MD.write_text("\n---\n\n".join(_importances_block(k, log[k]) for k in keys) + "\n")
     print(f"wrote {_SCORES_MD}  ({len(keys)} models)")

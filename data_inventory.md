@@ -24,6 +24,8 @@ access details (URLs, keys, code) are in the *Access Points* section below.
 | USDA CDL | Cropland Data Layer (crop classification raster) | CropScape API | `util/clip_crops.py`, `_make_crops.py` | public |
 | N-surplus | Iowa nitrogen-surplus grid (250 m) | static parquet | `util/build_source.py`, `_make_surplus.py` | CC BY 4.0 (gTREND, Nature Sci. Data 2026) |
 | NHD | Flowlines & waterbodies (widget overlays) | USGS NHD | `_make_map_overlays.py` | public |
+| EPA/USGS COMID attrs | Static per-reach basin attributes (tile drainage, base-flow index, contact time) keyed by outlet COMID | ScienceBase zipped CSVs | `util/fetch_sciencebase.py`, `_make_comid_attrs.py` | public domain (USGS/EPA StreamCat-family) |
+| AgTile-US | 30 m binary subsurface tile-drainage raster (2017) | Figshare GeoTIFF | `util/clip_agtile.py`, `_make_agtile.py` | CC BY 4.0 (Valayamkunnath et al. 2020) |
 
 ## Access Points
 
@@ -119,6 +121,20 @@ tif = requests.get(tiff_url).content
 - *Access Method:* Manual download, tifs ingested by `src/data/raw/surplus/tif/`.
 - *Requires API-Key:* **False**
 
+### COMID-keyed static basin attributes (tile drainage / base-flow / contact time)
+- *Description:* Per-reach static hydrologic attributes from the USGS/EPA StreamCat-family ScienceBase releases, keyed by NHDPlus `COMID`. Three attributes are staged, each in a local-catchment (`CAT_`) and upstream-accumulated (`TOT_`) form: **tiles92** (subsurface tile-drainage fraction, %, 1992 vintage), **bfi** (base-flow index, % of streamflow that is base flow), **contact** (subsurface contact time, days). Joined to a site by its basin's outlet COMID; the `TOT_` (whole-basin) columns are the between-site model features and the `CAT_` (local reach) columns are carried inert for diagnostics/choropleths.
+- *URL:* https://www.sciencebase.gov/catalog/ (items `57067469e4b03f95a075ad3e` tiles92, `5669a8e3e4b08895842a1d4f` bfi, `56f96fc5e4b0a6037df06b12` contact)
+- *Access Method:* unauthenticated HTTPS GET of the per-item zipped CSV (no HTTP Range; stream the whole file). See `src.build.util.fetch_sciencebase`.
+- *Requires API-Key:* **False**
+- *Built to:* `src/data/processed/comid_attrs.parquet` — one row per region COMID, columns `comid, cat_tiles92, tot_tiles92, cat_bfi, tot_bfi, cat_contact, tot_contact` (float64, NaN where the source flags a reach disconnected from the network). Read at runtime by `access.get_comid_attributes(comid)`; the result is stamped into `SiteData.comid_attrs` by `get_data`/`build_virtual_site_data`.
+
+### AgTile-US (30 m subsurface tile-drainage raster)
+- *Description:* National 30 m **plain binary** raster: 1 = tile-drained, 0 = everything else (undrained land, ag or non-ag alike). It carries **no** nodata / cropland mask (verified: CONUS tif is `nodata=None`, values `{0,1}` only). Single 2017 vintage. Rasterized onto the global weather grid, then integrated over a basin into two features whose denominators come from *outside* this raster: `tile_frac_basin` = tile-drained area / basin area (geometric), and `tile_frac_ag` = tile-drained pixels / **cultivated-cropland** pixels from CDL 2017 (Corn+Soybeans+Small_Grains+Fallow+Alfalfa; excludes Hay_Pasture and non-ag). `tile_frac_ag > tile_frac_basin` always (cultivated cropland ⊂ basin).
+- *URL:* https://doi.org/10.6084/m9.figshare.11825742 (Figshare; self-hosted GeoTIFF, **not** the Google Earth Engine mirror)
+- *Access Method:* manual GeoTIFF download to `src/data/raw/agtile/national/AgTile-US.tif` (~14.9 GB CONUS); the build clips to the region bbox and skips if the source tif is absent. See `src.build.util.clip_agtile`.
+- *Requires API-Key:* **False**
+- *Built to:* `src/data/interim/agtile_global.parquet` — keyed `global_node_id`, columns `tile_cells` (tile-drained pixel count per grid cell) and `cell_px` (total pixels the cell covers, a coverage diagnostic; a cell may be covered but untiled → `tile_cells=0`). Read at runtime by `access.get_agtile(uid)` / `_agtile_for_grid(grid)` into `SiteData.agtile`; the CDL cropland denominator for `tile_frac_ag` is read from `SiteData.crops` in `features._agtile_fractions`.
+
 ### US Census TIGER (state/county boundaries — masking)
 - *Description:* Cartographic boundary shapefiles used to mask the region to Iowa when gridding surplus/weather.
 - *URL:* https://www2.census.gov/geo/tiger/
@@ -163,6 +179,7 @@ Water-borne nitrate comes from a variety of sources, but the primary source is a
 - *Crop Distribution*, calculated yearly via satellite imagery from 2000 - 2025. Accessed using the USDA Crops Data Layer to produce GeoTIFFs, where each pixel corresponds to one of 254 different land-use types (Corn, Soybeans, Nonag, etc) at a resolution of 30m x 30m. We refer to this as the *crop data*.
 - *Nitrogen Surplus 2000-2017*, a model of yearly average nitrogen surplus in the continental United States from 1930-2017 calculated via the gTREND model in the 2026 Nature Paper [gTREND-Nitrogen - Long-term nitrogen mass balance data for the contiguous United States (1930-2017)](https://www.nature.com/articles/s41597-026-06576-x). One massive GeoTIFF downloaded manually for each year. We refer to this as the *surplus data*.
 - *Daily Historical Weather*, precipitation in inches from IEM and then min/max temperature in Celsius, min/max humidity, vapor pressure difference, evapotranspiration in (mm), solar radiation in Joules and 1000h fuel moisture from gridMET. We refer to this as the *weather data*.
+- *Static basin attributes*, time-invariant descriptors of a whole drainage basin that help explain why one site sits systematically higher or lower than another (the between-site gap). Two families: (1) COMID-keyed reach attributes joined by the basin's outlet COMID — subsurface **tile-drainage fraction** (`tot_tiles92`, %), **base-flow index** (`tot_bfi`, %), and **subsurface contact time** (`tot_contact`, days); and (2) the **AgTile** 30 m tile-drainage raster integrated to `tile_frac_basin` (tile-drained / basin area) and `tile_frac_ag` (tile-drained / CDL-2017 cultivated cropland). Tile drainage matters because artificially drained fields route nitrate to streams far faster than they would drain naturally.
 
 Other features we considered but decided against:
 - *SSURGO*, detailed static information about soil across the United States. We considered using it as a source of static categorical information for the land surrounding each sensor, but the data was hard to organize and preliminary EDA demonstrated it had little effect on model performance.
