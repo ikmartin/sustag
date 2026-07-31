@@ -1,17 +1,11 @@
-"""Build surplus_global.parquet: area-weighted nitrogen surplus per (global_node_id, year),
-aggregated ONCE over grid_global.
+"""Build surplus_global.parquet: area-weighted nitrogen surplus per (global_node_id, year), aggregated ONCE over grid_global.
 
-Phase 2 of the re-grain refactor. The old builder (data/surplus/make_surplus.py) overlaid the
-250 m surplus squares with each site's Voronoi cells and wrote one {uid}_surplus_grid.parquet
-per site. Here we overlay against the whole grid_global tessellation once, keyed by
-global_node_id; a site's surplus is then surplus_global.merge(site_view, on="global_node_id").
+Phase 2 of the re-grain refactor. The old builder (data/surplus/make_surplus.py) overlaid the 250 m surplus squares with each site's Voronoi cells and wrote one {uid}_surplus_grid.parquet per site. Here we overlay against the whole grid_global tessellation once, keyed by global_node_id; a site's surplus is then surplus_global.merge(site_view, on="global_node_id").
 
 Each 250 m surplus cell (a square) is area-weighted by its overlap with each Voronoi cell:
     total_kg_N   = Σ area(square ∩ cell) · surplus_kgha / 1e4     (kg, the cell's N sum)
     surplus_kgha = total_kg_N / cell_area_ha                       (intensive mean over the cell)
-Because grid_global's cells are identical to the old per-basin cells (Phase 0 verified cell_area
-to machine precision) and a cell's overlapping squares are the same, this reproduces the old
-per-site values up to float summation order (parity-checked, float-tolerant).
+Because grid_global's cells are identical to the old per-basin cells (Phase 0 verified cell_area to machine precision) and a cell's overlapping squares are the same, this reproduces the old per-site values up to float summation order (parity-checked, float-tolerant).
 
 Output (src/data/interim/surplus_global.parquet), one row per (global_node_id, year):
     global_node_id  int64
@@ -19,13 +13,9 @@ Output (src/data/interim/surplus_global.parquet), one row per (global_node_id, y
     surplus_kgha    float64
     total_kg_N      float64
 
-Source (src/data/raw/surplus/, falls back to legacy data/surplus/surplus_source/):
-    iowa_grid_lookup.parquet   pixel_id -> x, y (EPSG:5070), lon, lat
-    surplus[1..N].parquet      pixel_id, year, surplus_kgha, total_kg_N  (one year per chunk)
+Source (src/data/raw/surplus/tif/): national Surplus_N_{year}.tif rasters (EPSG:5070, 250 m, band = kg N/ha), 2000-2017. National coverage, so surplus now spans the WHOLE covariate_bbox -- out-of-Iowa grid cells get real surplus instead of NaN (this replaced the old Iowa-only iowa_grid_lookup.parquet + surplus[N].parquet source).
 
-COST: the statewide overlay is ~6M 250 m squares × ~23k cells. This is the heavy build in the
-pipeline (minutes, several GB). If memory is tight it can be tiled over sub-regions of
-grid_global (each tile is exact and independent); not done here to keep the port faithful.
+COST: the statewide overlay is ~6M 250 m squares × ~23k cells. This is the heavy build in the pipeline (minutes, several GB). If memory is tight it can be tiled over sub-regions of grid_global (each tile is exact and independent); not done here to keep the port faithful.
 
 Usage
 -----
@@ -63,36 +53,54 @@ _surplus_cfg = get_config()["surplus"]
 YEARS = list(range(_surplus_cfg["year_start"], _surplus_cfg["year_end"] + 1))
 
 
+_TIF_DIR = _SOURCE_DIR / "tif"  # national Surplus_N_{year}.tif rasters (EPSG:5070, 250 m, kg N/ha)
+
+
 def load_surplus_source(bbox=None, years=None) -> pd.DataFrame:
-    """Load surplus pixels filtered to a bbox and/or years (no 100M-row full merge).
+    """Load surplus pixels from the NATIONAL Surplus_N_{year}.tif rasters, clipped to `bbox`.
 
-    Columns: pixel_id, year, surplus_kgha, total_kg_N, x, y, lon, lat. The chunks are
-    one-year-per-file, so a `years` filter reads only the matching chunk(s) via row-group
-    pushdown; `bbox` (EPSG:5070, e.g. a grid's .total_bounds) keeps only pixels near that extent.
-    """
-    src = _SOURCE_DIR
-    lookup = pd.read_parquet(src / "iowa_grid_lookup.parquet")
-    pid_filter = None
-    if bbox is not None:
-        minx, miny, maxx, maxy = bbox
-        h = _SURPLUS_M / 2  # keep edge pixels whose 250 m square can still overlap the bbox
-        lookup = lookup[lookup["x"].between(minx - h, maxx + h) & lookup["y"].between(miny - h, maxy + h)]
-        pid_filter = set(lookup["pixel_id"].to_numpy().tolist())
+    The band is surplus intensity (kg N/ha). Returns pixel_id, year, surplus_kgha, x, y (EPSG:5070 centroids). `pixel_id` is the pixel's global (row, col) index in the CONUS tif grid -- stable across years, so a pixel's 250 m square is identical every year (aggregate dedups on it). `bbox` (EPSG:5070, e.g. a grid's .total_bounds) windows the read. Because the source is national, this now covers the whole covariate_bbox (out-of-Iowa cells get real surplus, not NaN)."""
+    import rasterio
+    from rasterio.windows import Window, from_bounds
+    from rasterio.windows import intersection as _win_intersect
 
-    yrs = list(years) if years is not None else None
+    yrs = list(years) if years is not None else list(YEARS)
     frames = []
-    for f in sorted(src.glob("surplus[0-9]*.parquet")):
-        df = pd.read_parquet(f, filters=[("year", "in", yrs)] if yrs is not None else None)
-        if df.empty:
+    for y in yrs:
+        f = _TIF_DIR / f"Surplus_N_{y}.tif"
+        if not f.exists():
+            print(f"  [WARN] surplus tif missing for {y}: {f}")
             continue
-        if pid_filter is not None:
-            df = df[df["pixel_id"].isin(pid_filter)]
-        if not df.empty:
-            frames.append(df)
+        with rasterio.open(f) as ds:
+            if bbox is not None:
+                minx, miny, maxx, maxy = bbox
+                h = _SURPLUS_M / 2  # pad so edge pixels whose square overlaps the bbox are kept
+                win = from_bounds(minx - h, miny - h, maxx + h, maxy + h, ds.transform)
+                win = _win_intersect(win.round_offsets().round_lengths(), Window(0, 0, ds.width, ds.height))
+            else:
+                win = Window(0, 0, ds.width, ds.height)
+            arr = ds.read(1, window=win).astype("float64")
+            wt = ds.window_transform(win)
+            col_off, row_off = int(win.col_off), int(win.row_off)
+            nod = ds.nodata
 
-    cols = ["pixel_id", "year", "surplus_kgha", "total_kg_N"]
-    surplus = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=cols)
-    return surplus.merge(lookup, on="pixel_id")
+        good = np.isfinite(arr)
+        if nod is not None:
+            good &= arr != nod
+        rows, cols = np.where(good)
+        if len(rows) == 0:
+            continue
+        xs, ys = rasterio.transform.xy(wt, rows, cols)  # pixel centroids (EPSG:5070)
+        pid = (rows + row_off).astype(np.int64) * 1_000_000 + (cols + col_off)  # stable global pixel id
+        frames.append(
+            pd.DataFrame(
+                {"pixel_id": pid, "year": np.int64(y), "surplus_kgha": arr[rows, cols],
+                 "x": np.asarray(xs), "y": np.asarray(ys)}
+            )
+        )
+
+    cols_ = ["pixel_id", "year", "surplus_kgha", "x", "y"]
+    return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame(columns=cols_)
 
 
 def aggregate_surplus_global(source: pd.DataFrame, grid: gpd.GeoDataFrame) -> pd.DataFrame | None:

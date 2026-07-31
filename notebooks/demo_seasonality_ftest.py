@@ -1,14 +1,11 @@
-"""seasonality_ftest.py -- Erin's nitrate/violation seasonality F-test, ported to the refactored
-data layer (src.data.access instead of the old `data` module).
+"""seasonality_ftest.py -- Erin's nitrate/violation seasonality F-test, ported to the refactored data layer (src.data.access instead of the old `data` module).
 
 Tests the hypotheses:
 H0: after accounting for rainfall, nitrate/violations have NO remaining seasonal structure.
 HA: significant seasonal structure remains.
 
 Fits a restricted (rainfall-only) and full (rainfall +
-Fourier harmonics) OLS on the day-of-year profile, compares them with a standard F-test and a
-HAC-robust Wald test (residuals are autocorrelated -> HAC is the one to trust), and draws the
-4-panel diagnostic.
+Fourier harmonics) OLS on the day-of-year profile, compares them with a standard F-test and a HAC-robust Wald test (residuals are autocorrelated -> HAC is the one to trust), and draws the 4-panel diagnostic.
 
 Notebook use:
     from seasonality_ftest import plot_ftest, run_pipeline, make_multi_site_df
@@ -38,8 +35,7 @@ from src.data import access
 
 # Build the per-site daily dataframe (adapted to src.data.access)
 def make_site_df(site):
-    """One row per day for a site: area-weightable nitrate mean/max, violation flag, basin precip.
-    Uses get_water / get_weather / get_basin_area directly (no full SiteData build)."""
+    """One row per day for a site: area-weightable nitrate mean/max, violation flag, basin precip. Uses get_water / get_weather / get_basin_area directly (no full SiteData build)."""
     precip = access.get_weather(site).groupby("date", as_index=False)["precip_in_1d"].mean()
     water = (
         access.get_water(site)
@@ -173,8 +169,7 @@ def print_results(res):
 
 # 4-panel diagnostic
 def plot_diagnostics(res_nitrate, res_violation):
-    """Top row: DOY profiles with rainfall-only vs +seasonal fits. Bottom row: full-model residuals
-    vs DOY with the Durbin-Watson stat. Returns the figure (render inline / fig.savefig(...))."""
+    """Top row: DOY profiles with rainfall-only vs +seasonal fits. Bottom row: full-model residuals vs DOY with the Durbin-Watson stat. Returns the figure (render inline / fig.savefig(...))."""
     fig = plt.figure(figsize=(14, 9))
     gs = gridspec.GridSpec(2, 2, hspace=0.38, wspace=0.32)
 

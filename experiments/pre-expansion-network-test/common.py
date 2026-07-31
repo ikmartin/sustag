@@ -1,11 +1,8 @@
 """Shared loaders for the R12 precondition test (see REPORT.md).
 
-Question this whole folder answers: does one site's nitrate carry predictive signal about another's
-as a function of HYDROLOGICAL relationship, ABOVE the shared seasonal/statewide driver the model
-already captures? That gates the graph/GNN + donor-channel direction.
+Question this whole folder answers: does one site's nitrate carry predictive signal about another's as a function of HYDROLOGICAL relationship, ABOVE the shared seasonal/statewide driver the model already captures? That gates the graph/GNN + donor-channel direction.
 
-Everything here reads data already on disk (85-ish sensors' daily nitrate + the basin-containment
-graph). No network, no new data.
+Everything here reads data already on disk (85-ish sensors' daily nitrate + the basin-containment graph). No network, no new data.
 """
 
 import sys
@@ -45,8 +42,7 @@ def build_wide(force: bool = False) -> pd.DataFrame:
 
 
 def statewide_mean(wide: pd.DataFrame) -> pd.Series:
-    """Cross-site daily mean nitrate -- the `rest_of_state` level the model ALREADY has. Removing it
-    is how we test whether connected pairs co-move BEYOND the statewide signal."""
+    """Cross-site daily mean nitrate -- the `rest_of_state` level the model ALREADY has. Removing it is how we test whether connected pairs co-move BEYOND the statewide signal."""
     return wide.mean(axis=1)
 
 
@@ -73,8 +69,7 @@ def haversine_km(lon1, lat1, lon2, lat2) -> float:
 
 
 def containment_info():
-    """Return (undirected_graph, component_id_by_site, directed_graph). Edge child->parent in the
-    directed graph means child's sensor lies inside parent's basin (child UPSTREAM of parent)."""
+    """Return (undirected_graph, component_id_by_site, directed_graph). Edge child->parent in the directed graph means child's sensor lies inside parent's basin (child UPSTREAM of parent)."""
     import networkx as nx
 
     dg = get_basin_graph()  # DiGraph, child -> parent (child nested in parent)

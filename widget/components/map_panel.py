@@ -1,6 +1,4 @@
-"""Map panel: registers every map callback and re-exports layout() (so layout.py can still call
-map_panel.layout()). Shared helpers/constants live in map_common; the UI builders in map_layout.
-Split purely for navigability -- behavior is unchanged."""
+"""Map panel: registers every map callback and re-exports layout() (so layout.py can still call map_panel.layout()). Shared helpers/constants live in map_common; the UI builders in map_layout. Split purely for navigability -- behavior is unchanged."""
 
 from .map_common import *  # noqa: F401,F403
 from .map_layout import layout, _crop_legend, _surplus_legend  # noqa: F401
@@ -375,8 +373,7 @@ def register_callbacks(app):
     def _pin_basin(delineate, method, toggle, region_geom):
         """Render a pin-drop basin overlay and its area label. Returns (layers, area_text).
 
-        The delineated FeatureCollection already carries area_km2 in its properties (set by the
-        builder), so the label reads it directly rather than recomputing.
+        The delineated FeatureCollection already carries area_km2 in its properties (set by the builder), so the label reads it directly rather than recomputing.
         """
         if "show" not in toggle or not region_geom or region_geom.get("type") != "Point":
             return [], ""

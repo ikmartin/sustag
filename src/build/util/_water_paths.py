@@ -1,9 +1,6 @@
 """Shared path resolution for the water builders (iwqis / usgs / site_metadata / _make_water).
 
-Source (IWQIS chunks + site_clean/measures/params, USGS QA dump) reads from src/data/raw/water,
-falling back to the legacy data/water/water_raw during staging. Outputs -- per-site nitrate
-parquets and metadata CSVs -- are WRITTEN to src/data/processed/water/{data,meta} (the tracked,
-durable IWQIS source of truth).
+Source (IWQIS chunks + site_clean/measures/params, USGS QA dump) reads from src/data/raw/water, falling back to the legacy data/water/water_raw during staging. Outputs -- per-site nitrate parquets and metadata CSVs -- are WRITTEN to src/data/processed/water/{data,meta} (the tracked, durable IWQIS source of truth).
 """
 
 from pathlib import Path

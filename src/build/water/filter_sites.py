@@ -4,8 +4,10 @@ Two kinds of filter, treated very differently:
 
   * QUANTITY (non-nan nitrate row count) -> `short_sites`. Applied automatically. A site is dropped if its number of non-nan nitrate observations does not exceed MIN_NITRATE_ROWS below -- a single, interpretable data-volume floor (see experiments/site-discovery/nitrate_row_counts.py for the cohort distribution used to pick it). This replaces the old sparsity + lifespan cutoffs.
   * QUALITY (sensor corruption) -> `flagged_sites`. A deliberately HIGH-false-positive detector: it is tuned for recall (catch every actually-bad site) and hands a human a review panel to confirm. A flagged site is NOT auto-dropped -- it is dropped only once a human promotes it into KNOWN_BAD below and reruns.
+  * SIZE (too small) -> `tiny_sites`. Applied automatically, but only to sites whose basin AND grid_global are already built (this step precedes make_features, so on a first-ever build it is a no-op and takes effect on the next pass). The measure is CELL COVERAGE -- Sum(frac_cell_in_basin), the basin's area in units of covariate cells -- not raw km2, because cell size is not constant and the grid may be re-cut at another resolution; coverage is already in the units that matter. Below MIN_CELL_COVERAGE the basin owns less than half a cell, so every covariate it has is a weighted sliver of cells lying mostly outside it -- and when those cells' centroids fall outside the basin, dist_to_sensor comes back all-NaN and every multi-bucket recipe raises "No objects to concatenate".
+  * SIZE (LOFO bridging) -> `oversized_sites`. Read from pipeline_config [site_filters].big_basin. These are hub basins that physically contain much of the fleet; because the conflict graph joins any two sites that are spatially nested AND temporally overlapping, one hub chains all its upstream sites into a single connected component -- i.e. one giant LOFO fold. Excluding four of them takes the largest family from 76 sites / 60% of all rows down to 23 / 25%, at a cost of 4.5% of rows. Selected on SITES CONTAINED, not basin area.
 
-    good_sites = [all raw_site_list sites] - short_sites - KNOWN_BAD
+    good_sites = [all raw_site_list sites] - short_sites - KNOWN_BAD - oversized_sites - tiny_sites
 
 Outputs `filtered_sites.json` (the three lists) + `review_panel.png` (one row per flagged site: a nitrate timeseries, a value histogram, and a stats table). The last CLI line prints `flagged_sites` as a copy-pasteable Python list.
 
@@ -32,6 +34,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+from src.build.config import get_config
 from src.build.water._paths import (
     filtered_sites_path,
     interim_water_dir,
@@ -40,28 +43,84 @@ from src.build.water._paths import (
     review_panel_path,
 )
 
+# ── oversized "hub" basins, excluded for LOFO health (see module docstring) ────
+# Unlike KNOWN_BAD this stays in pipeline_config.toml: it is a property of the basin geometry the build already knows about, not a human quality verdict, and the widget/basin tooling reads the same config. Read at call time so an edit takes effect without touching this file.
+def _oversized() -> list[str]:
+    return list(get_config()["site_filters"].get("big_basin", []))
+
 # ── the human-curated bad-site list ───────────────────────────────────────────
 # Edit this by hand after reviewing review_panel.png, then rerun. (Phase-1: seeded from the current pipeline_config.toml [site_filters].known_bad; Phase-2 removes the config key so this is the sole source of truth.)
 KNOWN_BAD = [
-    "WQS0113",
-    "WQS9901",
-    "WQS9903",
-    "WQS9904",
-    "WQS9902",
-    "WQS0091",
+    "USGS-05480603",
+    "USGS-05480986",
+    # "USGS-05483600", "USGS-06480000", "USGS-06899900", "USGS-06900050", "USGS-06901500",
+    "WQS0019",
+    # "WQS0025", "WQS0036", "WQS0042", "WQS0043", "WQS0044",
+    "WQS0045",
+    # "WQS0061", "WQS0064", "WQS0065", "WQS0066",
+    "WQS0068",
+    # "WQS0073",
+    "WQS0075",
+    # "WQS0076", "WQS0080",
+    "WQS0085",
     "WQS0088",
     "WQS0090",
-    "WQS0045",
-    "WQS0075",
+    # "WQS0091", "WQS0103", "WQS0111",
+    "WQS0113",
+    "WQS0114",
+    "WQS9901",
+    "WQS9902",
+    "WQS9903",
+    "WQS9904",
+    "WQS9999",
 ]
 
-# QUANTITY floor: a site is `short` (dropped) unless its non-nan nitrate row count EXCEEDS this. Tune
-# it against the cohort distribution from experiments/site-discovery/nitrate_row_counts.py. Default
-# 10,000 rows (~3.5 months at 15-min cadence) drops the empty + clearly-tiny sites and keeps the rest.
+# QUANTITY floor: a site is `short` (dropped) unless its non-nan nitrate row count EXCEEDS this. Tune it against the cohort distribution from experiments/site-discovery/nitrate_row_counts.py. Default 10,000 rows (~3.5 months at 15-min cadence) drops the empty + clearly-tiny sites and keeps the rest.
 MIN_NITRATE_ROWS = 10_000
 
+# COVERAGE floor: a basin with less than this many covariate CELLS' worth of area is dropped as `tiny_sites`. The measure is Sum(frac_cell_in_basin) over the grid_global cells the basin touches -- i.e. how much genuine cell area the basin actually owns, in units of cells.
+#
+# Thresholding coverage rather than km^2 is deliberate. Raw area has to be compared against a cell size that is not constant: a 1/24-deg cell is ~15.5 km^2 here but shrinks toward the poles, and the grid can be re-cut at a different resolution entirely. Coverage is already expressed in the units that matter -- if it is below 1, no single cell is fully inside the basin, and every covariate is a weighted average over cells that lie mostly OUTSIDE it. At 0.5 the basin owns less than half of one cell, so its "basin mean" is really its neighbours' land cover.
+#
+# The failure is not always graceful. WQS0109 (coverage 0.25) has two cells at 15% and 10% membership whose CENTROIDS fall outside the basin and off the sensor's upstream flow tree, so dist_to_sensor is NaN for every cell, every distance bucket is NaN, and any multi-bucket recipe dies in lag_buckets with "No objects to concatenate".
+#
+# At 0.5 this drops 7 of 123 sites (5.7%) but only 2.97% of daily-nitrate rows -- these basins are small AND short. The largest dropped is 0.49 cells; the two just above the line are 0.65 and 0.98, so even the survivors near the cut own less than one full cell.
+MIN_CELL_COVERAGE = 0.5
+
+
+def _cell_coverage(all_sites: list[str]) -> dict[str, float]:
+    """{site_uid: Sum(frac_cell_in_basin)} -- the basin's area in units of covariate CELLS.
+
+    ORDERING: this runs in the WATER build, which precedes make_features -- so until basins AND grid_global exist this returns {} and the filter is a no-op, taking effect on the next pass. Same shape as the big_basin list: a geometry-derived criterion that can only be applied once the geometry is built.
+
+    Deliberately computed from the basin polygon intersected with grid_global, via site_view's own _grid_basin_fractions, rather than by calling get_grid: it reuses the exact function the pipeline will use (so the number cannot drift from the real frac_cell_in_basin), and it needs NO per-site grid and NO D8 flow field -- which matters because the D8 walk is precisely what fails on the sites this filter exists to remove.
+    """
+    try:
+        from src.data.access import get_basin, get_basin_metadata
+        from src.data.crs import EQUAL_AREA_CRS
+        from src.data.site_view import _grid_basin_fractions, _grid_global
+
+        built = set(get_basin_metadata()["site_uid"].astype(str))
+        gg = _grid_global()
+    except Exception as e:
+        print(f"  [note] basins/grid_global not built yet ({type(e).__name__}); tiny-basin filter is a no-op.")
+        return {}
+
+    cover = {}
+    for uid in all_sites:
+        if uid not in built:
+            continue
+        try:
+            poly = get_basin(uid).to_crs(EQUAL_AREA_CRS).geometry.union_all()
+            members = gg[gg.geometry.intersects(poly)]
+            # a basin touching no cell at all scores 0 and is dropped -- there is nothing to aggregate
+            cover[uid] = float(_grid_basin_fractions(poly, members).sum()) if len(members) else 0.0
+        except Exception:
+            continue  # unreadable geometry -> unjudged, so kept (a filter must not drop on an error)
+    return cover
+
 # detector thresholds (physical / behavioral), mirrored from the site_stats.py study
-_HI = 45.0  # mg/L as N: above this is implausible for a surface nitrate sensor
+_HI = 50.0  # mg/L as N: above this is implausible for a surface nitrate sensor
 _SPIKE = 3.0  # mg/L jump between consecutive samples is non-physical
 _FLAT_K = 20  # >= this many identical consecutive samples counts as a flatline run
 _SEG_W = 2000  # ~3 weeks at 15-min cadence: window for the worst-segment scan
@@ -71,8 +130,7 @@ _FLAT_GAP_SEC = (
     2 * 3600
 )  # a flat run BREAKS across a time gap wider than this (2h), so identical readings that merely bracket a data gap don't count as one continuous stuck stretch
 
-# scrubbing (data-correction) thresholds -- localized defects removed from otherwise-good series
-_SCRUB_FLAT_HOURS = 48.0  # a constant-value run lasting >= this many hours is deleted as a stuck sensor. 48h (2 days) is chosen from the cohort's flat-run distribution: a real nitrate signal never holds ONE exact value for 2+ days, whereas normal overnight/low-flow stability tops out around 12-15h (a shorter floor like 3-6h shreds clean sites -- WQS0003 loses 0 at 48h but ~0.7% at 3h). Tune via experiments/site-discovery/site_stats.py behavior. NOTE USGS series hold identical values more often (coarser quantization); revisit per-source if it over-scrubs them
+# scrubbing (data-correction): the ONLY localized defect removed is out-of-physical-range points (< -1 or > _HI); the point's nitrate is set to NaN. Flatline/stuck-sensor scrubbing was removed -- exact-value runs over-scrubbed coarsely-quantized (esp. USGS) series, deleting real stable low-flow periods rather than stuck sensors.
 
 
 # ── gap-aware flat-run detection (shared by features + scrubbing) ─────────────
@@ -129,12 +187,10 @@ def _site_features(g: pd.DataFrame) -> dict:
     if n < 50:
         return out
     d1 = np.diff(v)
-    # gap-aware constant-value run lengths (see _flat_same/_runlen): identical readings that only
-    # bracket a data gap don't register as one continuous stuck stretch.
+    # gap-aware constant-value run lengths (see _flat_same/_runlen): identical readings that only bracket a data gap don't register as one continuous stuck stretch.
     runlen = _runlen(_flat_same(v, dt_v))
 
-    # duration (days) of the longest run of one identical value -- a stuck sensor. runlen tags every
-    # member of the longest run with L, so argmax is its first index; measure end-start in real time.
+    # duration (days) of the longest run of one identical value -- a stuck sensor. runlen tags every member of the longest run with L, so argmax is its first index; measure end-start in real time.
     L = int(runlen.max())
     start = int(np.argmax(runlen))
     flat_days = float((dt_v[start + L - 1] - dt_v[start]) / np.timedelta64(1, "D")) if L > 1 else 0.0
@@ -178,45 +234,23 @@ def _seasonal_coherence(daily: pd.DataFrame) -> pd.Series:
 
 
 # ── scrubbing (data correction) ───────────────────────────────────────────────
-def _flat_scrub_mask(v: np.ndarray, dt_v: np.ndarray, min_hours: float) -> tuple[np.ndarray, int]:
-    """Boolean mask over v of samples inside a gap-aware constant-value run lasting >= min_hours (a stuck sensor), plus the run count. A duration floor, so brief legitimate plateaus survive."""
-    same = _flat_same(v, dt_v)
-    n = len(v)
-    mask = np.zeros(n, dtype=bool)
-    runs, thr, i = 0, min_hours * 3600.0, 1
-    while i < n:
-        if same[i]:
-            j = i
-            while j < n and same[j]:
-                j += 1
-            a, b = i - 1, j - 1  # the run covers indices a..b (a is its first member)
-            if float((dt_v[b] - dt_v[a]) / np.timedelta64(1, "s")) >= thr:
-                mask[a : b + 1] = True
-                runs += 1
-            i = j
-        else:
-            i += 1
-    return mask, runs
-
-
 def _scrub_series(s: pd.DataFrame):
-    """Remove localized defects from a raw series: out-of-physical-range points (<0 or >_HI) and stuck constant-value runs (>= _SCRUB_FLAT_HOURS). Returns (cleaned frame sorted by datetime with scrubbed nitrate_con set to NaN, report) or (None, None) if nothing was removed. The datetime timeline is preserved; make_water's daily-max simply drops the NaNs."""
+    """Remove localized defects from a raw series: out-of-physical-range points (< -1 or > _HI) have their nitrate_con set to NaN. (Flatline/stuck-sensor scrubbing was removed -- exact-value runs over-scrubbed coarsely-quantized series, deleting real stable low-flow periods rather than stuck sensors.) Returns (cleaned frame sorted by datetime, report) or (None, None) if nothing was removed. The datetime timeline is preserved; make_water's daily-max simply drops the NaNs."""
     d = s.sort_values("datetime").reset_index(drop=True)
     v_all = pd.to_numeric(d["nitrate_con"], errors="coerce").to_numpy()
     idx = np.where(~np.isnan(v_all))[0]
     if len(idx) < 2:
         return None, None
-    v, dt_v = v_all[idx], d["datetime"].to_numpy()[idx]
-    range_local = (v < 0) | (v > _HI)
-    flat_local, flat_runs = _flat_scrub_mask(v, dt_v, _SCRUB_FLAT_HOURS)
-    n_range, n_flat = int(range_local.sum()), int(flat_local.sum())
-    if n_range == 0 and n_flat == 0:
+    v = v_all[idx]
+    range_local = (v < -1) | (v > _HI)
+    n_range = int(range_local.sum())
+    if n_range == 0:
         return None, None
     remove = np.zeros(len(d), dtype=bool)
-    remove[idx[range_local | flat_local]] = True
+    remove[idx[range_local]] = True
     cleaned = d.copy()
     cleaned.loc[remove, "nitrate_con"] = np.nan
-    return cleaned, {"n_range": n_range, "n_flatline": n_flat, "flat_runs": flat_runs}
+    return cleaned, {"n_range": n_range}
 
 
 def build_features(all_sites: list[str]) -> tuple[pd.DataFrame, dict, set, dict, dict]:
@@ -236,8 +270,7 @@ def build_features(all_sites: list[str]) -> tuple[pd.DataFrame, dict, set, dict,
         prof = pd.DataFrame({"site_uid": uid, "doy": dm.index.dayofyear, "val": dm.values})
         daily_rows.append(prof)
 
-        # SCRUB localized defects -> cleaned interim file (write when something is removed, else
-        # clear any stale cleaned file so make_water doesn't read outdated data on a rerun).
+        # SCRUB localized defects -> cleaned interim file (write when something is removed, else clear any stale cleaned file so make_water doesn't read outdated data on a rerun).
         interim = interim_water_dir() / f"{uid}_water.parquet"
         cln, report = _scrub_series(s)
         if report is not None:
@@ -334,7 +367,7 @@ def _stats_text(uid, F, sig, short_set, cleaned) -> str:
     ]
     if uid in cleaned:
         c = cleaned[uid]
-        lines.append(f"SCRUBBED: {c['n_range']} out-of-range, {c['n_flatline']} stuck-flat ({c['flat_runs']} runs)")
+        lines.append(f"SCRUBBED: {c['n_range']} out-of-range")
     return "\n".join(lines)
 
 
@@ -353,9 +386,7 @@ def _recommendation(uid, fired: set, cleaned: dict) -> str:
 
 
 def _longest_flat_span(s: pd.Series):
-    """Index bounds (start, end) of the longest run of equal consecutive non-nan values in a daily
-    series -- the visible stuck-sensor stretch, for highlighting. NaN (gap) days break a run. None if
-    no run of length >= 2."""
+    """Index bounds (start, end) of the longest run of equal consecutive non-nan values in a daily series -- the visible stuck-sensor stretch, for highlighting. NaN (gap) days break a run. None if no run of length >= 2."""
     vals = s.to_numpy()
     best = (0, 0)
     cur = None
@@ -381,14 +412,12 @@ def render_panel(review, F, sig, daily_series, short_set, cleaned, removed_days,
     for i, uid in enumerate(review):
         ax_ts, ax_hist, ax_txt = axes[i]
         s = daily_series.get(uid, pd.Series(dtype=float))
-        # reindex to a full daily calendar so genuine gaps become NaN and matplotlib BREAKS the line
-        # there, rather than drawing a straight segment across the hole (which reads as interpolation).
+        # reindex to a full daily calendar so genuine gaps become NaN and matplotlib BREAKS the line there, rather than drawing a straight segment across the hole (which reads as interpolation).
         if len(s):
             s = s.reindex(pd.date_range(s.index.min(), s.index.max(), freq="D"))
         color = "crimson" if uid in KNOWN_BAD else ("#ee6677" if sig.loc[uid, "flagged"] else "#4477aa")
         ax_ts.plot(s.index, s.values, lw=0.5, c=color)
-        # highlight the longest stuck-flat stretch so a short flat at a low value can't hide in a
-        # multi-year trace (the number in the stats block is longest_flat_days).
+        # highlight the longest stuck-flat stretch so a short flat at a low value can't hide in a multi-year trace (the number in the stats block is longest_flat_days).
         flat = _longest_flat_span(s)
         if flat is not None:
             fs = s.iloc[flat[0] : flat[1] + 1]
@@ -429,8 +458,7 @@ def render_panel(review, F, sig, daily_series, short_set, cleaned, removed_days,
             transform=ax_txt.transAxes,
         )
     axes[0][0].set_title("daily-mean nitrate (mg/L as N)", fontsize=8)
-    # reserve a fixed ~0.9in band at the top for the title (a fixed FRACTION collapses on tall panels,
-    # letting the suptitle land inside the first row); place the title inside that band.
+    # reserve a fixed ~0.9in band at the top for the title (a fixed FRACTION collapses on tall panels, letting the suptitle land inside the first row); place the title inside that band.
     fig_h = 1.7 * nrow
     fig.tight_layout(rect=[0, 0, 1, 1 - 0.9 / fig_h])
     fig.suptitle(
@@ -450,8 +478,7 @@ def filter_sites(plots: bool = True) -> dict:
 
     F, daily_series, nodata, cleaned, removed_days = build_features(all_sites)
 
-    # SHORT (quantity): too few non-nan nitrate rows to keep. `n` is exactly that count; nodata sites
-    # (no raw parquet, absent from F) count as 0 and so are always short.
+    # SHORT (quantity): too few non-nan nitrate rows to keep. `n` is exactly that count; nodata sites (no raw parquet, absent from F) count as 0 and so are always short.
     n_rows = pd.to_numeric(F["n"], errors="coerce")
     short = set(F.index[~(n_rows > MIN_NITRATE_ROWS)]) | set(nodata)
 
@@ -459,23 +486,33 @@ def filter_sites(plots: bool = True) -> dict:
     sig = detect(F)
     flagged = set(sig.index[sig["flagged"]])
 
-    # GOOD = all - short - KNOWN_BAD  (flagged is advisory, NOT subtracted here).
-    good = set(all_sites) - short - set(KNOWN_BAD)
+    # OVERSIZED (size): hub basins excluded for LOFO health. Intersected with the candidate universe so a stale config entry can't silently claim to have excluded a site that isn't here.
+    oversized = set(_oversized()) & set(all_sites)
 
-    # recommended KNOWN_BAD = flagged sites the review verdict marks 'record as bad' (an unrecoverable
-    # whole-series signal fired, so scrubbing can't fix them), excluding ones already in KNOWN_BAD.
+    # TINY (size): basins owning less than MIN_CELL_COVERAGE of one covariate cell, where the aggregation has nothing real to measure. Only sites with a built basin are judged; the rest are unjudged and therefore kept.
+    coverage = _cell_coverage(all_sites)
+    tiny = {u for u, c in coverage.items() if c < MIN_CELL_COVERAGE}
+
+    # GOOD = all - short - KNOWN_BAD - oversized - tiny  (flagged is advisory, NOT subtracted here).
+    good = set(all_sites) - short - set(KNOWN_BAD) - oversized - tiny
+
+    # recommended KNOWN_BAD = flagged sites the review verdict marks 'record as bad' (an unrecoverable whole-series signal fired, so scrubbing can't fix them), excluding ones already in KNOWN_BAD.
     fired_of = lambda u: {c for c in _SIGNALS if u in sig.index and sig.loc[u, c]}
-    rec_bad = sorted(u for u in flagged if u not in KNOWN_BAD and _recommendation(u, fired_of(u), cleaned) == "record as bad")
+    rec_bad = sorted(
+        u for u in flagged if u not in KNOWN_BAD and _recommendation(u, fired_of(u), cleaned) == "record as bad"
+    )
 
     result = {
         "good_sites": sorted(good),
         "flagged_sites": sorted(flagged),
         "short_sites": sorted(short),
-        # sites whose localized defects were auto-scrubbed into interim/water (uid -> removal counts);
-        # make_water reads the cleaned file for these.
+        # hub basins excluded for LOFO health (pipeline_config [site_filters].big_basin). Their raw per-site parquets are still downloaded and retained -- only the processed/derived products are skipped -- so re-including one is a filter/make_water/make_features cycle, no refetch.
+        "oversized_sites": sorted(oversized),
+        # basins below MIN_CELL_COVERAGE -- they own less than half a covariate cell, so their aggregated covariates are slivers of cells lying mostly outside the basin. uid -> cell coverage, so the reason a site was dropped is legible without recomputing geometry.
+        "tiny_sites": {u: round(coverage[u], 3) for u in sorted(tiny)},
+        # sites whose localized defects were auto-scrubbed into interim/water (uid -> removal counts); make_water reads the cleaned file for these.
         "cleaned_sites": {u: cleaned[u] for u in sorted(cleaned)},
-        # flagged sites the review recommends ADDING to KNOWN_BAD (unrecoverable corruption; sites
-        # already in KNOWN_BAD are excluded, hence "additions")
+        # flagged sites the review recommends ADDING to KNOWN_BAD (unrecoverable corruption; sites already in KNOWN_BAD are excluded, hence "additions")
         "recommended_bad_additions": rec_bad,
     }
     with open(filtered_sites_path(), "w") as f:
@@ -490,13 +527,23 @@ def filter_sites(plots: bool = True) -> dict:
         f"  flagged (quality): {len(flagged)}  (high-recall; per-signal: {sig[_SIGNALS].sum().astype(int).to_dict()})"
     )
     print(f"  KNOWN_BAD:        {len(KNOWN_BAD)}")
+    print(f"  oversized (size): {len(oversized)}  (hub basins, config [site_filters].big_basin: {sorted(oversized)})")
+    if coverage:
+        print(
+            f"  tiny (coverage):  {len(tiny)}  (< {MIN_CELL_COVERAGE:g} cells of basin area, of "
+            f"{len(coverage)} basins measured: { {u: round(coverage[u], 3) for u in sorted(tiny)} })"
+        )
+    else:
+        print("  tiny (coverage):  0  (basins/grid_global not built yet -- filter is a no-op this pass)")
+    stale = set(_oversized()) - set(all_sites)
+    if stale:
+        print(f"    [note] {len(stale)} big_basin entries are not in the candidate list (no-ops): {sorted(stale)}")
     if cleaned:
         tot_range = sum(c["n_range"] for c in cleaned.values())
-        tot_flat = sum(c["n_flatline"] for c in cleaned.values())
         print(
-            f"  scrubbed:         {len(cleaned)} site(s) cleaned -> interim/water ({tot_range:,} out-of-range + {tot_flat:,} stuck-flat samples removed)"
+            f"  scrubbed:         {len(cleaned)} site(s) cleaned -> interim/water ({tot_range:,} out-of-range samples removed)"
         )
-    print(f"  GOOD:             {len(good)}  = candidates - short - KNOWN_BAD")
+    print(f"  GOOD:             {len(good)}  = candidates - short - KNOWN_BAD - oversized - tiny")
     kb_caught = sorted(set(KNOWN_BAD) & flagged)
     print(f"  detector recall on KNOWN_BAD: {len(kb_caught)}/{len(KNOWN_BAD)}")
     print(f"  wrote {filtered_sites_path()}")
@@ -512,18 +559,10 @@ def filter_sites(plots: bool = True) -> dict:
 
     # per-site scrub detail: what was removed and why (largest first)
     if cleaned:
-        print("\n== SCRUBBED SITES (localized defects removed -> interim/water) ==")
-        for u in sorted(cleaned, key=lambda u: -(cleaned[u]["n_range"] + cleaned[u]["n_flatline"])):
+        print("\n== SCRUBBED SITES (out-of-range samples removed -> interim/water) ==")
+        for u in sorted(cleaned, key=lambda u: -cleaned[u]["n_range"]):
             c = cleaned[u]
-            reason = "; ".join(
-                p
-                for p in (
-                    f"{c['n_range']:,} out-of-range" if c["n_range"] else "",
-                    f"{c['n_flatline']:,} stuck-flat in {c['flat_runs']} run(s)" if c["n_flatline"] else "",
-                )
-                if p
-            )
-            print(f"  {u:<14} {c['n_range'] + c['n_flatline']:>9,} rows deleted  ({reason})")
+            print(f"  {u:<14} {c['n_range']:>9,} out-of-range rows deleted")
 
     # copy-pasteable hand-offs: the advisory flagged set, then the sites to actually record as bad
     print("\n" + "=" * 78)

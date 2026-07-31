@@ -118,13 +118,18 @@ def make_water(out_root: str | None = None, limit: int | None = None) -> None:
     print(f"  wrote {meta_dir / 'site_statistics.csv'}  (median lifespan {stats['lifespan'].median():.1f}y)")
 
     if out_root is None:
-        # Only the real contract write invalidates the runtime metadata cache.
+        # Only the real contract write invalidates the runtime caches: the metadata (site list) and
+        # the cross-site nitrate-state cache (rebuilt lazily from the new daily-max water on next use).
         try:
             from src.data import access
 
             access.get_metadata.cache_clear()
         except Exception:
             pass
+        nitrate_cache = _ROOT / "src" / "data" / "cache" / "nitrate_state_daily_wide.parquet"
+        if nitrate_cache.exists():
+            nitrate_cache.unlink()
+            print(f"  invalidated {nitrate_cache.relative_to(_ROOT)} (rebuilds from new daily-max water)")
 
 
 if __name__ == "__main__":

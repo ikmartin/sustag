@@ -7,8 +7,7 @@ For every site pair with >= MIN_OVERLAP concurrent observed days, compute:
   - connected  : basins hydrologically nested (same containment component, size > 1)
   - direct     : a direct containment edge (one nested immediately in the other)
   - n_hops     : shortest path in the containment graph (NaN if disconnected)
-Writes pairs.parquet. Prints the POWER CHECK (how many connected pairs even exist) up front --
-if that is tiny, the graph premise is underpowered on Iowa data alone, itself a finding.
+Writes pairs.parquet. Prints the POWER CHECK (how many connected pairs even exist) up front -- if that is tiny, the graph premise is underpowered on Iowa data alone, itself a finding.
 """
 
 import networkx as nx

@@ -1,3 +1,169 @@
+# [2026-07-31]
+
+Results from some experiments that landed. Look at verdicts.
+
+##### `exp32: longrun_mean` –– testing the long mean, std of crop and surplus features.
+
+Ablation of mean and std experiments. Get one mean and one std feature per crop per basin and one per surplus feature per basin.
+
+**Verdict:** Use only `longrun_mean` features for REG, `longrun_std` is slightly harmful. More of a tossup for CLF between `longrun_both` and `longrun_mean`. The std has positive signal for CLF, but is many more features. My guess is std will be useful as site count grows -- use `longrun_both` unless you need to cut stuff then use `longrun_mean`.
+
+- `REG`: best is using only `longrun_mean` features (no standard deviation, including only std makes it worse than base), 0.4489 lofo_r2 with 81 features over 0.4102 lofo_r2 base recipe with 54 features. Best feature is `surplus_kgha_mean_b1` and `pct_corn_mean_b2`.
+- `CLF`: best is both features, very marginally. Recipe `longrun_both` gets `lofo_prauc_lift` of 2.934 and `lofo_auc` of 0.8693, but has 119 features. Using only `longrun_mean` gets a `lofo_prauc_lift` of 2.914 (marginally better) and a `lofo_auc` of 0.872 (marginally better) with only 89 features. The base recipe does worst at `loso_prauc_lift` of 2.684 and `lofo_auc` of 0.8404. The std only recipes score higher than base.
+
+#### Basic Network Feature Ablations
+
+Experiments 33-36c are all ablations of variations on network features. They are all roughly of the following sorts of columns and recipes:
+
+**9 Columns:**
+- `nbr_anom_lag0`, donor's anomaly, lag0, in `concurrent` block
+- `nbr_anom_lag1`, donor's anomaly, lag1, in `lagged` block
+- `nbr_anom_lag3`, donor's anomaly, lag3, in `lagged` block
+- `nbr_level_lag1`, donor's raw level at lag1, the only column that can move the between-site channel, since an anomaly is mean-zero per site by construction
+- `nbr2_anom_lag`, the `second-hop` donor's anomaly at lag 1 (next site in the same direction)
+- `nbr_n_neighbors`, static number, count of monitored neighbors, up + down
+- `nbr_area_ratio`, log_10(donor basin area/own basin area) -- proxy for dilution
+- `dist_to_neighbor`, meters along the containment edge, D8 flow distance, straight line distance if it doesn't exist, NaN if neither exists
+- `neighbor_up`, flag indicator, 1.0 if chosen neighbor is upstream, 0.0 if downstream, NaN if no neighbor.
+
+Then we have the following recipe protoypes:
+- `nbr_concurrent` — lag0 only
+- `nbr_lagged` — lag1 + lag3
+- `nbr_level` — level_lag1 only
+- `nbr_2hop` — lagged + twohop
+- `nbr_coverage` — the four static scalars only. This is the control that separates "the donor's reading helps" from "merely knowing a donor exists helps"
+- `nbr_all` — all nine
+- `nbr_all_no_lag0` — all but lag0, i.e. the largest set a shipped recipe could actually carry.
+##### `exp33: network features` –– testing basic network feature ablations
+
+Test "nitrate from most similar upstream/downstream neighbor", where similarity is ranked by basin area similarity.
+– `REG`: best is keeping all "no_lag0" features, get `lofo_r2` of 0.5097 with 95 features compared to base recipe of 0.4489. Best feature is `surplus_kgha_mean_b1` and then `pct_corn_mean_b2`.
+- `CLF`: best is also the `nbr_all_no_lag0` faeature, `lofo_auc` of 0.8957 and `lofo_prauc_lift` of 3.249. Get 130 features over base recipe of 116 features. Not as big of a win as REG. Best feature is a longrun feature, `surplus_kgha_sd_b2`, a standard deviation feature.
+
+##### `exp34: network features variant`
+**Verdict:**
+
+Only gets one neighbor, rather than `exp33` where each site has an up and downstream neighbor.
+
+
+
+# [2026-07-30]
+
+The new distance features landed in experiments 33 - 35c, and they improve everything. This is expected, but what is fascinating is that it basically closes the gap between lofo and loso everywhere it measured. So it moves lofo quite a bit, but actually it moves loso basically not at all (last full train had loso_auc of 0.88 and the neighbor feature had loso_auc of like 0.89). This is weird. This means that
+
+- model with no neighbor features trained on all sites but 1, tested on that one
+- model with neighbor features trained on all sites but 1 and the sites its connected to, tested on 1
+
+Seem to perform the same... note that this isn't literally true because I'm using GroupKFold. What would be interesting is doing a literal LOSO run on all 119 sites, hold one site out at a time and train a model with no graph features. Then train a model in the same way WITH graph features, and compare results. Then compare to a graph feature model evaluated on LOFO. If all are roughly the same then maybe the full model trained on all sites WITHOUT 
+
+*Code changes — the island/network split*
+- **Two recipes per task now.** `recipe_REG`/`recipe_CLF` → `island_REG`/`island_CLF` (every feature computable at an arbitrary ungauged pin, statewide aggregates included); new `network_REG`/`network_CLF` add the reach-graph donor block. Network is a strict superset — REG +8 columns (flag encoding), CLF +14 (both directions) — and both share one aggregation pass rather than forking it.
+- **The neighbour block moved from `exps.py` into `features.py`** as `neighbor_nitrate()`, with all six bug fixes intact. `lags` is a parameter and 0 is legal, so the same-day column stays *emittable*; `recipes._NBR_LAGS_*` = `(1, 3)` is where it is declined, which keeps the deployment-legality call in one place.
+- **`train.py both` now trains four models.** 
+- `tune.py`/`fulltune.py` gained `--variant`; `save_model` now records `recipe` in the sidecar, since four models share two targets and the filename was the only disambiguator.
+- **`tune_threshold.py` repurposed** to `--target-recall` / `--target-fdr`, solved exactly off the PR curve. `train.build` already writes the beta table, and `BETA_GRID`'s 14 points snap, so "what τ catches 90% of violations" was previously only answerable to grid resolution. It now also refuses a model/recipe pair the sidecar contradicts.
+- Added the `nbr_all_no_lag0` arm — one line in `_neighbor_ablation.masks`, so all four variants get it. Nothing measured the column set a recipe could actually ship: `nbr_all` includes lag0, `nbr_lagged` drops level/twohop/cover with it.
+
+*Code changes — feature-manifest tuner*
+- **`NOISE_CEILING = 0.003` cost rule**, applied to grid ranking, ceiling raises and expansion steps: a doubling of trees×leaves×samples must buy more than a noise floor or the cheaper config stands. Replayed on the 07-29 CLF grid it independently picks 12,000 trees (0.6768) over 26,530 (0.6791) — 0.65 of a floor for 2.2× the compute.
+- **Ceiling growth is per config now**, not per stage: a bound config is refit alone while finished rows keep their scores, which is exact rather than an approximation since prefix scoring makes a config that chose k=400 of 1500 pick the same 400 of 6000. Plus `--max-ceiling` (6000), `--automatic-expansion` (off by default, **still untested**) and `--dump-curve`.
+- **Diagnosis of the 22-hour CLF screen run:** stage 2 drove `lam` to the bottom of its ladder and stage 3 did the same to `mcw`, leaving `lr` as the only shrinkage — so the loss creeps down forever and `best_k` is bounded solely by whatever ceiling it is handed (1500 → 26,530, buying +0.0002 to +0.0023 per doubling). Every config that keeps a real `reg_lambda` terminates on its own.
+
+*Code changes — feature-manifest experiment*
+- **`run_exp.py` takes a required, mutually exclusive `--island` / `--network`.** No default on purpose: the two are not comparable — network is scored only where a donor resolves, and reach neighbours co-fall with the basin families LOFO holds out — so a bare invocation that silently picked one would write a number into the shared log that nobody could place later. Every entry carries `variant`; `render_results` puts it in the run listing (where a run actually gets chosen) and in the report header. Absent reads as "not recorded", not as island, same as `true_lofo`.
+- **`--network` folds the donor block into the BASE**, so every candidate is screened over it and drop-one reports what removing it costs. Four drop units — `nbr_anom` / `nbr_level` / `nbr2` / `nbr_meta` — grouped like `_BASE_BLOCKS` for the same reason, since a 1-column drop cannot clear the floor. Column names derived from `recipes._NBR_LAGS_*` / `_NBR_ENCODING_*` rather than restated. There are deliberately no `add_nbr_*` arms: a candidate already in the base expands to exactly `base` and pays a full CV fit to log fold noise.
+- **Hard guard on the donor column names.** `compare_many` silently drops columns the pool lacks — for a *candidate* that shows up as an add-one arm scoring exactly `base`, but these are base columns, so the same drift would shrink the base and move every number in the run with nothing saying why. Any `_nbr_blocks` name the pool does not hold now raises before the first fit. Verified by injecting a typo.
+- Verified end to end on both encoding branches: CLF (`both`) 42 → 56 features with drop deltas 4/2/2/6, REG (`flag`) 41 → 49 with 2/1/1/4. Site count unchanged — the 12% with no donor keep the columns all-NaN and still pool.
+
+*Bugs found*
+- **`--dump-curve` had never worked, not once.** `curves += [...]` inside `score_point`, which is a closure: an augmented assignment *rebinds*, so `curves` compiles as local to the nested function and the first dumped row raises `UnboundLocalError`. The `rows.append(...)` on the line above survives only because it mutates instead of assigning. Fixed with `.extend`. Every run since the flag landed died on its first config, which is why no `*_curve.csv` has ever existed.
+- **`_SCREEN_XGB_CLF` was orphaned.** `_DEFAULTS["screen"]["clf"]` pointed at `_FULL_XGB_CLF`, so the CLF add-one screen had been fitting base-sized arms at the *full* config all along and the 2690-tree screen block was dead code that `grep` finds exactly one reference to — its own definition. Fixed; screen points at its own dict again.
+- **The CV splitter was under-linking conflict groups.** `build_conflict_graph` keyed its span lookup on `get_site_ids()` (116) while the containment graph carries 123 nodes, so the 7 filter-dropped sites got `None` from a dict *miss* — indistinguishable from "no nitrate record" — and every edge touching them was silently dropped. 5 hard leaks in the holdout audit; now 0, and **no cohort site changes fold**, so logged scores stay comparable.
+- **The per-site grid cache was stale in a way mtimes cannot see.** Cached `frac_cell_in_basin` differed from a live rebuild on *every boundary cell* (interior cells matched exactly) by ≤1.6e-4 — a sub-metre shift in the reprojected basin outline, with unchanged polygon, unchanged code and unchanged library versions. Added `preferred_basin.csv` to the staleness inputs (it decides *which* basin file the check even guards) and a `_build_env.json` provenance stamp; the cache is correctly rejected until `_make_site_grids --force` reruns.
+- **The grid builder could never finish — same 123/116 split as the CV splitter, mirrored.** `_make_site_grids._sites()` took its cohort from `preferred_basin.csv` (123) while `build_grid_live` → `get_location` reads the water contract (116), so the 7 filter-dropped sites failed with a bare `index 0 is out of bounds for axis 0 with size 0`. They contributed no cells, but the failures tripped the `if failed:` branch, so `_build_env.json` was **never** stamped and the cache stayed "not current" forever — every site computing its grid live, which is the whole cost the artifact exists to avoid. `_sites()` is now the intersection, with a `[warn]` for the converse hole (a cohort site with no preferred basin — none today), and `get_location` raises a `KeyError` naming the site instead of letting the positional index blow up. Leftover: 7 orphan parquets in `processed/grids/` for the dropped sites; they evaluate as not-current so nothing serves them, and they can't be rebuilt (no sensor location).
+- `selftest.virtual_equals_real` was asserting `abs(area_a - area_b) > 1e-6` on a quantity of order 4×10⁹ m² — about 16 significant digits, at or past float64 — so it could fail on summation order alone. Now relative (`rtol=1e-9`), and frame comparison moved off bit-identity.
+
+*Findings*
+- 12% of the cohort (14 of 116 sites) resolves no donor in either direction — but these are gauged sites, which sit where someone chose to instrument. The figure for arbitrary map pins is unmeasured and is the number that decides whether `network` is the primary model or the fallback. (Re-measured through the shipped `recipes._neighbor_nitrate` path rather than the `exps.py` one: 102/116 = 87.9%, so the two agree.)
+- New `_SCREEN_XGB_CLF` is **depth 3, lr 0.05** — the cost-adjusted winner of stage 1 at 0.6391 / k=2050 / fit_cost 8,036 (adj 0.6002), over depth 5 at 0.6421 / k=2950 / cost 46,256 (adj 0.5956). `n_estimators=500` is **extrapolated, not measured**.
+
+*Next steps*
+1. **Do not paste a fulltune winner into `RECIPE_XGB` until 36/36c have re-run.** `run_exp._xgb_config` reads it at import; that is exactly how exp 36 got confounded. It currently holds the values 33/33c used, which is the state wanted at launch.
+2. Once the machine is free: `python run_exp.py --full 36 36c 34 35 34c 35c --extra`. One pass closes **G1** (36/36c finally comparable to 33/33c, and 36c run at all) and **G2** (`nbr_all_no_lag0` on every encoding — exp 33 is already picking it up from the in-flight `--full 32 33`).
+3. **Measure the base plateau now that `--dump-curve` works** — `python tune.py --task clf --cols base --search "" --dump-curve --ceiling 1500 --max-ceiling 1500`, ~3 min, one config. Read the smallest k still within ~0.006 of its own peak and replace the extrapolated `n_estimators=500`. Cheap insurance on the config every add-one arm fits at, and it is the evidence needed before deciding whether to put the tolerance rule into `best_k`.
+4. **Run the manifest, CLF first.** Four runs (`--island` / `--network` × `--task clf` / `--task reg`), and CLF is ~8× cheaper per fit than REG — `_SCREEN_XGB_CLF` is 500 trees at depth 3 (4,000) against `_FULL_XGB_REG`'s 490 at depth 6 (31,360) — so a mistake in the network arms surfaces in a fraction of the wall time. Extrapolating an 8-site smoke, this is an overnight job, not an afternoon one.
+5. **Test `--automatic-expansion`** with a forced ladder edge (e.g. `--depths 3,4`) before using it on a real fulltune. Growth, the cost rule and the edge report are all verified; the expansion walk is not, because the smoke winner landed mid-ladder.
+6. **Retune all four models.** Both `network_*` land untuned by design — `_tuned_iters` raises rather than defaulting, so `train.py both` trains the island pair and stops loudly. Widen the depth and lam ladders first: the last REG fulltune settled at the top of both, which means truncated, not optimal.
+7. Decide **forecast vs nowcast** (G3). It is a product decision, not an experiment, and it determines whether lag0 is legal at all — unavailable to a forecast, available to a nowcast off a live donor feed. Only urgent if G2 shows lag0 is expensive to give up.
+8. Still unrun: **E1** (in-situ discharge, network-only) and **E2** (discrete grab samples, possibly island-legal too). Read the coverage-only arm first in each — station density tracks land use, so a coverage arm carrying the effect means a sampling-effort fingerprint rather than a measurement.
+
+# [2026-07-29]
+
+Performed several ablations on the main features. Started with
+
+```python
+features = [wb, cb, cb_exp, sb, sb_exp, *lagged_avgs, roll_n_all]
+```
+- took out `cb`, `cb_exp`, all bucketing, `surplus_expT` columns, and swapped `cb_exp` to be non-bucketed. The exp crops were bucketed too, to be clear.
+- Taking out all bucketing hurt both CLF and REG targets, REG a reasonable amount.
+- corn_b*_exp features seem potentially harmful in REG, negative perm score when added up across features, dropping them doesn't affect headline score, gains some `between_r2` score, same rmse as baseline.
+- pct_corn_b* features good for CLF, mixed for REG: for REG it improves `between_r2`, `macro_r2`, `within_r2`
+
+**CLF**
+| recipe_name | prauc | auc | br2 | f2 | fdr_at_f2 |
+|---|---|---|---|---|---|
+| recipe_CLF2 (baseline) | 0.6779 | 0.8686 | 0.3737 | 0.8580 | 0.5223 |
+| crop_exp_no_bucket | 0.6765 | 0.8691 | 0.3810 | 0.8760 | 0.5408 |
+| no_w_bck_yes_other_bck | 0.6738 | 0.8677 | 0.3682 | 0.8727 | 0.5367 |
+| no_exp_surplus | 0.6710 | 0.8667 | 0.3671 | 0.8619 | 0.5288 |
+| no_exp_crops | 0.6709 | 0.8655 | 0.3550 | 0.8621 | 0.5353 |
+| no_norm_crops | 0.6652 | 0.8643 | 0.3123 | 0.8735 | 0.5439 |
+| no_bucket | 0.6625 | 0.8597 | 0.2898 | 0.8907 | 0.5682 |
+
+**REG**
+| recipe_name | lofor2 | rmse | between_r2 | within_r2 | macro_r2 |
+|---|---|---|---|---|---|
+| no_exp_crops | 0.4531 | 4.0178 | 0.4669 | 0.4101 | 0.2061 |
+| recipe_REG2 (baseline) | 0.4522 | 4.0208 | 0.4383 | 0.4107 | 0.1892 |
+| crop_exp_no_bucket | 0.4507 | 4.0263 | 0.4543 | 0.4035 | 0.2360 |
+| no_w_bck_yes_other_bck | 0.4489 | 4.0331 | 0.4317 | 0.4075 | 0.1895 |
+| no_exp_surplus | 0.4483 | 4.0354 | 0.4389 | 0.4102 | 0.2189 |
+| no_norm_crops | 0.4464 | 4.0423 | 0.4604 | 0.4203 | 0.2429 |
+| no_bucket | 0.4076 | 4.1815 | 0.3725 | 0.4033 | 0.2465 |
+
+*Actions taken*
+- **Delete five dead weather vars**, keeping only `fuel_moisture_1000h` for now (+0.020 REG, +0.0075 CLF, essentially all in b1/b2).
+- Ship no_exp_crops as the REG recipe, keeping exp_crops in CLF but not bucketed
+- **Remove `rest_of_state_nitrate_lag3` for CLF**, it seems dead
+- `surplus_kgha_mean_b*` +0.052 REG (of which b1 alone is +0.041), +0.014 CLF. The single best engineered feature family. **Keeping it.** This is the static surplus feature.
+- **Keeping** the tile/drainage statics, tile_frac_basin (+0.013 REG, +0.009 CLF) and tile_frac_ag (+0.010 REG).
+- Re-tuning on the reduced feature set. Should rerun reg_no_exp_crops and reg_no_norm_crops on a few different seeds and average the results.
+- **Switch** bucketed `crops_expT` for non-bucketed `crops_expT` in the CLF recipe.
+- **Delete** the `crops_exp` value entirely for REG
+
+*Code changes*
+- `recipes.py` split into REG/CLF sections with per-task `_LIVE_WEATHER_PREFIX_*` and `_CROSS_SITE_ROLL_*`; every global read inside `_agg_features_*` is now in its `_cache_by_site` key, so editing one invalidates the memo instead of serving stale frames.
+- Small-experiments harness now fits at `train.xgb_for(recipe_REG/CLF, task)` instead of `FAST_XGB`, which was 800 trees at `reg_lambda=5` — c≈0.0009, i.e. no regularization. Every record predating this is incomparable, so `_record` logs the effective config.
+- Added exps 33/33c, 34/34c, 35/35c: three encodings of the reach-graph neighbour feature (both directions / direction flag / signed distance), plus a 36/36c scaffold for upstream-definition variants. Six bugs fixed on the way, incl. a NaN-truthiness `or` chain that silently killed the `flow_dist_m`→`euc_dist_m` fallback on all 7 unroutable edges.
+- Feature-manifest: `full_feature_set` was missing `surplus_expT` (both tasks) and `crops_whole` (CLF), so drop-one could not test two blocks the shipped recipe carries. Now a superset of shipped, with each unit tagged `shipped`/`n_cols`.
+- Manifest cost down 234 → 136 CV fits and 13 → 4-5 aggregations/site, via an `--encodings` gate on the bake-off arms (59% of candidates, none of which can enter `full`) and grouping the 23 unmeasurable single-column base drops into 6 blocks.
+- Two XGB regimes for the manifest (`_SCREEN_XGB_*` for add-one arms, `_FULL_XGB_*` for drop-one); `python fulltune.py` now produces all four blocks in one invocation. **Both are still untuned copies of REG's numbers — CLF's `reg_lambda` is c≈5.6 rather than 1.0.**
+- `fulltune.py` and `tune.main` both bound `tune()` positionally against a signature where `loso` preceded `true_lofo`, so every fulltune run silently used true-LOFO folds while `--true_lofo` toggled the LOSO pass. Fixed; `--append` also no longer lets a stale CSV row become the stage winner.
+- `render_results.py` 1020 → 346 lines, leading with a shipped-gap section (omitted-but-useful / shipped-but-inert, judged against the measured noise floors). CLF drop-one was never sorted at all — `lofo_prauc` vanished in the metric rework, so every delta was NaN and the `Rank` column reported log order; `surplus_norm` at −0.0076 was ranked 33rd.
+
+*Shipped tuner (`src/models/tune.py` + `fulltune.py`)*
+- `tuning_logs.json` → `.jsonl`, one appended line per config. As a JSON array it read-inserted-rewrote the whole file per config — O(n²), 80 KB at 195 entries — and, worse, it was **lossy under concurrency**: two fulltune runs racing on read-modify-write took the log from 195 entries to 1. An appended sub-4KB line is atomic on POSIX, so concurrent sweeps interleave instead of clobbering.
+- Grid rows now carry `ceiling` and `ceiling_bound`. Under `--append` the CSV accumulates stages *and* ceiling retries, so without them a config that chose 400 trees was indistinguishable from one cut off at 400 — recoverable only as `best_k/k_frac`, and `k_frac` is rounded.
+- Ceiling-retry trigger 0.8 → **0.9**, and the retry now grows the ceiling **×1.5 floored to a multiple of `_COARSE`** rather than doubling. Backstop cost drops ~511× → ~75×; the alignment matters because the scan grid is `range(50, ceiling+1, 50)` and an unaligned ceiling leaves `at_ceiling` reporting a shorter prefix than its name claims.
+- Retries reuse the stage's own `append` instead of forcing `True`, so stage 1's retry overwrites its own ceiling-bound attempt rather than leaving a truncated measurement sorted above the real winner. `_BIND` moved into `tune.py` so the CSV flag and the retry trigger read one constant.
+- Everything after `sites` in `tune()` is keyword-only. Thirteen positional args was correct only by convention — it is exactly the shape that silently misbound `true_lofo`→`loso` in the feature-manifest copy.
+
+# [2026-07-28]
+
+Everything optimized. Tuning redone, actually useful and good now. Should make drop-one feature irrelevant in the feature-manifest, a well-tuned XGBoost ought to ignore columns which don't contribute positive signal. Next step is to run a fulltune.py on the full model, fit a full model, and then use the perm/gain scores to ammend columns. Additionally the gain/perm scores on the fulltuned wide_recipe in the feature-manifest should be enlightening.
+
+Old repo mostly finished, old widget converted to static website, "light" models tuned and deployed, README updated. Old writeups need to be updated, that's all that's left though.
+
 # [2026-07-22]
 
 Had Claude make research report `notes/new-site-report.md`, report on potential for adding new sites.

@@ -49,9 +49,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[3]))  # repo root on pat
 from src.build.util._water_paths import build_log_path, meta_dir, raw_dir
 from src.build.util.usgs import USGS_SITE_LIST
 
-# ── canonical schema ──────────────────────────────────────────────────────────
-# Single source of truth for the output. Adapters are reindexed to this, so a source that omits a
-# column yields nulls rather than shifting the schema.
+# ── canonical schema ───────────────────────────────────────────
+# Single source of truth for the output. Adapters are reindexed to this, so a source that omits a column yields nulls rather than shifting the schema.
 CANONICAL = [
     # contract columns -- the only three anything downstream reads
     "site_uid",
@@ -151,9 +150,7 @@ def _site_clean_path() -> Path:
 def _parse_pg_array(value) -> list[str]:
     """Postgres array literal -> list of strings. Handles '{05451210}', '{}', NaN.
 
-    Deliberately NOT ast.literal_eval: '{05451210}' is a SyntaxError (leading-zero int literal)
-    and '{}' parses as an empty dict. And never int() -- the leading zero is part of the station
-    number and is what makes 'USGS-' + x reconstruct correctly.
+    Deliberately NOT ast.literal_eval: '{05451210}' is a SyntaxError (leading-zero int literal) and '{}' parses as an empty dict. And never int() -- the leading zero is part of the station number and is what makes 'USGS-' + x reconstruct correctly.
     """
     if not isinstance(value, str):
         return []
@@ -289,8 +286,7 @@ def _iwqis_rows(site_ids: list[str], ml: pd.DataFrame, clean: pd.DataFrame) -> p
 
 
 def _apply_iwqis_supplement(df: pd.DataFrame) -> pd.DataFrame:
-    """Map the IWQIS columns into their iwqis_* homes and resolve drainage_area. Shared by both
-    adapters, since USGS rows can also carry an IWQIS registration."""
+    """Map the IWQIS columns into their iwqis_* homes and resolve drainage_area. Shared by both adapters, since USGS rows can also carry an IWQIS registration."""
     df = df.copy()
     df["iwqis_uid"] = df.get("uid")
     for src, dst in [
@@ -325,8 +321,7 @@ SOURCES = [_usgs_rows, _iwqis_rows]
 def _groundwater_flag(df: pd.DataFrame) -> pd.Series:
     """True for karst-spring / well sites, which no surface delineation can represent.
 
-    OR across three signals -- must be all three: the USGS well is caught by site_type, but Big
-    Spring (WQS0031) has a NULL site_type and is caught only by its `31gw...` nickname.
+    OR across three signals -- must be all three: the USGS well is caught by site_type, but Big Spring (WQS0031) has a NULL site_type and is caught only by its `31gw...` nickname.
     """
     site_type = df["site_type"].astype(str).str.strip().str.lower()
     river = df["iwqis_river"].astype(str).str.lower()
@@ -363,8 +358,7 @@ def _resolve_colloc(df: pd.DataFrame) -> pd.Series:
 def build_candidates(force: bool = False) -> pd.DataFrame:
     """STEP 1: write site_candidates.csv (the candidate universe). Returns the frame.
 
-    Runs first, off direct sources. Does NOT write the contract file or clear the access cache --
-    that is filter_sites.py after the kept set is known.
+    Runs first, off direct sources. Does NOT write the contract file or clear the access cache -- that is filter_sites.py after the kept set is known.
     """
     clean = _site_clean()
     usgs_ids = _usgs_candidate_ids()

@@ -12,8 +12,7 @@ Reacts to state written by the map panel:
   coordinates of a point selection.  Area-based information is not yet
   implemented.
 
-Neither callback knows anything about the forecast model — this panel is
-purely descriptive.
+Neither callback knows anything about the forecast model — this panel is purely descriptive.
 """
 
 import pandas as pd
@@ -55,9 +54,7 @@ def _build_timeseries_figure(
 ) -> go.Figure:
     """Build the site timeseries figure with nitrate and rain traces.
 
-    Nitrate is plotted on the primary y-axis.  A secondary y-axis is reserved
-    for rainfall — uncomment the rain block below once the rain parquets are
-    ready for the sites you care about.
+    Nitrate is plotted on the primary y-axis.  A secondary y-axis is reserved for rainfall — uncomment the rain block below once the rain parquets are ready for the sites you care about.
     """
     fig = go.Figure()
     try:

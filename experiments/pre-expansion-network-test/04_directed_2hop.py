@@ -1,13 +1,9 @@
-"""Follow-up A: does 2-hop carry signal when it is a genuine CONTAINMENT CHAIN (one basin transitively
-inside the other, i.e. a directed upstream->downstream path) rather than two SIBLING tributaries under
-a shared parent?
+"""Follow-up A: does 2-hop carry signal when it is a genuine CONTAINMENT CHAIN (one basin transitively inside the other, i.e. a directed upstream->downstream path) rather than two SIBLING tributaries under a shared parent?
 
-In step 02 "2-hop" lumped both. The containment graph is DIRECTED (child -> parent = child's sensor
-inside parent's basin = child upstream). So:
+In step 02 "2-hop" lumped both. The containment graph is DIRECTED (child -> parent = child's sensor inside parent's basin = child upstream). So:
   nested   : a directed path exists between the pair (one basin contains the other)  -> real connection
   sibling  : connected undirected but NO directed path (share a downstream parent, neither contains other)
-We split 2-hop by this and compare residual co-movement. Prediction: nested 2-hop > sibling 2-hop,
-but weaker than 1-hop because the extra hop means a bigger area ratio (more dilution).
+We split 2-hop by this and compare residual co-movement. Prediction: nested 2-hop > sibling 2-hop, but weaker than 1-hop because the extra hop means a bigger area ratio (more dilution).
 """
 
 import networkx as nx

@@ -47,8 +47,7 @@ def _build_legend():
 
 
 def _crop_legend():
-    """Skinny vertical list of the dominant-crop colours (no header). Shown when the rain grid is on
-    and grid-colour mode is 'crop' (see render_grid_color_legend)."""
+    """Skinny vertical list of the dominant-crop colours (no header). Shown when the rain grid is on and grid-colour mode is 'crop' (see render_grid_color_legend)."""
     return html.Div(
         [_legend_row(colors.CROP_COLORS[c], colors.CROP_COLORS[c], c.replace("_", " ")) for c in colors.CROP_COLORS],
         style=_LEGEND_BOX_STYLE,
@@ -56,9 +55,7 @@ def _crop_legend():
 
 
 def _surplus_legend():
-    """Vertical nitrogen-surplus colour scale. Sampled from the ACTUAL cell colour map
-    (surplus_viz.surplus_to_hex -> YlOrRd over the global min/max) so the bar matches the grid, low
-    (bottom) -> high (top). Shown when the rain grid is on and grid-colour mode is 'surplus'."""
+    """Vertical nitrogen-surplus colour scale. Sampled from the ACTUAL cell colour map (surplus_viz.surplus_to_hex -> YlOrRd over the global min/max) so the bar matches the grid, low (bottom) -> high (top). Shown when the rain grid is on and grid-colour mode is 'surplus'."""
     lo, hi = surplus_viz._min_surplus(), surplus_viz._max_surplus()
     n = 12
     stops = [surplus_viz.surplus_to_hex(lo + i / (n - 1) * (hi - lo)) for i in range(n)]
@@ -271,8 +268,7 @@ def _build_graph_display_section():
 
 
 def _forecast_years():
-    """Weather years available for a virtual-site forecast (trimmed so target_year keeps its
-    ±2-month lookback buffer)."""
+    """Weather years available for a virtual-site forecast (trimmed so target_year keeps its ±2-month lookback buffer)."""
     yrs = sorted(access._weather_global_files())
     return yrs[1:-1] if len(yrs) > 2 else yrs
 
@@ -552,8 +548,7 @@ def _build_map_display_section():
 
 
 def _build_presentation_section():
-    """Display options tuned for screen-recording / presentation. Currently the grid-cell colour
-    mode; more toggles will be added here. Controls read their defaults from colors.default()."""
+    """Display options tuned for screen-recording / presentation. Currently the grid-cell colour mode; more toggles will be added here. Controls read their defaults from colors.default()."""
     return html.Details(
         [
             html.Summary("Presentation Display Options", style=_SECTION_LABEL_SUMMARY),

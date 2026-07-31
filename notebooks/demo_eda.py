@@ -51,8 +51,7 @@ def _daily(uid: str, agg: str = "max") -> pd.Series:
 
 
 def _daily_precip(uid: str) -> pd.Series:
-    """Basin-mean daily precipitation (in). get_weather has one row per grid cell per day, so
-    average over cells to get the basin-wide daily value (matches the widget)."""
+    """Basin-mean daily precipitation (in). get_weather has one row per grid cell per day, so average over cells to get the basin-wide daily value (matches the widget)."""
     w = access.get_weather(uid)
     s = w.groupby("date")["precip_in_1d"].mean()  # column is precip_in_1d
     s.index = pd.to_datetime(s.index)
@@ -89,8 +88,7 @@ def plot_nitrate_timeseries(uid: str, agg: str = "max"):
 
 # demonstrate seasonality (day-of-year climatology)
 def plot_seasonality(uid: str, agg: str = "max"):
-    """Nitrate by day-of-year: faint per-year traces + the mean climatology (red). The spring/
-    early-summer peak is the seasonal signal the doy sin/cos features capture."""
+    """Nitrate by day-of-year: faint per-year traces + the mean climatology (red). The spring/ early-summer peak is the seasonal signal the doy sin/cos features capture."""
     s = _daily(uid, agg)
     doy = s.index.dayofyear.to_numpy()
     year = s.index.year.to_numpy()
@@ -112,9 +110,7 @@ def plot_seasonality(uid: str, agg: str = "max"):
 
 # nitrate + rain autocorrelation together (Isaac's autocorrelation_of_rain_sites, one site)
 def plot_autocorrelation(uid: str, lags: int = 90, agg: str = "max"):
-    """ACF of daily nitrate (orange) and daily rain (blue) out to `lags` days -- one site's version
-    of Isaac's autocorrelation_of_rain_sites grid. Nitrate decays slowly (strong memory -> 'predict
-    yesterday' is a hard baseline to beat); rain drops off fast. statsmodels plot_acf, with
+    """ACF of daily nitrate (orange) and daily rain (blue) out to `lags` days -- one site's version of Isaac's autocorrelation_of_rain_sites grid. Nitrate decays slowly (strong memory -> 'predict yesterday' is a hard baseline to beat); rain drops off fast. statsmodels plot_acf, with
     missing='conservative' so the daily gaps are handled."""
     import statsmodels.api as sm
 
@@ -263,9 +259,7 @@ def plot_fleet_seasonality(sites=None, agg: str = "max", min_days: int = 60):
 
 # Isaac's violation seasonality: avg # of violation days per month, per site + fleet (cell_importance.ipynb)
 def _monthly_violation_days(uid: str) -> pd.DataFrame:
-    """Avg number of violation days per calendar month for one site (Isaac's
-    get_mean_month_violation_number): daily-max nitrate -> violation flag (>= 10 mg/L) -> monthly SUM
-    (# violation days that month) -> average across years by calendar month. Index = month (1-12)."""
+    """Avg number of violation days per calendar month for one site (Isaac's get_mean_month_violation_number): daily-max nitrate -> violation flag (>= 10 mg/L) -> monthly SUM (# violation days that month) -> average across years by calendar month. Index = month (1-12)."""
     w = pd.DataFrame(access.get_water(uid)["nitrate_con"].resample("1D").max())
     w["violation"] = w["nitrate_con"] >= VIOLATION_MGL
     m = w.resample("1MS").agg({"nitrate_con": "max", "violation": "sum"}).reset_index()

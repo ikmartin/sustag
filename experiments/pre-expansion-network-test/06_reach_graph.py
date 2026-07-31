@@ -1,22 +1,12 @@
-"""Follow-up C (the GNN-relevant redo): rebuild the graph as the IMMEDIATE-containment (reach) network
-and re-test 1-hop vs 2-hop.
+"""Follow-up C (the GNN-relevant redo): rebuild the graph as the IMMEDIATE-containment (reach) network and re-test 1-hop vs 2-hop.
 
-The step-01 graph was point-in-polygon containment -> transitively CLOSED, so every chain A in M in B
-collapsed to a direct A->B edge and 2-hop chains could not exist. That is a construction artifact, not
-hydrology. Here we build the graph the user specified, which mimics the river-reach network a GNN would
-use:
+The step-01 graph was point-in-polygon containment -> transitively CLOSED, so every chain A in M in B collapsed to a direct A->B edge and 2-hop chains could not exist. That is a construction artifact, not hydrology. Here we build the graph the user specified, which mimics the river-reach network a GNN would use:
 
     s -- t  iff  B(s) subset B(t) [or vice-versa]  AND  no other site r has B(s) subset B(r) subset B(t)
 
-i.e. the transitive reduction: an edge only to the NEAREST enclosing monitored basin. Now a real chain
-A in M in B is a 2-hop path A->M->B, and we can ask whether nitrate signal PROPAGATES through the
-intermediate node -- the thing multi-hop message passing exists to exploit.
+i.e. the transitive reduction: an edge only to the NEAREST enclosing monitored basin. Now a real chain A in M in B is a 2-hop path A->M->B, and we can ask whether nitrate signal PROPAGATES through the intermediate node -- the thing multi-hop message passing exists to exploit.
 
-We report residual co-movement for 1-hop (immediate), 2-hop CHAIN (A in M in B), 2-hop SIBLING, and --
-the decisive GNN test -- the PARTIAL correlation of a 2-hop chain (A,B) controlling for the intermediate
-M. If M screens off A (partial ~ 0), a 1-hop neighbour feature already carries everything and multi-hop
-is redundant. If A adds signal beyond M (partial > 0), multi-hop -- a GNN -- has something to carry.
-Reproduces fig4 on the new graph as fig8.
+We report residual co-movement for 1-hop (immediate), 2-hop CHAIN (A in M in B), 2-hop SIBLING, and -- the decisive GNN test -- the PARTIAL correlation of a 2-hop chain (A,B) controlling for the intermediate M. If M screens off A (partial ~ 0), a 1-hop neighbour feature already carries everything and multi-hop is redundant. If A adds signal beyond M (partial > 0), multi-hop -- a GNN -- has something to carry. Reproduces fig4 on the new graph as fig8.
 """
 
 import networkx as nx

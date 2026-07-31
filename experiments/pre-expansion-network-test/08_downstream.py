@@ -1,15 +1,11 @@
 """Follow-up E: downstream neighbours as predictors + the either-direction coverage gain.
 
-A pin with no monitored site UPSTREAM may still sit upstream of a monitored site (a downstream gauge
-integrates the pin's water). Since Spearman is symmetric, a downstream neighbour predicts the pin at
-the SAME per-edge strength an upstream neighbour would; the new value is COVERAGE -- more pins have a
-monitor downstream (any mainstem gauge below them) than upstream (a monitor in their own catchment).
+A pin with no monitored site UPSTREAM may still sit upstream of a monitored site (a downstream gauge integrates the pin's water). Since Spearman is symmetric, a downstream neighbour predicts the pin at the SAME per-edge strength an upstream neighbour would; the new value is COVERAGE -- more pins have a monitor downstream (any mainstem gauge below them) than upstream (a monitor in their own catchment).
 
 For each site s (as a stand-in for a pin):
   upstream monitors  = dg.predecessors(s)   (basins ⊂ B_s)  -> best = LARGEST (least diluted vs s)
   downstream monitors= dg.successors(s)     (basins ⊃ B_s)  -> best = SMALLEST (least diluted vs s)
-We report structural coverage (who has a neighbour at all), the nearest-neighbour residual predictive
-power each direction, and the either-direction feature (nearest neighbour in area, up or down).
+We report structural coverage (who has a neighbour at all), the nearest-neighbour residual predictive power each direction, and the either-direction feature (nearest neighbour in area, up or down).
 """
 
 import warnings

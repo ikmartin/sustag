@@ -1,9 +1,6 @@
 """This file does one thing: it finds valid candidate sites from various data sources, right now just USGS and IWQIS.
 
-"Valid" = an in-situ (continuous, pcode 99133) nitrate site inside the bounding box that is SURFACE
-water (not a well/spring). The ONLY filter applied is groundwater vs surface water -- the
-sparsity/lifespan quality filter is deliberately NOT applied here (that lives in the build's
-filter_sites.py, which decides the finally-kept set). So this returns the candidate universe.
+"Valid" = an in-situ (continuous, pcode 99133) nitrate site inside the bounding box that is SURFACE water (not a well/spring). The ONLY filter applied is groundwater vs surface water -- the sparsity/lifespan quality filter is deliberately NOT applied here (that lives in the build's filter_sites.py, which decides the finally-kept set). So this returns the candidate universe.
 
 Sources:
   * USGS  -- discovered fresh by querying the USGS OGC API for pcode 99133 within the bbox (so it
@@ -65,9 +62,7 @@ def _usgs_nitrate_sites_in_bbox(bbox) -> list[str]:
 
 
 def discover(bbox=None) -> pd.DataFrame:
-    """The in-situ surface-water nitrate candidate universe in the bbox, as a frame. USGS is
-    discovered by bbox query; IWQIS is the WQS#### registry filtered to the bbox. Groundwater is the
-    only exclusion. Adds a `source`."""
+    """The in-situ surface-water nitrate candidate universe in the bbox, as a frame. USGS is discovered by bbox query; IWQIS is the WQS#### registry filtered to the bbox. Groundwater is the only exclusion. Adds a `source`."""
     bbox = bbox or get_bbox()
     minlon, minlat, maxlon, maxlat = bbox
     _set_usgs_pat()

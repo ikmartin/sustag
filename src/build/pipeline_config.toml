@@ -6,16 +6,20 @@
 # path also needs lives in src/data/crs.py as a constant (EQUAL_AREA_CRS), not here.
 
 # ── region of interest ───────────────────────────────────────────────────────
-# Shared by crops, surplus, and weather. WGS84 lon/lat, [min_lon, min_lat, max_lon, max_lat].
-# Generous box around Iowa + basins reaching into neighbouring states, with margin so small
-# basin edits don't fall outside it. Iowa proper spans ~lon -96.65..-90.01, lat 40.33..43.59.
+# bbox_wgs84 is the FIXED site-discovery box (fetch_sites only). WGS84 lon/lat,
+# [min_lon, min_lat, max_lon, max_lat]. Generous box around Iowa + basins reaching into
+# neighbouring states. Iowa proper spans ~lon -96.65..-90.01, lat 40.33..43.59.
+# covariate_bbox is DERIVED (the box enclosing every delineated basin + bbox_wgs84) and written
+# here by _make_region AFTER basins are built; covariate builders read it via get_covariate_bbox().
+# It is absent until the first basin build; get_covariate_bbox() falls back to bbox_wgs84.
 [region]
 bbox_wgs84 = [-97.6, 39.8, -89.5, 44.5]
+covariate_bbox = [-100.158, 39.75, -85.839, 47.885]
 
 # ── crops pipeline ───────────────────────────────────────────────────────────
 [crops]
-# Inclusive year span to attempt (CropScape covers 2000-2025 for Iowa).
-year_start = 2000
+# Inclusive year span to attempt (CropScape covers 2000-2025 for Iowa but national coverage begins in 2008).
+year_start = 2008
 year_end = 2025
 # Crops kept as their own column when aggregating CDL pixels onto the grid. Every CDL class
 # not listed here is bucketed into "other". Names must match src/data/cdl_legend.py exactly
@@ -67,22 +71,27 @@ sparsity_cutoff = 0.5
 lifespan_cutoff = 3.92
 
 [site_filters]
-known_bad = [
-    "WQS0113",
-    "WQS9901",
-    "WQS9903",
-    "WQS9904",
-    "WQS9902",
-    "WQS0091",
-    "WQS0088",
-    "WQS0090",
-    "WQS0045",
-    "WQS0075",
-]
+# known_bad moved to the KNOWN_BAD constant at the top of src/build/water/filter_sites.py
+# (the new water build's human-review loop maintains it; it is no longer a build-config knob).
+#
+# big_basin STAYS here (unlike known_bad): it describes basin geometry the build already knows,
+# not a human quality verdict. Consumed by src/build/water/filter_sites.py, which subtracts it from
+# good_sites -> these sites get no contract row, no basin and no features. Their RAW per-site
+# parquets are still downloaded and kept, so re-including one costs a
+# filter_sites -> make_water -> make_features cycle with no refetch.
+#
+# CRITERION IS SITES CONTAINED, NOT AREA. The conflict graph joins sites that are spatially nested
+# AND temporally overlapping, so one hub basin chains every sensor inside it into a single LOFO
+# family. USGS-05465500 contains 38 of 127 sites at only 32k km2 -- an area rule misses it, which is
+# why the original area-picked trio left the largest family at 76 sites / 60% of all rows.
+# With the four below: 21 -> 31 families, largest family 76 -> 23 sites (60% -> 25% of rows), for
+# 4.5% of rows given up. Next tier by containment if this needs widening: WQS0033 (22),
+# WQS0115 (20), USGS-05420400 (19).
 big_basin = [
-    "USGS-05474500",
-    "WQS0020",
-    "USGS-05420500",
+    "USGS-05474500",  # contains 75 -- Mississippi R. at Keokuk
+    "USGS-05465500",  # contains 38 -- Iowa R. at Wapello
+    "WQS0020",        # contains 27
+    "USGS-05420500",  # contains 20 -- Mississippi R. at Clinton
 ]
 # Groundwater / karst sites: no surface drainage basin, so they can't be delineated or featured
 # like a stream site (filter_sites also drops them via the is_groundwater flag). The USGS ones are

@@ -122,6 +122,26 @@ def test_get_data() -> Result:
     return Result("get_data", PASS if not bad else FAIL, f"{len(sample)} sites; issues {bad}")
 
 
+_RTOL = 1e-9  # float agreement demanded below. Tight enough to catch anything meaningful -- the 2026-07-30 stale-grid drift was ~1e-4 relative, five orders louder -- while not asserting bit-identity of quantities that are legitimately summed in different orders.
+
+
+def _frames_match(a: pd.DataFrame, b: pd.DataFrame) -> bool:
+    """Same schema, same rows, floats equal to _RTOL and everything else exact.
+
+    NOT DataFrame.equals, which is bit-identity: on a float column that demands ~16 significant digits and fails on any reordering of a sum. Geometry stays exact -- a shifted vertex is a real difference, not rounding.
+    """
+    if list(a.columns) != list(b.columns) or len(a) != len(b):
+        return False
+    for c in a.columns:
+        x, y = a[c], b[c]
+        if pd.api.types.is_float_dtype(x) and pd.api.types.is_float_dtype(y):
+            if not np.allclose(x.to_numpy(), y.to_numpy(), rtol=_RTOL, atol=0.0, equal_nan=True):
+                return False
+        elif not x.equals(y):
+            return False
+    return True
+
+
 def test_virtual_equals_real() -> Result:
     sample = _sample_sites()
     bad = []
@@ -133,16 +153,16 @@ def test_virtual_equals_real() -> Result:
         virt = access.build_virtual_site_data(access.get_basin(uid), lat, lon, weather_start=ws, weather_end=we)
         real = access.get_data(uid)
         for fld in ("grid", "crops", "surplus", "weather"):
-            if not getattr(virt, fld).reset_index(drop=True).equals(getattr(real, fld).reset_index(drop=True)):
+            if not _frames_match(getattr(virt, fld).reset_index(drop=True), getattr(real, fld).reset_index(drop=True)):
                 bad.append(f"{uid}:{fld}")
-        if abs(virt.basin_area - real.basin_area) > 1e-6:
+        # RELATIVE, not absolute. The old `> 1e-6` was an absolute bound on a quantity of order 4e9 m^2 -- ~16 significant digits, at or past what float64 can represent, so it could fail on summation order alone.
+        if not np.isclose(virt.basin_area, real.basin_area, rtol=_RTOL, atol=0.0):
             bad.append(f"{uid}:area")
     return Result("virtual_equals_real", PASS if not bad else FAIL, f"{len(sample)} sites; mismatches {bad}")
 
 
 def test_splits() -> Result:
-    """The leakage-aware CV: conflict components form, folds cover 0..4, and a holdout has NO
-    hard (both-axes) leaks across the train/test boundary."""
+    """The leakage-aware CV: conflict components form, folds cover 0..4, and a holdout has NO hard (both-axes) leaks across the train/test boundary."""
     from src.splits import conflict_graph as cg
 
     groups = cg.split_groups()
@@ -162,8 +182,7 @@ def test_splits() -> Result:
 def test_features() -> Result:
     """build_feature_frame produces a well-formed, mostly-finite model matrix for a real site.
 
-    Asserts the expected feature FAMILIES are present (column *count* varies legitimately with
-    basin size -- a compact basin has only the near `_b0` distance bucket, which predict NaN-fills).
+    Asserts the expected feature FAMILIES are present (column *count* varies legitimately with basin size -- a compact basin has only the near `_b0` distance bucket, which predict NaN-fills).
     """
     from src.features.recipes import build_feature_frame
 
@@ -178,7 +197,10 @@ def test_features() -> Result:
                 len(fr) > 0
                 and {"date", "doy_sin", "doy_cos"} <= cols
                 and any(c.startswith("fuel_moisture_1000h") for c in cols)  # weather family (the one live weather var)
-                and (task != "reg" or any("Corn" in c for c in cols))  # crop family (REG only; CLF drops crops)
+                # crop family, BOTH tasks. Case-insensitive: the normalized aggregation emits
+                # pct_corn_*, not the capitalized Corn_* of the retired sum encoding.
+                and any("corn" in c.lower() for c in cols)
+                and any(c.lower().startswith("surplus_kgha_") for c in cols)  # surplus family
                 and any(c.startswith("rest_of_state_nitrate_lag") for c in cols)  # neighbour
             )
             if not has:

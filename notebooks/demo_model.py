@@ -1,16 +1,14 @@
 """model_demo.py -- notebook wrappers for the model-CV and full-training slices of the demo.
 
-Thin one-liners over the real harness (src.eval.cook + src.models.train), so the notebook stays
-clean:
+Thin one-liners over the real harness (src.eval.cook + src.models.train), so the notebook stays clean:
 
     from model_demo import *
-    cv = run_cv(recipe_CLF, task="clf")     # cross-site CV: LOSO/LOFO + the class-imbalance suite
+    cv = run_cv(island_CLF, task="clf")     # cross-site CV: LOSO/LOFO + the class-imbalance suite
     show_metrics(cv)                         # tidy transposed metric -> value view
     top_features(cv, n=15)                   # gain-ranked feature importances
-    run_full_train("demo_CLF", recipe_CLF, task="clf")   # CV + fit on ALL rows + log + save booster
+    run_full_train("demo_CLF", island_CLF, task="clf")   # CV + fit on ALL rows + log + save booster
 
-`run_cv` uses the quick FAST_XGB config by default (snappy for a live demo); `run_full_train` uses
-the tuned REAL_XGB config and produces the actual deployable model + a fulltrain_logs.json entry.
+`run_cv` uses the quick FAST_XGB config by default (snappy for a live demo); `run_full_train` uses the recipe's tuned config from train.RECIPE_XGB and produces the actual deployable model + a fulltrain_logs.json entry. An untuned recipe raises UntunedRecipe -- run src/models/fulltune.py first.
 """
 
 import sys
@@ -22,8 +20,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from src.eval.cook import compare_many, FAST_XGB, _pool, _features, _target, _grouped_models, basin_groups
-from src.features.recipes import recipe_REG, recipe_CLF  # noqa: F401  (re-exported for the notebook)
+from src.eval.cook import compare_many, FAST_XGB, _pool_wide, _features, _target, _grouped_models, basin_groups
+from src.features.recipes import island_REG, island_CLF  # noqa: F401  (re-exported for the notebook)
 from src.data.access import get_site_ids
 from src.features.features import (
     daily_nitrate,
@@ -46,16 +44,15 @@ def demo_sites(min_obs: int = 1500) -> list:
     return [s for s in get_site_ids() if daily_nitrate(site_uid=s).dropna().shape[0] >= min_obs]
 
 
-def run_cv(recipe, task: str = "clf", sites=None, xgb=None, name=None, min_rows: int = 500) -> pd.DataFrame:
+def run_cv(recipe, task: str = "clf", sites=None, xgb=None, name=None) -> pd.DataFrame:
     """Cross-site CV for one recipe: leave-one-site-out (loso_*) and leave-one-basin-family-out (lofo_*) metrics -- for clf that includes the class-imbalance suite (prauc_lift, f2, mcc, recall_at_far). Returns the one-row metrics DataFrame (gain importances on `.attrs`).
 
     Defaults: FAST_XGB (quick demo config)
-    `sites`: subset to speed up a live demo further. `min_rows` is the per-site inclusion floor
-    `min_rows`: (drop sites with fewer usable rows); lower it to admit shorter records.
+    `sites`: subset to speed up a live demo further. There is no per-site row floor -- the water build (filter_sites.py) is the sole site filter.
     """
     xgb = FAST_XGB if xgb is None else xgb
     name = name or getattr(recipe, "__name__", "recipe")
-    return compare_many({name: recipe}, sites=sites, target_col=_TARGET[task], task=task, min_rows=min_rows, **xgb)
+    return compare_many({name: recipe}, sites=sites, target_col=_TARGET[task], task=task, **xgb)
 
 
 def show_metrics(res: pd.DataFrame) -> pd.DataFrame:
@@ -69,11 +66,11 @@ def top_features(res: pd.DataFrame, n: int = 15) -> pd.DataFrame:
     return pd.DataFrame({name: s.head(n) for name, s in imp.items()})
 
 
-def run_full_train(name: str, recipe, task: str = "clf", xgb=None, final_iters=None, min_rows: int = 500) -> None:
-    """Full deployable run: cross-site CV (logged to fulltrain_logs.json), then fit on ALL rows and save the booster to models/<name>.json. Wraps src.models.train.build. Uses the tuned REAL_XGB config for the task by default. NOTE: the real config trains 5000-tree models -- this is the slow, side-effecting "actual training run" (writes a model + a log entry). `min_rows` is the per-site inclusion floor for the pool."""
+def run_full_train(name: str, recipe, task: str = "clf", xgb=None, final_iters=None) -> None:
+    """Full deployable run: cross-site CV (logged to fulltrain_logs.json), then fit on ALL rows and save the booster to models/<name>.json. Wraps src.models.train.build. Uses the recipe's tuned config from train.RECIPE_XGB by default, and raises UntunedRecipe if it has none. NOTE: this is the slow, side-effecting "actual training run" (writes a model + a log entry)."""
     if xgb is None:
-        xgb = train.REAL_XGB_CLF if task == "clf" else train.REAL_XGB_REG
-    train.build(name, recipe, target_col=_TARGET[task], task=task, xgb=xgb, final_iters=final_iters, min_rows=min_rows)
+        xgb = train.xgb_for(recipe, task)
+    train.build(name, recipe, target_col=_TARGET[task], task=task, xgb=xgb, final_iters=final_iters)
 
 
 # Preet's model diagnostics: feature-importance bars + spatial-CV PR curves
@@ -96,13 +93,7 @@ PREET_LAM = 10_000  # Preet's single exp-decay length (~10 km) for crops + surpl
 
 
 def _preet_eda_reg_frame(site, lam: int = PREET_LAM):
-    """Preet's EDA_and_modeling.ipynb REGRESSION feature set (the notebook preet_xgb_baseline
-    reconstructs), rebuilt on the refactored data layer: exp-decay-weighted crops & surplus at a
-    single ~10 km scale, basin precip + rolling-SUM antecedent rain (3/7/14/30d), raw calendar
-    (month / day_of_year / week), and basin area -- target = daily-MEAN nitrate_con (as the notebook
-    used). Deliberately EXCLUDES the full gridMET weather block and lat/lon: those are
-    testing_stuff.ipynb (the CLASSIFIER) traits, not this regression notebook. (That classifier
-    feature set is demo_recipes.preet_recipe.)"""
+    """Preet's EDA_and_modeling.ipynb REGRESSION feature set (the notebook preet_xgb_baseline reconstructs), rebuilt on the refactored data layer: exp-decay-weighted crops & surplus at a single ~10 km scale, basin precip + rolling-SUM antecedent rain (3/7/14/30d), raw calendar (month / day_of_year / week), and basin area -- target = daily-MEAN nitrate_con (as the notebook used). Deliberately EXCLUDES the full gridMET weather block and lat/lon: those are testing_stuff.ipynb (the CLASSIFIER) traits, not this regression notebook. (That classifier feature set is demo_recipes.preet_recipe.)"""
     kw = {"site_uid": site} if isinstance(site, str) else {"site_data": site}
     n = daily_nitrate(**kw, agg_meth="mean").rename("nitrate_con")  # EDA used daily-MEAN nitrate
     # precip ONLY (drop the rest of the gridMET block) + rolling-SUM antecedent rain
@@ -123,21 +114,12 @@ def _preet_eda_reg_frame(site, lam: int = PREET_LAM):
 
 
 def preet_xgb_baseline(sites=None, n_splits: int = 5, lam: int = PREET_LAM):
-    """Faithful reconstruction of Preet's cell-12 XGBoost REGRESSION baseline (EDA_and_modeling,
-    "Model Selection: Establishing an XGBoost Baseline"). Pools EDA_and_modeling's own regression
-    feature set (precip + rolling rain + exp-decay crops/surplus + calendar + basin area, via
-    _preet_eda_reg_frame -- NOT the testing_stuff classifier features in demo_recipes.preet_recipe),
-    runs a 5-fold GroupKFold spatial CV, and PRINTS -- literally, as Preet did -- per-fold Test RMSE
-    / Test R² on the held-out unseen sites, then the global feature importances.
+    """Faithful reconstruction of Preet's cell-12 XGBoost REGRESSION baseline (EDA_and_modeling, "Model Selection: Establishing an XGBoost Baseline"). Pools EDA_and_modeling's own regression feature set (precip + rolling rain + exp-decay crops/surplus + calendar + basin area, via _preet_eda_reg_frame -- NOT the testing_stuff classifier features in demo_recipes.preet_recipe), runs a 5-fold GroupKFold spatial CV, and PRINTS -- literally, as Preet did -- per-fold Test RMSE / Test R² on the held-out unseen sites, then the global feature importances.
 
     The fold-to-fold R² spread (Preet saw ~0.40 down to ~0.09) is her "spatial generalization gap":
-    a single global model transfers unevenly to unseen watersheds. This is the benchmark the
-    bucketed + travel-time-lagged spatial recipe_REG had to beat, and the reason plain per-site
-    linear/tree baselines (see demo_baselines.regression_model_comparison) were set aside for XGBoost.
+    a single global model transfers unevenly to unseen watersheds. This is the benchmark the bucketed + travel-time-lagged spatial recipe_REG had to beat, and the reason plain per-site linear/tree baselines (see demo_baselines.regression_model_comparison) were set aside for XGBoost.
 
-    Returns the global feature-importances Series (taken from the last fold's model, as Preet did).
-    NOTE: target is daily-MEAN nitrate (as EDA_and_modeling used), and Preet's exact hyperparameters
-    (500 trees, lr=0.03, depth=6, subsample/colsample=0.8)."""
+    Returns the global feature-importances Series (taken from the last fold's model, as Preet did). NOTE: target is daily-MEAN nitrate (as EDA_and_modeling used), and Preet's exact hyperparameters (500 trees, lr=0.03, depth=6, subsample/colsample=0.8)."""
     import xgboost as xgb
     from sklearn.model_selection import GroupKFold
     from sklearn.metrics import mean_squared_error, r2_score
@@ -146,7 +128,7 @@ def preet_xgb_baseline(sites=None, n_splits: int = 5, lam: int = PREET_LAM):
         return _preet_eda_reg_frame(site, lam=lam)
 
     recipe.__name__ = "preet_eda_reg"
-    pool = _pool(recipe, sites or get_site_ids(), "nitrate_con", progress_label="preet_eda_reg")
+    pool = _pool_wide(recipe, sites or get_site_ids(), "nitrate_con", progress_label="preet_eda_reg")
     feat = _features(pool, "nitrate_con")
     X, y, groups = pool[feat], pool["nitrate_con"], pool["site"]
 
@@ -175,15 +157,13 @@ def preet_xgb_baseline(sites=None, n_splits: int = 5, lam: int = PREET_LAM):
 
 
 def plot_pr_curves(recipe, sites=None, groupby: str = "family", n_splits: int = 5, xgb=None):
-    """Spatial-CV precision-recall curves (Preet's pr_curve figure): one PR curve per held-out fold
-    (faint dashed) + the interpolated mean (firebrick) + the random-guess baseline. `groupby`:
-    'family' = leave-one-basin-family-out (leakage-aware; the honest analog of Preet's leave-one-
-    K-means-cluster-out) or 'site' = leave-one-site-out. Classification only."""
+    """Spatial-CV precision-recall curves (Preet's pr_curve figure): one PR curve per held-out fold (faint dashed) + the interpolated mean (firebrick) + the random-guess baseline. `groupby`:
+    'family' = leave-one-basin-family-out (leakage-aware; the honest analog of Preet's leave-one- K-means-cluster-out) or 'site' = leave-one-site-out. Classification only."""
     from sklearn.metrics import precision_recall_curve, auc
 
     xgb = FAST_XGB if xgb is None else xgb
     target = _TARGET["clf"]
-    pool = _pool(recipe, sites or get_site_ids(), target, progress_label=getattr(recipe, "__name__", "recipe"))
+    pool = _pool_wide(recipe, sites or get_site_ids(), target, progress_label=getattr(recipe, "__name__", "recipe"))
     feat = _features(pool, target)
     X, y = pool[feat], _target(pool, target, "clf")
     groups = basin_groups(pool["site"]) if groupby == "family" else pool["site"]

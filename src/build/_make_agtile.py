@@ -1,17 +1,10 @@
 """Build interim/agtile_global.parquet: AgTile tile-drainage pixel counts over grid_global.
 
-Pipeline B of the static-data additions -- the raster/areal path, mirroring _make_crops. Rasterizes
-grid_global onto the AgTile clip transform once and bincounts, per cell:
+Pipeline B of the static-data additions -- the raster/areal path, mirroring _make_crops. Rasterizes grid_global onto the AgTile clip transform once and bincounts, per cell:
   tile_cells = pixels == 1 (tile-drained)
   cell_px    = every pixel the cell covers within the raster (coverage denominator)
 
-AgTile-US is a PLAIN BINARY raster: 1 = tile-drained, 0 = everything else (undrained land, ag OR
-non-ag alike). It carries NO nodata / cropland mask (verified: the CONUS tif is nodata=None, values
-{0,1} only). An earlier design assumed non-ag land was masked as nodata -- it is NOT -- so there is
-no "agricultural pixel" denominator inside this raster. The two downstream features get their
-denominators elsewhere: tile_frac_basin from the basin AREA (geometric), and tile_frac_ag from CDL
-cultivated-cropland pixel counts (crops_global) -- see features._agtile_fractions. cell_px is stored
-only as a coverage diagnostic; a cell may legitimately have tile_cells=0 (covered but untiled).
+AgTile-US is a PLAIN BINARY raster: 1 = tile-drained, 0 = everything else (undrained land, ag OR non-ag alike). It carries NO nodata / cropland mask (verified: the CONUS tif is nodata=None, values {0,1} only). An earlier design assumed non-ag land was masked as nodata -- it is NOT -- so there is no "agricultural pixel" denominator inside this raster. The two downstream features get their denominators elsewhere: tile_frac_basin from the basin AREA (geometric), and tile_frac_ag from CDL cultivated-cropland pixel counts (crops_global) -- see features._agtile_fractions. cell_px is stored only as a coverage diagnostic; a cell may legitimately have tile_cells=0 (covered but untiled).
 
 Single vintage 2017 -> no year dimension (unlike crops_global).
 
@@ -46,8 +39,7 @@ _BINCOUNT_BLOCK = 2048  # raster rows per block, caps transient memory (as in _m
 
 
 def _read_clip_window(src, bounds):
-    """Read the AgTile clip band over `bounds` (in the clip CRS, `src.crs`). Returns
-    (band, transform, nodata), or (None, None, None) if the bounds miss the raster."""
+    """Read the AgTile clip band over `bounds` (in the clip CRS, `src.crs`). Returns (band, transform, nodata), or (None, None, None) if the bounds miss the raster."""
     window = from_bounds(*bounds, src.transform).round_offsets().round_lengths()
     window = intersection(window, Window(0, 0, src.width, src.height))
     if window.width <= 0 or window.height <= 0:
@@ -113,8 +105,7 @@ def build_agtile_global(force: bool = False) -> pd.DataFrame:
 
 
 def main(force: bool = False) -> None:
-    """Clip the national AgTile tif then aggregate onto grid_global. Skips with a warning (does not
-    fail the pipeline) if the manually-downloaded national raster is absent."""
+    """Clip the national AgTile tif then aggregate onto grid_global. Skips with a warning (does not fail the pipeline) if the manually-downloaded national raster is absent."""
     from src.build.util.clip_agtile import clip_agtile
 
     try:

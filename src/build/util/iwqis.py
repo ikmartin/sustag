@@ -1,17 +1,10 @@
 """Build the IWQIS nitrate data (faithful port of data/water/make_iwqis_data.py).
 
-PECULIAR SOURCE: IWQIS is NOT an API. The original download (iwqis_alldata.csv) was chunked with
-split_csv.py into chunks/ (to fit on GitHub) and its site.csv hand-fixed to site_clean.csv (a
-bad quote on row 63). This reassembles the chunked CSV via the manifest and writes one
-{uid}_water.parquet per data-bearing WQS candidate + the metadata CSVs. Quality filtering
-(sparsity/lifespan) was extracted to filter_sites.py (step 3); this step just materializes data.
+PECULIAR SOURCE: IWQIS is NOT an API. The original download (iwqis_alldata.csv) was chunked with split_csv.py into chunks/ (to fit on GitHub) and its site.csv hand-fixed to site_clean.csv (a bad quote on row 63). This reassembles the chunked CSV via the manifest and writes one {uid}_water.parquet per data-bearing WQS candidate + the metadata CSVs. Quality filtering (sparsity/lifespan) was extracted to filter_sites.py (step 3); this step just materializes data.
 
-Because the raw chunks are 3.1 GB and not re-fetchable, the per-site parquets (processed/water)
-are the durable source of truth; this builder only needs to run when reconstructing from chunks.
+Because the raw chunks are 3.1 GB and not re-fetchable, the per-site parquets (processed/water) are the durable source of truth; this builder only needs to run when reconstructing from chunks.
 
-Source (raw/water, else legacy water_raw): chunks/, site_clean.csv, measures.csv, params.csv.
-Output: processed/water/data/{uid}_water.parquet, processed/water/meta/iwqis_{site_metadata,
-measures,params}.csv.
+Source (raw/water, else legacy water_raw): chunks/, site_clean.csv, measures.csv, params.csv. Output: processed/water/data/{uid}_water.parquet, processed/water/meta/iwqis_{site_metadata, measures,params}.csv.
 """
 
 import json
@@ -93,8 +86,7 @@ _WQS_RE = r"WQS\d+"
 
 
 def _data_uids(full_data) -> list[str]:
-    """WQS-candidate uids that actually appear in the reassembled data. This is the pull set --
-    quality filtering (sparsity/lifespan) is filter_sites.py, step 3."""
+    """WQS-candidate uids that actually appear in the reassembled data. This is the pull set -- quality filtering (sparsity/lifespan) is filter_sites.py, step 3."""
     uids = pd.Series(full_data["site_uid"].astype(str).unique())
     return sorted(uids[uids.str.match(_WQS_RE, na=False)])
 
@@ -102,9 +94,7 @@ def _data_uids(full_data) -> list[str]:
 def _precheck() -> bool:
     """True if the last build's outputs are all present, so we can skip the 3.1 GB reassembly.
 
-    Manifest = iwqis_site_metadata.csv, which now lists the data-bearing WQS candidates (not the
-    kept set -- keeping moved to filter_sites). Skipping is safe: the final kept set is a subset of
-    what is on disk, so filter_sites still prunes to the correct result.
+    Manifest = iwqis_site_metadata.csv, which now lists the data-bearing WQS candidates (not the kept set -- keeping moved to filter_sites). Skipping is safe: the final kept set is a subset of what is on disk, so filter_sites still prunes to the correct result.
     """
     if not (_metadata_target().exists() and _measures_target().exists() and _params_target().exists()):
         return False

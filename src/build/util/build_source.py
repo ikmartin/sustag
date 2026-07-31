@@ -1,8 +1,6 @@
 """Build the nitrogen-surplus source files (grid lookup + per-year panel) from GeoTIFFs.
 
-Ported from the legacy data/surplus/build_source.py. Reads single-band gTREND surplus rasters
-(Surplus_N_{year}.tif, EPSG:5070, 250 m), clips them to the project region box
-(pipeline_config.toml [region]), and writes the source parquets that _make_surplus.py consumes:
+Ported from the legacy data/surplus/build_source.py. Reads single-band gTREND surplus rasters (Surplus_N_{year}.tif, EPSG:5070, 250 m), clips them to the project region box (pipeline_config.toml [region]), and writes the source parquets that _make_surplus.py consumes:
 
     iowa_grid_lookup.parquet  pixel_id -> x, y (raster CRS), lon, lat (EPSG:4326). One row per cell
                               in the cropped extent (valid or not), so pixel_ids stay stable across
@@ -11,13 +9,9 @@ Ported from the legacy data/surplus/build_source.py. Reads single-band gTREND su
                               into N git-friendly chunks; coordinates live in the lookup.
                               _make_surplus.load_surplus_source globs surplus*.parquet + the lookup.
 
-INPUT  (the Surplus_N_*.tif rasters):  src/data/raw/surplus/tif/    (override with --tif-dir)
-OUTPUT (the source parquets):          src/data/raw/surplus/        (override with --out-dir)
+INPUT  (the Surplus_N_*.tif rasters):  src/data/raw/surplus/tif/    (override with --tif-dir) OUTPUT (the source parquets):          src/data/raw/surplus/        (override with --out-dir)
 
-The Surplus_N_*.tif rasters are the gTREND gridded nitrogen-surplus product -- a static research
-dataset, downloaded by hand (no API). Drop them in raw/surplus/tif/ named Surplus_N_{year}.tif.
-raw/surplus/ is gitignored, so this is only needed to *regenerate* the surplus source from scratch;
-the committed surplus_global.parquet supersedes it for normal use (_make_surplus short-circuits).
+The Surplus_N_*.tif rasters are the gTREND gridded nitrogen-surplus product -- a static research dataset, downloaded by hand (no API). Drop them in raw/surplus/tif/ named Surplus_N_{year}.tif. raw/surplus/ is gitignored, so this is only needed to *regenerate* the surplus source from scratch; the committed surplus_global.parquet supersedes it for normal use (_make_surplus short-circuits).
 
 Usage
 -----
@@ -40,7 +34,7 @@ from pyproj import Transformer
 _THIS_DIR = Path(__file__).resolve().parent  # src/build/util
 _SRC = _THIS_DIR.parents[1]  # src
 sys.path.insert(0, str(_THIS_DIR.parents[2]))  # repo root -> import src.build.config
-from src.build.config import get_region_bbox
+from src.build.config import get_covariate_bbox
 
 _RAW_SURPLUS = _SRC / "data" / "raw" / "surplus"
 DEFAULT_TIF_DIR = _RAW_SURPLUS / "tif"  # put Surplus_N_*.tif here (override with --tif-dir)
@@ -51,7 +45,7 @@ N_CHUNKS = 18  # split the panel into this many parquets to keep each git-friend
 
 def _region_mask(raster_crs) -> list:
     """The project region box (config [region]) as mask geometries in raster_crs."""
-    min_lon, min_lat, max_lon, max_lat = get_region_bbox()
+    min_lon, min_lat, max_lon, max_lat = get_covariate_bbox()
     region = gpd.GeoSeries([box(min_lon, min_lat, max_lon, max_lat)], crs="EPSG:4326").to_crs(raster_crs)
     return list(region.geometry)
 

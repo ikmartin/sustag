@@ -1,8 +1,6 @@
 """site_stats.py -- QA report + programmatic corruption detector for the fetch_site_list manifest.
 
-Prints short CLI reports and saves graphs for the IWQIS nitrate candidate sites, and -- the point --
-flags corrupted sites PROGRAMMATICALLY so the hand-curated `known_bad` list in pipeline_config.toml
-can be replaced by inspection of a short shortlist instead of the whole cohort.
+Prints short CLI reports and saves graphs for the IWQIS nitrate candidate sites, and -- the point -- flags corrupted sites PROGRAMMATICALLY so the hand-curated `known_bad` list in pipeline_config.toml can be replaced by inspection of a short shortlist instead of the whole cohort.
 
 Two things learned from the data, which shape this tool:
   * Lifespan / sparsity are QUANTITY, not quality. A short but clean series is usable (XGBoost pools
@@ -24,8 +22,7 @@ Reasons to drop a site, BEYOND lifespan/sparsity (this tool automates the first;
   * co-location redundancy (a USGS and IWQIS uid for one physical site)
   * record entirely outside covariate coverage (surplus ends 2017)
 
-Scope: IWQIS only (that is where the labels + full raw data live). USGS sites not already on disk
-would need a dataretrieval pull -- out of scope for v1.
+Scope: IWQIS only (that is where the labels + full raw data live). USGS sites not already on disk would need a dataretrieval pull -- out of scope for v1.
 
     python site_stats.py               # full report + plots + proposed_known_bad.csv
     python site_stats.py --recompute   # ignore the cached feature table
@@ -126,16 +123,14 @@ def _site_features(g: pd.DataFrame) -> dict:
 
 
 def _seasonal_coherence(daily: pd.DataFrame) -> pd.Series:
-    """Corr of each site's day-of-year mean profile with the cohort-mean profile. Low = no/odd
-    seasonality. `daily` is long: site_uid, doy, val (site daily-mean nitrate)."""
+    """Corr of each site's day-of-year mean profile with the cohort-mean profile. Low = no/odd seasonality. `daily` is long: site_uid, doy, val (site daily-mean nitrate)."""
     prof = daily.groupby(["site_uid", "doy"])["val"].mean().unstack("doy")  # site x doy
     cohort = prof.mean(axis=0)  # cohort seasonal profile
     return prof.apply(lambda r: r.corr(cohort), axis=1).rename("seasonal_coherence")
 
 
 def build_features(recompute: bool = False) -> pd.DataFrame:
-    """Feature table over every IWQIS site in _full_data (cached to site_features.csv). Tags manifest
-    membership and known_bad. The _full_data load is a slow 42M-row reassembly, so cache aggressively."""
+    """Feature table over every IWQIS site in _full_data (cached to site_features.csv). Tags manifest membership and known_bad. The _full_data load is a slow 42M-row reassembly, so cache aggressively."""
     if _FEAT_CACHE.exists() and not recompute:
         return pd.read_csv(_FEAT_CACHE, dtype={"site_uid": str}).set_index("site_uid")
 
@@ -174,9 +169,7 @@ def build_features(recompute: bool = False) -> pd.DataFrame:
 
 # ── corruption detector ───────────────────────────────────────────────────────
 def detect(F: pd.DataFrame) -> pd.DataFrame:
-    """Corruption signals + a composite ranked SCORE. Returns per-signal booleans, `score`, `rank`,
-    and `flagged`. Whole-series stats can't cleanly separate the subtle bad sites, so the primary
-    output is a ranked shortlist (score) plus high-confidence auto-flags for the obvious cases."""
+    """Corruption signals + a composite ranked SCORE. Returns per-signal booleans, `score`, `rank`, and `flagged`. Whole-series stats can't cleanly separate the subtle bad sites, so the primary output is a ranked shortlist (score) plus high-confidence auto-flags for the obvious cases."""
     z = lambda c: pd.to_numeric(F.get(f"z_{c}"), errors="coerce").fillna(0)
     num = lambda c: pd.to_numeric(F[c], errors="coerce")
     pos = lambda c, s=1: (s * z(c)).clip(lower=0)  # only anomalies in the CORRUPT direction

@@ -73,20 +73,30 @@ weekly = aggregate_by_interval(site_uid=uid, value_col="nitrate_con", interval="
 
 ## Eval
 
-`src.eval.cook` is the cross-site CV harness. A *recipe* is a function `site_uid -> DataFrame` (feature columns + a target column). `compare_many` scores recipes under Leave-One-Site-Out (`loso_*`, optimistic) and Leave-One-Family-Out (`lofo_*`, honest transfer) CV.
+`src.eval.cook` is the cross-site CV harness. A *recipe* is a function `site_uid -> DataFrame` (feature columns + a target column). Three holdout strategies, optimistic to conservative:
+
+| | grouping | note |
+|---|---|---|
+| `loso_*` | by site | nested neighbours stay in training — the leakage channel is open |
+| `lodo{d}_*` | one site per fold, connected sites within *d* km dropped from training | opt-in via `lodo_d_km=`; a true leave-one-out, so ~25× the fits |
+| `lofo_*` | by conflict-graph family | discards a whole family (~25% of rows) — more pessimistic than deployment |
+
+**`loso_`/`lofo_` are historical names and are NOT leave-one-out** — both run `GroupKFold(5)`, holding out ~1/5 of the sites or families per fold. All reported aggregates (`between_*`, `within_*`, `macro_*`) come from the **LOFO** out-of-fold predictions; `loso_auc`/`loso_r2` survive only so the LOSO−LOFO gap can be read as a leakage gauge.
 
 ### Examples
 
 ```python
-from src.eval.cook import compare_many, FAST_XGB
+from src.eval.cook import compare_many, compare_masks, FAST_XGB
 from src.features.recipes import recipe_CLF
 
 scores = compare_many({"clf": recipe_CLF}, sites=None, target_col="violation", task="clf", **FAST_XGB)
-scores.T                                    # lofo_auc, lofo_prauc_lift, lofo_recall_at_far, brier, ...
+scores.T                                    # lofo_auc, lofo_prauc_lift, lofo_recall_at_f2, ...
 scores.attrs["importance"]["clf"].head()    # gain-ranked feature importances (free)
 ```
 
-Also: `cook_one` (single-site chronological CV), `cook_fleet` / `compare_fleet` (per-site fleet summaries), and `fit_full` (train one deployable model on all rows).
+For many recipes that are column subsets of one wide frame, prefer `compare_masks(wide_recipe, {name: cols}, pool=...)`: it scores every recipe against **one shared pool**, so identical rows and fold assignments make a base-vs-candidate delta isolate the feature effect. `compare_many` re-pools per recipe, which mixes in a cohort effect.
+
+Also: `fit_full` (train one deployable model on all rows). The per-site path (`cook_one` / `cook_fleet` / `compare_one` / `compare_fleet`) was retired — the project moved off per-site modelling early on.
 
 ## Features
 
@@ -111,10 +121,12 @@ X = build_feature_frame("USGS-05465500", task="clf")
 ### Examples
 
 ```python
-from src.models.train import build, REAL_XGB_CLF
+from src.models.train import build, xgb_for
 from src.features.recipes import recipe_CLF
 
-build("my_CLF", recipe_CLF, target_col="violation", task="clf", xgb=REAL_XGB_CLF)
+# xgb_for pulls the recipe's tuned config out of train.RECIPE_XGB, tree count included.
+# A recipe with no entry raises UntunedRecipe -- run src/models/fulltune.py first.
+build("my_CLF", recipe_CLF, target_col="violation", task="clf", xgb=xgb_for(recipe_CLF, "clf"))
 ```
 
 ```bash

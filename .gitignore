@@ -6,18 +6,16 @@ src/data/raw/weather
 src/data/raw/water
 src/data/raw/comid_attrs
 src/data/raw/agtile
+src/data/raw/fertilizer
 src/data/interim/*
 src/data/processed/*
 src/data/cache/*
 !src/data/**/.gitkeep
 
-# EXCEPTION: the annual, cell-aggregated crop/surplus globals + the static grid are TINY (~6MB each)
-# -- one row per (cell, YEAR), not (cell, day) like weather. Committing them lets a fresh clone run
-# without the multi-GB raw CDL/surplus sources (the crops/surplus builders short-circuit on these).
-# (weather_global_*.parquet stays ignored: ~260MB/year, 4.6GB total -> hosted download / re-fetch.)
-!src/data/interim/grid_global.parquet
-!src/data/interim/crops_global.parquet
-!src/data/interim/surplus_global.parquet
+# These files used to be gitignored, but they are compressed on creation and git can't diff them, so they're uploaded every time. Add them as exceptions once they are stable (final bbox and site list locked in)
+src/data/interim/grid_global.parquet
+src/data/interim/crops_global.parquet
+src/data/interim/surplus_global.parquet
 
 # EXCEPTION: the per-site water data + metadata is the ONLY durable copy of IWQIS nitrate
 # (not re-fetchable from any API), so it is tracked in git. The 3.1GB raw IWQIS chunks under
@@ -72,6 +70,7 @@ src/data/interim.zip
 .vscode
 .claude
 MEMORY.md
+CLAUDE.md
 
 __pycache__/
 *.pyc

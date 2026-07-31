@@ -4,8 +4,7 @@ Two questions:
   RAW      : do connected pairs co-move more than disconnected? (expected yes, but partly seasonality)
   RESIDUAL : does that excess SURVIVE removing the statewide daily mean? (the decisive test -- the
              donor/graph channel only adds value if a neighbour beats `rest_of_state`)
-Controls for distance by comparing connected vs disconnected WITHIN matched Euclidean-distance bins.
-Writes summary.json.
+Controls for distance by comparing connected vs disconnected WITHIN matched Euclidean-distance bins. Writes summary.json.
 """
 
 import json

@@ -41,11 +41,7 @@ class VirtualForecast:
 
 
 def forecast_virtual_site(lat: float, lon: float, target_year: int, beta: float = 2.0) -> VirtualForecast:
-    """Delineate the basin at (lat, lon), build its features for `target_year`, score both models,
-    and apply the β operating point to the classifier: alarm days = P(violation) >= tau(β), where
-    tau and its honest recall/FDR come from the deployed model's tuned beta_table (see
-    src.models.tune_threshold). The NLDI call + build makes this a several-second operation; wrap
-    callers in dcc.Loading.
+    """Delineate the basin at (lat, lon), build its features for `target_year`, score both models, and apply the β operating point to the classifier: alarm days = P(violation) >= tau(β), where tau and its honest recall/FDR come from the deployed model's tuned beta_table (see src.models.tune_threshold). The NLDI call + build makes this a several-second operation; wrap callers in dcc.Loading.
     """
     sd = build_virtual_basin(lat=lat, lon=lon, target_year=target_year)
     reg = _predict(load_model(task="reg"), virtual_recipe(sd, task="reg", target_year=target_year))

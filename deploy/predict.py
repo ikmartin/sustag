@@ -1,10 +1,6 @@
 """Load a trained recipe model and score a (virtual) feature frame.
 
-The saved models (deploy/models/*.json) are XGBoost boosters. A feature frame from virtual_recipe
-/ recipes.build_feature_frame is aligned to the booster's feature_names before scoring: columns
-are selected + ordered to match, missing columns are NaN-filled (XGBoost handles NaN natively --
-e.g. a small basin lacking the far `_b1` distance bucket), and extra recipe columns are dropped.
-feature_mismatch() surfaces both sets so a recipe<->model version skew is explicit.
+The saved models (deploy/models/*.json) are XGBoost boosters. A feature frame from virtual_recipe / recipes.build_feature_frame is aligned to the booster's feature_names before scoring: columns are selected + ordered to match, missing columns are NaN-filled (XGBoost handles NaN natively -- e.g. a small basin lacking the far `_b1` distance bucket), and extra recipe columns are dropped. feature_mismatch() surfaces both sets so a recipe<->model version skew is explicit.
 """
 
 import json
@@ -47,8 +43,7 @@ def load_model(*, task: str = None, name: str = None) -> xgb.Booster:
 
 
 def load_meta(*, task: str = None, name: str = None) -> dict:
-    """The <model>.json.meta.json sidecar (feat / task / target, plus any beta_table + base_rate
-    written by tune_threshold.py). Resolves the same name as load_model. Empty dict if absent."""
+    """The <model>.json.meta.json sidecar (feat / task / target, plus any beta_table + base_rate written by tune_threshold.py). Resolves the same name as load_model. Empty dict if absent."""
     if name is None:
         name = DEFAULT_CLF_NAME if task == "clf" else DEFAULT_REG_NAME if task == "reg" else None
         if name is None:
@@ -58,10 +53,7 @@ def load_meta(*, task: str = None, name: str = None) -> dict:
 
 
 def threshold_for_beta(meta: dict, beta: float) -> dict | None:
-    """Operating point for `beta` from a meta's beta_table (written by tune_threshold): the grid row
-    nearest `beta`, augmented with the pooled base_rate -- keys tau / recall / precision / fdr /
-    base_rate. Returns None when the model has no beta_table (untuned), so callers can fall back to
-    showing the raw probability with no alarm threshold."""
+    """Operating point for `beta` from a meta's beta_table (written by tune_threshold): the grid row nearest `beta`, augmented with the pooled base_rate -- keys tau / recall / precision / fdr / base_rate. Returns None when the model has no beta_table (untuned), so callers can fall back to showing the raw probability with no alarm threshold."""
     table = meta.get("beta_table")
     if not table:
         return None
@@ -70,17 +62,14 @@ def threshold_for_beta(meta: dict, beta: float) -> dict | None:
 
 
 def feature_mismatch(booster: xgb.Booster, features: pd.DataFrame) -> dict:
-    """Column skew between a feature frame and the model: {'model_only', 'recipe_only'}. A
-    model_only that is not just an absent distance bucket signals a recipe<->model version skew."""
+    """Column skew between a feature frame and the model: {'model_only', 'recipe_only'}. A model_only that is not just an absent distance bucket signals a recipe<->model version skew."""
     fn = set(booster.feature_names)
     cols = {c for c in features.columns if c != "date"}
     return {"model_only": sorted(fn - cols), "recipe_only": sorted(cols - fn)}
 
 
 def predict(booster: xgb.Booster, features: pd.DataFrame) -> pd.Series:
-    """Score `features`, aligning columns to the model's feature_names (reindex: select + order,
-    NaN-fill missing). Returns a Series indexed by the frame's `date` (positive-class probability
-    for a classifier, the predicted target for a regressor)."""
+    """Score `features`, aligning columns to the model's feature_names (reindex: select + order, NaN-fill missing). Returns a Series indexed by the frame's `date` (positive-class probability for a classifier, the predicted target for a regressor)."""
     fn = booster.feature_names
     date = pd.DatetimeIndex(pd.to_datetime(features["date"])) if "date" in features.columns else None
     X = features.reindex(columns=fn)

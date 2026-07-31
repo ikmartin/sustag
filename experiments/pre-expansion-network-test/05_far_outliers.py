@@ -1,5 +1,4 @@
-"""Follow-up B: the far-but-correlated pairs (rho_resid >= 0.25 AND euclid_km >= 350).
-Is their high correlation real, or chance / similar seasonal baselines?
+"""Follow-up B: the far-but-correlated pairs (rho_resid >= 0.25 AND euclid_km >= 350). Is their high correlation real, or chance / similar seasonal baselines?
 
 Three discriminators:
   1. connected?   -- a pair on ONE long river (e.g. the Mississippi) is hydrologically nested yet far

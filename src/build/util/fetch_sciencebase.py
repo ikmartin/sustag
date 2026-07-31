@@ -1,14 +1,8 @@
 """Pinned downloads of ScienceBase item files, by stable file NAME.
 
-Standalone helper -- NOT imported by the runtime read path. Used by the COMID-attribute builder to
-stage source CSV zips locally, then the builder reads only the pinned files (no live-fetch on any
-runtime path).
+Standalone helper -- NOT imported by the runtime read path. Used by the COMID-attribute builder to stage source CSV zips locally, then the builder reads only the pinned files (no live-fetch on any runtime path).
 
-Why discover the URL by name each time: a ScienceBase file's direct URL is a content-addressed
-`?f=__disk__<hash>` link that CHURNS (the 2026-03 data-system migration rotated them; a hardcoded
-hash now 404s). The file NAME is stable, so we read the item JSON and resolve the current URL for
-that name at fetch time. The `sciencebase.usgs.gov/manager/.../file/...` "parquet" copies are also
-still broken (they return an HTML app shell) -- use the named CSV zips.
+Why discover the URL by name each time: a ScienceBase file's direct URL is a content-addressed `?f=__disk__<hash>` link that CHURNS (the 2026-03 data-system migration rotated them; a hardcoded hash now 404s). The file NAME is stable, so we read the item JSON and resolve the current URL for that name at fetch time. The `sciencebase.usgs.gov/manager/.../file/...` "parquet" copies are also still broken (they return an HTML app shell) -- use the named CSV zips.
 """
 
 import sys
@@ -32,8 +26,7 @@ def item_files(item: str, timeout: int = 60) -> list[dict]:
 def fetch_item_file(item: str, name: str, dest_dir: Path, force: bool = False, timeout: int = 300) -> Path:
     """Download `name` from ScienceBase `item` into dest_dir, pinned. Returns the local path.
 
-    Idempotent: skips the download if the file is already present and non-empty (unless force).
-    ScienceBase does not honor HTTP Range, so the whole file is streamed in one request.
+    Idempotent: skips the download if the file is already present and non-empty (unless force). ScienceBase does not honor HTTP Range, so the whole file is streamed in one request.
     """
     dest_dir.mkdir(parents=True, exist_ok=True)
     out = dest_dir / name

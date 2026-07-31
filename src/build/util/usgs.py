@@ -1,11 +1,8 @@
 """Pull and format USGS-NWIS continuous water data (faithful port of data/water/make_usgs_data.py).
 
-Per-site collector for the curated USGS_SITE_LIST: a 15-minute snapped wide table per site with
-one column per available core pcode (nitrate always present). NETWORK build via `dataretrieval`
-(needs api-keys.toml -> {"usgs": PAT}). Incremental: only missing date ranges are fetched.
+Per-site collector for the curated USGS_SITE_LIST: a 15-minute snapped wide table per site with one column per available core pcode (nitrate always present). NETWORK build via `dataretrieval` (needs api-keys.toml -> {"usgs": PAT}). Incremental: only missing date ranges are fetched.
 
-Source/keys: api-keys.toml. Output: processed/water/data/{uid}_water.parquet, processed/water/
-meta/usgs_{site_metadata,units}.csv; QA long-format dumps -> raw/water/USGS_QA_DUMP/.
+Source/keys: api-keys.toml. Output: processed/water/data/{uid}_water.parquet, processed/water/ meta/usgs_{site_metadata,units}.csv; QA long-format dumps -> raw/water/USGS_QA_DUMP/.
 """
 
 import logging
@@ -238,10 +235,7 @@ def params_from_meta(site_id: str, meta) -> int:
 def main(api_keys):
     """Build the USGS data site by site (incremental). api_keys must contain 'usgs' (a PAT).
 
-    STEP 2a of the water build. Filtering was extracted to filter_sites.py, with a deliberate
-    exception kept here: the big_basin and groundwater USGS sites are excluded from the FETCH rather
-    than pulled-then-pruned, to avoid wasteful network + parquet churn (a redesign can re-centralize
-    this later). filter_sites still drops both categories independently.
+    STEP 2a of the water build. Filtering was extracted to filter_sites.py, with a deliberate exception kept here: the big_basin and groundwater USGS sites are excluded from the FETCH rather than pulled-then-pruned, to avoid wasteful network + parquet churn (a redesign can re-centralize this later). filter_sites still drops both categories independently.
     """
     import os
 

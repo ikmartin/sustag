@@ -30,7 +30,24 @@ def _bucket_map(site_uid="", site_data=None, edges=_DEFAULT_DIST_EDGES_M):
 
 
 def bucket_lags(site_uid="", site_data=None, water_velocity=_VEL, edges=_DEFAULT_DIST_EDGES_M):
-    """Per-bucket travel-time lag in days (= median cell distance / water speed). Series: bucket -> lag_days."""
+    """Per-bucket travel-time lag in days.
+
+    Parameters
+    ----------
+    site_uid : str, optional
+        Site to resolve a grid for; ignored when `site_data` is given.
+    site_data : SiteData, optional
+        Prebuilt site data, to avoid re-resolving the grid.
+    water_velocity : float, default _VEL
+        Metres per second used to convert distance to travel time.
+    edges : sequence, default _DEFAULT_DIST_EDGES_M
+        Distance bucket edges in metres.
+
+    Returns
+    -------
+    pd.Series
+        bucket -> lag_days, the median cell distance in that bucket divided by `water_velocity`.
+    """
     grid = _resolve_data(site_data=site_data, site_uid=site_uid).grid
     b = grid["node_id"].map(_bucket_map(site_uid=site_uid, site_data=site_data, edges=edges))
     med = grid["dist_to_sensor"].groupby(b).median()
@@ -38,10 +55,25 @@ def bucket_lags(site_uid="", site_data=None, water_velocity=_VEL, edges=_DEFAULT
 
 
 def lag_buckets(weather_b, lags, cols=None, date_col="date", bucket_col="bucket"):
-    """Shift each bucket's weather columns back by its lag (row t <- value from t-lag).
+    """Shift each bucket's weather columns back by that bucket's travel-time lag.
 
-    `lags` is a bucket->days Series (or list, indexed positionally). With no bucket
-    column (edges=[]) the whole frame is lagged by the single lag value.
+    Row t takes the value from t - lag, so a distant bucket's weather reaches the sensor on the day it would actually arrive.
+
+    Parameters
+    ----------
+    weather_b : pd.DataFrame
+        Long bucketed weather, one row per (date, bucket).
+    lags : pd.Series or sequence
+        bucket -> days (from bucket_lags); a plain sequence is indexed positionally.
+    cols : sequence, optional
+        Columns to shift; default every non-key column.
+    date_col, bucket_col : str
+        Key column names. With no bucket column (edges=[]) the whole frame is shifted by the single lag.
+
+    Returns
+    -------
+    pd.DataFrame
+        Same shape, values shifted per bucket.
     """
     if cols is None:
         cols = [c for c in weather_b.columns if c not in (date_col, bucket_col)]
@@ -65,28 +97,72 @@ def lag_buckets(weather_b, lags, cols=None, date_col="date", bucket_col="bucket"
     return pd.concat(parts, ignore_index=True)
 
 
-def agg_grid_to_buckets(df, mapping, keys, col_agg):
-    """Aggregate per-cell `df` to one row per (`keys`[, bucket]) via `col_agg` {col: how}.
+def _weighted_group_agg(x, gkeys, cols, weights, kind):
+    """Weighted sum (`kind="wsum"`) or weighted mean (`"wmean"`) of `cols` per `gkeys` group, vectorized.
 
-    `mapping` is node_id -> bucket. The frame is indexed by node_id so weighted
-    aggregators can pull per-cell weights via ``values.index``; the bucket grouping is
-    dropped when the mapping defines a single bucket (edges=[]).
+    VALID ONLY FOR REDUCTIONS LINEAR IN THE VALUES -- Sum(v*w) and Sum(v*w)/Sum(w) -- because it scales each row by its cell weight once and then takes a plain groupby sum in Cython. A median or quantile tagged into this path would return wrong numbers silently, which is why aggregators opt in via `.agg_kind` rather than being routed by name. NaN handling is deliberate and load-bearing: a bare groupby sum SKIPS NaN while the per-group `np.dot`/`np.average` this replaced PROPAGATE it, so groups containing one are masked back to NaN explicitly. See notes/pooling-performance-report.md.
+    """
+    w = weights.reindex(x.index).to_numpy(dtype=float)
+    num = x[cols].mul(w, axis=0)
+    keyframe = x[gkeys]
+
+    grouped = pd.concat([num, keyframe], axis=1).groupby(gkeys, observed=True)[cols]
+    total = grouped.sum()
+    saw_nan = pd.concat([num.isna(), keyframe], axis=1).groupby(gkeys, observed=True)[cols].sum() > 0
+
+    if kind == "wmean":
+        denom = pd.concat([pd.Series(w, index=x.index, name="_w"), keyframe], axis=1)
+        total = total.div(denom.groupby(gkeys, observed=True)["_w"].sum(), axis=0)
+    return total.mask(saw_nan)
+
+
+def agg_grid_to_buckets(df, mapping, keys, col_agg):
+    """Aggregate a per-cell frame to one row per (`keys`[, bucket]).
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Per-cell values, indexed by node_id so weighted aggregators can pull per-cell weights via ``values.index``.
+    mapping : pd.Series
+        node_id -> bucket. The bucket grouping is dropped when the mapping defines a single bucket (edges=[]).
+    keys : sequence of str
+        Row keys to group by alongside the bucket, e.g. ``["date"]`` or ``["year"]``.
+    col_agg : dict
+        {column: how}. A `how` carrying ``.agg_kind`` / ``.cell_weights`` (the curried weighted aggregators) is routed through _weighted_group_agg and computed vectorized; anything else -- a builtin like ``sum``, or a caller's own callable -- goes through groupby.agg unchanged.
+
+    Returns
+    -------
+    pd.DataFrame
+        One row per (key[, bucket]).
     """
     # index by node_id so each group's value Series carries node_id as its index;
     # that lets a weighted aggregator (_area_mean_curry) pull the matching per-cell
     # weights via values.index.
     x = df.set_index("node_id")
+    gkeys = list(keys)
     if mapping.cat.categories.size > 1:
         x["bucket"] = x.index.map(mapping)
-        g = x.groupby([*keys, "bucket"], observed=True)
-
-    else:
-        g = x.groupby([*keys], observed=True)
+        gkeys = [*keys, "bucket"]
 
     out = {}
+    vectorizable, per_group = {}, {}
     for col, how in col_agg.items():
-        out[col] = g[col].agg(how)
-    return pd.DataFrame(out).reset_index()
+        (vectorizable if getattr(how, "agg_kind", None) else per_group)[col] = how
+
+    if per_group:
+        g = x.groupby(gkeys, observed=True)
+        for col, how in per_group.items():
+            out[col] = g[col].agg(how)
+
+    # batch the vectorized columns by the weights+kind they share, so each batch is ONE groupby
+    batches = {}
+    for col, how in vectorizable.items():
+        batches.setdefault((how.agg_kind, id(how.cell_weights)), (how, []))[1].append(col)
+    for (kind, _), (how, cols) in batches.items():
+        agg = _weighted_group_agg(x, gkeys, cols, how.cell_weights, kind)
+        out.update({c: agg[c] for c in cols})
+
+    return pd.DataFrame({c: out[c] for c in col_agg}).reset_index()
 
 
 def _agg_dicts(land_use_func, weather_func):
@@ -140,6 +216,9 @@ def _area_mean_curry(site_uid="", site_data=None):
         # values is one group's Series indexed by node_id -> weight by those cells
         return float(np.average(values, weights=area_ha.loc[values.index]))
 
+    # Same reduction, declared so agg_grid_to_buckets can do it vectorized instead of calling _func
+    # once per (group, column). _func stays the reference definition and the fallback.
+    _func.cell_weights, _func.agg_kind = area_ha, "wmean"
     return _func
 
 
@@ -156,6 +235,7 @@ def _exp_curry(site_data, lam):
     def _exp_decay_weighting(values):
         return float(np.dot(values, cell_w.loc[values.index]))
 
+    _exp_decay_weighting.cell_weights, _exp_decay_weighting.agg_kind = cell_w, "wsum"
     return _exp_decay_weighting
 
 
@@ -168,24 +248,29 @@ def _standard_agg_dicts(site_data):
 
 
 def _exp_decay_agg_dicts(site_data, lam):
-    """Agg dicts using exp distance-decay-weighted sums (`lam`). (The normalized-mean variant was
-    dropped -- exp9/10 found it no better than the sum.)"""
+    """Agg dicts using exp distance-decay-weighted sums with decay length `lam`. Sum only -- a normalized-mean variant measured no better (exp 9/10)."""
     sumfunc = _exp_curry(site_data=site_data, lam=lam)
     return _agg_dicts(sumfunc, sumfunc)
 
 
 def flatten_buckets(df, bucket_col="bucket", value_cols=None):
-    """(value_cols, bucket) -> (value_cols)
-    Pivot a long bucketed frame to wide, folding the bucket into column names.
+    """Pivot a long bucketed frame to wide, folding the bucket into column names.
 
-    The row key is whichever of ``date`` (daily) or ``year`` (annual) the frame
-    carries; the ``bucket`` dimension is spread into the columns, so each value
-    column ``col`` becomes ``col_b0`` / ``col_b1`` / ... one per bucket. Returns one
-    row per key, with that key (date or year) as a column.
+    ``(value_cols, bucket) -> (value_cols)``: each ``col`` becomes ``col_b0`` / ``col_b1`` / ... one per bucket.
 
-    The bucket is cast to int first so the pivot keys on plain integers (a leftover
-    categorical bucket would otherwise spawn empty columns for unobserved bins). The
-    input frame is not mutated.
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Long frame carrying a ``date`` (daily) or ``year`` (annual) row key plus `bucket_col`.
+    bucket_col : str, default 'bucket'
+        Cast to int before pivoting, so the result keys on plain integers -- a surviving categorical would spawn empty columns for unobserved bins.
+    value_cols : sequence, optional
+        Columns to spread; default every non-key column.
+
+    Returns
+    -------
+    pd.DataFrame
+        One row per key, with that key as a column. The input is not mutated.
     """
     key = "date" if "date" in df.columns else "year"
     if value_cols is None:
@@ -201,12 +286,23 @@ def flatten_buckets(df, bucket_col="bucket", value_cols=None):
         return df
 
 
-def _with_key_column(d):
-    """Return `d` with a 'date' or 'year' key as a column, resetting a date/year
-    index into one when needed (and promoting a Series to a frame).
+def tag_values(frame, suffix, keep=None):
+    """Append `suffix` to every value column, so one aggregation's variants coexist in a single frame.
 
-    Lets date-*indexed* inputs (the climatology Series/frames) be merged directly,
-    without the caller having to reset_index first.
+    Value columns are everything but the date/year/bucket keys; `keep` first restricts them to that list (used to drop total_kg_N, keeping only surplus_kgha). `date` MUST stay protected -- weather-with-lag frames are daily, and a suffixed date column leaves flatten_buckets unable to find its row key.
+    """
+    struct = [c for c in ("date", "year", "bucket") if c in frame.columns]
+    val = [c for c in frame.columns if c not in struct]
+    if keep is not None:
+        val = [c for c in val if c in keep]
+        frame = frame[struct + val]
+    return frame.rename(columns={c: f"{c}{suffix}" for c in val})
+
+
+def _with_key_column(d):
+    """Return `d` with a 'date' or 'year' key as a column, resetting a date/year index into one when needed (and promoting a Series to a frame).
+
+    Lets date-*indexed* inputs (the climatology Series/frames) be merged directly, without the caller having to reset_index first.
     """
     if isinstance(d, pd.Series):
         d = d.to_frame()
@@ -227,17 +323,13 @@ def _with_key_column(d):
 def merge_on_date(dfs, spine=None):
     """Merge frames keyed by `date` (daily) or `year` (annual) onto one daily timeline.
 
-    Each frame must carry exactly one row-key — a ``date`` or ``year`` column, or a
-    matching index (a DatetimeIndex / index named "date", or an index named "year"),
-    which is reset into a column automatically. A Series is promoted to a frame.
+    Each frame must carry exactly one row-key — a ``date`` or ``year`` column, or a matching index (a DatetimeIndex / index named "date", or an index named "year"), which is reset into a column automatically. A Series is promoted to a frame.
 
     * ``date`` — a daily frame; aligned to the timeline on its date.
     * ``year`` — an annual frame; its one row per year is broadcast (copied) onto
       every date that falls in that year.
 
-    The timeline is the union of every date-keyed frame's dates (unless `spine` is
-    given); a year is derived from it, and each frame is left-joined on its own key —
-    so an annual frame's one row per year repeats across all of that year's days.
+    The timeline is the union of every date-keyed frame's dates (unless `spine` is given); a year is derived from it, and each frame is left-joined on its own key — so an annual frame's one row per year repeats across all of that year's days.
 
     Parameters
     ----------

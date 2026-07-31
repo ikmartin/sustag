@@ -1,10 +1,6 @@
 """STEP 3 of the water build: filter candidates to the kept set and write the contract file.
 
-The last step of `metadata -> usgs+iwqis -> filter`. Reads the candidate table (site_candidates.csv)
-and the pulled data, applies every quality/exclusion filter that used to live inside usgs.py and
-iwqis.py, and writes the final `site_location_metadata.csv` -- which is, by construction, the kept
-set that access.get_metadata() reads. It also prunes non-kept parquets so the data dir equals the
-kept set, and appends the filter funnel to the build log.
+The last step of `metadata -> usgs+iwqis -> filter`. Reads the candidate table (site_candidates.csv) and the pulled data, applies every quality/exclusion filter that used to live inside usgs.py and iwqis.py, and writes the final `site_location_metadata.csv` -- which is, by construction, the kept set that access.get_metadata() reads. It also prunes non-kept parquets so the data dir equals the kept set, and appends the filter funnel to the build log.
 
 Filtering rules (all here except the one big_basin USGS exclusion kept at fetch in usgs.py):
     IWQIS keep: data_count >= sparsity_cutoff AND lifespan >= lifespan_cutoff  ([iwqis] config)
@@ -47,8 +43,7 @@ def _read_candidates() -> pd.DataFrame:
 def _iwqis_quality(sparsity_cutoff: float, lifespan_cutoff: float) -> set[str]:
     """WQS uids passing the sparsity + lifespan cutoffs, computed from the reassembled data.
 
-    Same arithmetic as the retired iwqis.filter_sites: fraction of rows with a nitrate value, and
-    span between first and last sample in years.
+    Same arithmetic as the retired iwqis.filter_sites: fraction of rows with a nitrate value, and span between first and last sample in years.
     """
     src = iwqis._full_data().copy()
     src["datetime"] = pd.to_datetime(src["datetime"], utc=True)
@@ -64,7 +59,9 @@ def filter_final() -> pd.DataFrame:
     cand = _read_candidates()
     cfg = get_config()
     sparsity, lifespan = cfg["iwqis"]["sparsity_cutoff"], cfg["iwqis"]["lifespan_cutoff"]
-    excluded = set(cfg["site_filters"]["known_bad"]) | set(cfg["site_filters"]["big_basin"])
+    # NOTE this module is retired with _make_water; known_bad moved to src/build/water/filter_sites.py
+    # (KNOWN_BAD) and is no longer in config, so read it defensively.
+    excluded = set(cfg["site_filters"].get("known_bad", [])) | set(cfg["site_filters"]["big_basin"])
 
     is_usgs = cand.site_uid.str.startswith("USGS-")
     gw = set(cand.loc[cand.is_groundwater, "site_uid"])

@@ -1,9 +1,6 @@
 """Basin Editor panel section and callbacks.
 
-Owns the Basin Editor block that lives in the Debug menu: site selection,
-flag display, preferred-basin radio, confirm button, and the basin display
-checkboxes.  The map-layer callbacks that *render* basin polygons (basin1,
-basin2, basin3) stay in map_panel because they output to map LayerGroups.
+Owns the Basin Editor block that lives in the Debug menu: site selection, flag display, preferred-basin radio, confirm button, and the basin display checkboxes.  The map-layer callbacks that *render* basin polygons (basin1, basin2, basin3) stay in map_panel because they output to map LayerGroups.
 """
 
 import math
@@ -107,10 +104,7 @@ def _display_cell(toggle_id: str, area_id: str) -> html.Div:
 
 
 def _basin_display_table() -> html.Table:
-    """Rows v1/v2/v3 x columns site/pin. Site cells reuse basin{1,2,3}-toggle (map_panel renders
-    the stored parquets); pin cells drive the live pin-drop overlays. Each checkbox shows the area
-    of its basin (km2) to the right -- site areas from preferred_basin.csv, pin areas computed on
-    drop."""
+    """Rows v1/v2/v3 x columns site/pin. Site cells reuse basin{1,2,3}-toggle (map_panel renders the stored parquets); pin cells drive the live pin-drop overlays. Each checkbox shows the area of its basin (km2) to the right -- site areas from preferred_basin.csv, pin areas computed on drop."""
     hdr_style = {"fontSize": "10px", "color": "#888", "fontWeight": "600", "padding": "2px 8px", "textAlign": "center"}
     row_label_style = {"fontSize": "11px", "color": "#555", "padding": "2px 8px", "whiteSpace": "nowrap"}
     header = html.Tr(

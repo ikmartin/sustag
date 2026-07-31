@@ -1,6 +1,4 @@
-"""demo_baselines.py -- the team's NON-XGBoost baseline models, consolidated for the demo's
-"why XGBoost was chosen" narrative. None of these use XGBoost; they are the benchmarks the spatial
-XGBoost recipe had to beat.
+"""demo_baselines.py -- the team's NON-XGBoost baseline models, consolidated for the demo's "why XGBoost was chosen" narrative. None of these use XGBoost; they are the benchmarks the spatial XGBoost recipe had to beat.
 
     from demo_baselines import *
     regression_model_comparison(uid)     # Jay: dummy/linear/ridge/lasso/RF/GBM, CV R2 + test R2/RMSE
@@ -12,9 +10,7 @@ Ported to the refactored data layer (src.data.access). Provenance:
              seasonal_modeling.ipynb        (Holt-Winters exponential smoothing)
   * Erin  -- baseline_models.ipynb          (next-day persistence / linear / logistic / random-walk)
 
-NOTE on ARIMA/SARIMA: Isaac's ma_ar_sarima.py is an empty stub and his only ARIMA use is a single
-exploratory AutoARIMA(...).fit(rain) that just prints the fitted order (no forecast, no metrics), so
-there is no real classical-TS baseline to port here.
+NOTE on ARIMA/SARIMA: Isaac's ma_ar_sarima.py is an empty stub and his only ARIMA use is a single exploratory AutoARIMA(...).fit(rain) that just prints the fitted order (no forecast, no metrics), so there is no real classical-TS baseline to port here.
 """
 
 import sys
@@ -51,11 +47,7 @@ def _resampled_nitrate(uid: str, freq: str = "ME", agg: str = "max") -> pd.Serie
 
 
 def plot_exponential_smoothing(uid: str, freq: str = "ME", agg: str = "max"):
-    """Jay's Holt-Winters (triple) exponential-smoothing forecast of nitrate. Resamples the daily
-    max to `freq` (ME=monthly / W=weekly), splits 80/20 chronologically, fits an additive-trend
-    (damped) + additive-seasonal model, and forecasts the held-out tail. A pure-history seasonal
-    baseline -- no rain/land-use covariates, just level + trend + annual cycle -- the starting point
-    the covariate models had to beat. Title carries the held-out MSE."""
+    """Jay's Holt-Winters (triple) exponential-smoothing forecast of nitrate. Resamples the daily max to `freq` (ME=monthly / W=weekly), splits 80/20 chronologically, fits an additive-trend (damped) + additive-seasonal model, and forecasts the held-out tail. A pure-history seasonal baseline -- no rain/land-use covariates, just level + trend + annual cycle -- the starting point the covariate models had to beat. Title carries the held-out MSE."""
     from statsmodels.tsa.api import ExponentialSmoothing
     from sklearn.metrics import mean_squared_error
 
@@ -91,8 +83,7 @@ def plot_exponential_smoothing(uid: str, freq: str = "ME", agg: str = "max"):
 
 def _regression_frame(uid: str) -> pd.DataFrame:
     """Jay's weekly regression design matrix (regression_first_attempt), adapted to src.data.access:
-    weekly-mean nitrate (target) joined to weekly-mean basin precip and the annual surplus/crop
-    covariates broadcast by year. One flat row per week."""
+    weekly-mean nitrate (target) joined to weekly-mean basin precip and the annual surplus/crop covariates broadcast by year. One flat row per week."""
     nitrate_weekly = access.get_water(uid)["nitrate_con"].resample("1W").mean().reset_index()
     nitrate_weekly.columns = ["date", "nitrate_avg"]
     nitrate_weekly["date"] = pd.to_datetime(nitrate_weekly["date"]).dt.tz_localize(None)
@@ -117,14 +108,9 @@ def _regression_frame(uid: str) -> pd.DataFrame:
 
 
 def regression_model_comparison(uid: str, test_size: float = 0.2, seed: int = 42) -> pd.DataFrame:
-    """Jay's 'first attempt' baseline panel (regression_first_attempt): build the weekly flat-feature
-    frame and score a set of off-the-shelf regressors -- dummy / linear / ridge / lasso / random
-    forest / gradient boosting -- with 5-fold CV R² plus held-out test R²/RMSE. These per-site,
-    flat-feature models (no spatial structure, no travel-time lags) were the motivation for moving to
-    the spatial XGBoost recipe. Returns the results sorted by test_r2 (higher = better).
+    """Jay's 'first attempt' baseline panel (regression_first_attempt): build the weekly flat-feature frame and score a set of off-the-shelf regressors -- dummy / linear / ridge / lasso / random forest / gradient boosting -- with 5-fold CV R² plus held-out test R²/RMSE. These per-site, flat-feature models (no spatial structure, no travel-time lags) were the motivation for moving to the spatial XGBoost recipe. Returns the results sorted by test_r2 (higher = better).
 
-    NOTE (kept faithful to Jay): the split is a plain random train_test_split, so it leaks a little
-    across time -- fine as a rough baseline, but the honest number is the spatial-CV recipe score."""
+    NOTE (kept faithful to Jay): the split is a plain random train_test_split, so it leaks a little across time -- fine as a rough baseline, but the honest number is the spatial-CV recipe score."""
     from sklearn.model_selection import train_test_split, cross_val_score
     from sklearn.preprocessing import StandardScaler
     from sklearn.dummy import DummyRegressor
@@ -172,11 +158,7 @@ def regression_model_comparison(uid: str, test_size: float = 0.2, seed: int = 42
 def erin_site_df(site: str) -> pd.DataFrame:
     """Erin's per-site next-day frame (baseline_models.make_site_df), adapted to src.data.access.
 
-    One row per day with daily nitrate mean/max + a `violation` flag, basin-mean precip, the
-    per-cell precip×2017-surplus interaction (`rain_x_surplus`), rolling 7/14/30d rain and
-    rain×surplus sums, annual crops, basin area, the autoregressive nitrate lags, and the shifted
-    next-day targets `nitrate_tomorrow` / `violation_tomorrow`. (Faithful to Erin's quirk that
-    `nitrate_lag1` is TODAY's value, i.e. the persistence/random-walk anchor.)"""
+    One row per day with daily nitrate mean/max + a `violation` flag, basin-mean precip, the per-cell precip×2017-surplus interaction (`rain_x_surplus`), rolling 7/14/30d rain and rain×surplus sums, annual crops, basin area, the autoregressive nitrate lags, and the shifted next-day targets `nitrate_tomorrow` / `violation_tomorrow`. (Faithful to Erin's quirk that `nitrate_lag1` is TODAY's value, i.e. the persistence/random-walk anchor.)"""
     # daily precip (basin mean) + the per-cell precip x 2017-surplus interaction
     weather = access.get_weather(site)
     precip = weather.groupby("date", as_index=False)["precip_in_1d"].mean()
@@ -236,18 +218,14 @@ def erin_baselines(
     test_size: int = 100,
     verbose: bool = True,
 ) -> pd.DataFrame:
-    """Erin's next-day baseline suite (baseline_models). Under a TimeSeriesSplit (train on the past,
-    test on a later contiguous block) it scores, per fold:
+    """Erin's next-day baseline suite (baseline_models). Under a TimeSeriesSplit (train on the past, test on a later contiguous block) it scores, per fold:
 
       classification (Average Precision / PR-AUC, higher better):
         dummy_most_frequent, dummy_stratified, gaussian_rw (P(tomorrow>10 | today) ~ N(today, σ²)), logreg
       regression (MAE / RMSE in mg/L, lower better):
         persistence (predict today's value), linreg
 
-    The reading (Erin's): the Gaussian random walk should beat the dummies by a wide margin (it knows
-    today's value); if logreg can't beat the random walk, or linreg can't beat persistence, the
-    engineered features aren't adding information beyond "what happened yesterday" -- an honest,
-    useful negative result. Returns a mean/std-across-folds summary DataFrame."""
+    The reading (Erin's): the Gaussian random walk should beat the dummies by a wide margin (it knows today's value); if logreg can't beat the random walk, or linreg can't beat persistence, the engineered features aren't adding information beyond "what happened yesterday" -- an honest, useful negative result. Returns a mean/std-across-folds summary DataFrame."""
     from scipy.stats import norm
     from sklearn.dummy import DummyClassifier
     from sklearn.linear_model import LogisticRegression, LinearRegression

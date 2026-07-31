@@ -1,20 +1,14 @@
 """basin_crop_composition.py -- does a basin's crop composition depend on its size?
 
-Tests the "real agronomy" hypothesis directly, WITHOUT the feature pipeline: crop composition is
-computed straight from the raw CDL pixel counts (get_data -> sd.crops) weighted only by each cell's
-basin-membership fraction -- no agg_crops, no distance buckets, no exp-decay, no /basin_area. So if a
-basin-area vs composition correlation survives here, it's geography, not an artifact of features.py /
-transformers.py.
+Tests the "real agronomy" hypothesis directly, WITHOUT the feature pipeline: crop composition is computed straight from the raw CDL pixel counts (get_data -> sd.crops) weighted only by each cell's basin-membership fraction -- no agg_crops, no distance buckets, no exp-decay, no /basin_area. So if a basin-area vs composition correlation survives here, it's geography, not an artifact of features.py / transformers.py.
 
 For each site:  pct_<crop> = Sum_over(cells, years) [ crop_px * frac_in_basin ]
                              / Sum_over(cells, years, classes) [ class_px * frac_in_basin ]
 i.e. the long-run (all years pooled) area-weighted share of that class in the basin, in [0, 1].
 
-Produces one scatter of basin area (km^2, log x) vs pct_<crop>, annotated with the Pearson and
-Spearman correlations, saved next to this script.
+Produces one scatter of basin area (km^2, log x) vs pct_<crop>, annotated with the Pearson and Spearman correlations, saved next to this script.
 
-The same check runs for N surplus: `surplus` plots basin-mean N-surplus intensity (kg N/ha,
-total_kg_N mass / area, all years pooled, membership-weighted) vs basin area.
+The same check runs for N surplus: `surplus` plots basin-mean N-surplus intensity (kg N/ha, total_kg_N mass / area, all years pooled, membership-weighted) vs basin area.
 
 Usage:
     python basin_crop_composition.py corn          (crop composition share, [0,1])
@@ -59,9 +53,7 @@ def _site_composition(sd) -> dict | None:
 
 
 def _site_surplus_intensity(sd) -> float | None:
-    """Long-run basin-mean N-surplus intensity (kg N/ha) for one site, straight from raw surplus: the
-    total N mass over all cells & years (basin-membership-weighted) divided by the same-weighted total
-    area. No agg_surplus, no buckets, no /basin_area helper. None if unusable."""
+    """Long-run basin-mean N-surplus intensity (kg N/ha) for one site, straight from raw surplus: the total N mass over all cells & years (basin-membership-weighted) divided by the same-weighted total area. No agg_surplus, no buckets, no /basin_area helper. None if unusable."""
     if sd is None or getattr(sd, "surplus", None) is None or sd.grid is None:
         return None
     grid = sd.grid[["node_id", "cell_area", "frac_cell_in_basin"]]
@@ -73,8 +65,7 @@ def _site_surplus_intensity(sd) -> float | None:
 
 
 def collect(target: str) -> pd.DataFrame:
-    """target = a crop class name (-> composition share in [0,1]) or 'surplus' (-> basin-mean kg/ha).
-    y is computed straight from raw pixels/surplus, bypassing the agg_* feature pipeline."""
+    """target = a crop class name (-> composition share in [0,1]) or 'surplus' (-> basin-mean kg/ha). y is computed straight from raw pixels/surplus, bypassing the agg_* feature pipeline."""
     rows = []
     for uid in [str(u) for u in get_site_ids()]:
         try:

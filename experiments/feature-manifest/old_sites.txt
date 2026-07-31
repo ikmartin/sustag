@@ -1,0 +1,98 @@
+# Pre-expansion site list: the 83 sites the project ran on before the data-build rework.
+#
+# Extracted from src/data/processed/water/meta/site_location_metadata.csv at commit de336cf
+# ("commit before data build rework"), which is the last state before the water pipeline was
+# rebuilt and the fleet grew to 127. Committed here rather than re-derived from git so
+# --old-sites-only stays reproducible if that history is ever rewritten or squashed.
+#
+# NOTE: only 79 of these 83 survive the reworked filter. All four dropped sites
+# (USGS-05464420, USGS-05480603, USGS-05480986, WQS0114) have records too short to clear it.
+# run_exp.py intersects with get_site_ids() and reports the gap,
+# so a run on this list yields 79 sites -- which is exactly the cohort the 20260723/20260726
+# runs in log.json used, making it the like-for-like baseline for the 127-site fleet.
+#
+# 23 USGS + 60 IWQIS = 83 sites
+
+USGS-05412500
+USGS-05418110
+USGS-05418400
+USGS-05418720
+USGS-05451210
+USGS-05455100
+USGS-05464420
+USGS-05464475
+USGS-05464500
+USGS-05465500
+USGS-05480603
+USGS-05480986
+USGS-05481000
+USGS-05482000
+USGS-05482300
+USGS-05482500
+USGS-05483600
+USGS-05484000
+USGS-05484500
+USGS-06603750
+USGS-06604440
+USGS-06808500
+USGS-06817000
+WQS0001
+WQS0002
+WQS0003
+WQS0005
+WQS0006
+WQS0007
+WQS0008
+WQS0009
+WQS0010
+WQS0011
+WQS0012
+WQS0013
+WQS0014
+WQS0021
+WQS0022
+WQS0023
+WQS0024
+WQS0025
+WQS0027
+WQS0032
+WQS0033
+WQS0035
+WQS0037
+WQS0038
+WQS0039
+WQS0040
+WQS0043
+WQS0044
+WQS0046
+WQS0047
+WQS0048
+WQS0050
+WQS0051
+WQS0053
+WQS0054
+WQS0055
+WQS0056
+WQS0058
+WQS0061
+WQS0063
+WQS0064
+WQS0065
+WQS0066
+WQS0067
+WQS0069
+WQS0070
+WQS0071
+WQS0072
+WQS0073
+WQS0074
+WQS0076
+WQS0080
+WQS0081
+WQS0083
+WQS0084
+WQS0102
+WQS0104
+WQS0111
+WQS0114
+WQS0115

@@ -1,9 +1,6 @@
 """Build-time configuration: parse pipeline_config.toml.
 
-Build-only -- the runtime read path (src/data) must NOT import this module. The one
-cross-cutting invariant the read path needs (the equal-area CRS) lives in src/data/crs.py
-as a constant instead; everything here is a build knob (region, year spans, site filters,
-thresholds, crop-aggregation schema).
+Build-only -- the runtime read path (src/data) must NOT import this module. The one cross-cutting invariant the read path needs (the equal-area CRS) lives in src/data/crs.py as a constant instead; everything here is a build knob (region, year spans, site filters, thresholds, crop-aggregation schema).
 """
 
 import tomllib
@@ -15,17 +12,24 @@ _CONFIG_FILE = Path(__file__).resolve().parent / "pipeline_config.toml"
 
 @lru_cache(maxsize=1)
 def get_config() -> dict:
-    """Full parsed pipeline config, cached for the process. Uses an absolute path off this
-    file, so it is unaffected by os.chdir() (the pipeline runner chdir's per builder)."""
+    """Full parsed pipeline config, cached for the process. Uses an absolute path off this file, so it is unaffected by os.chdir() (the pipeline runner chdir's per builder)."""
     with open(_CONFIG_FILE, "rb") as f:
         return tomllib.load(f)
 
 
 def get_region_bbox(albers: bool = False) -> tuple:
-    """Shared area of interest as (min_lon, min_lat, max_lon, max_lat), or EPSG:5070 metres
-    if albers=True. The Albers path reuses the invariant reprojection from src.data.crs
-    (build may depend on data-side constants; data must never depend on build)."""
+    """The FIXED site-discovery box (min_lon, min_lat, max_lon, max_lat), or EPSG:5070 metres if albers=True. Only fetch_sites uses this. Covariate builders use get_covariate_bbox(). The Albers path reuses the invariant reprojection from src.data.crs (build may depend on data-side constants; data must never depend on build)."""
     bbox = tuple(get_config()["region"]["bbox_wgs84"])
+    if albers:
+        from src.data.crs import wgs84_to_albers
+        return tuple(wgs84_to_albers(*bbox))
+    return bbox
+
+
+def get_covariate_bbox(albers: bool = False) -> tuple:
+    """The covariate build extent (min_lon, min_lat, max_lon, max_lat), or EPSG:5070 metres if albers=True. This is `region.covariate_bbox` -- the box enclosing every delineated basin plus the site box -- which _make_region computes and writes to pipeline_config.toml AFTER basins are built. Until then it falls back to the site bbox_wgs84. All covariate builders (grid, weather, crops, surplus, agtile, comid_attrs, map_overlays) read THIS, so their extent grows to cover out-of-Iowa basins; the site box stays fixed to avoid a discover->bigger-basins feedback loop."""
+    region = get_config()["region"]
+    bbox = tuple(region.get("covariate_bbox", region["bbox_wgs84"]))
     if albers:
         from src.data.crs import wgs84_to_albers
         return tuple(wgs84_to_albers(*bbox))

@@ -1,7 +1,6 @@
 """Follow-up D: an AREA-WEIGHTED aggregate of all upstream monitored nitrate as a single predictor.
 
-For a target site s with basin B, let U = all other sites whose basin is inside B (upstream). Build a
-weighted daily series M from their nitrate and ask how well M predicts s (Spearman, raw and residual).
+For a target site s with basin B, let U = all other sites whose basin is inside B (upstream). Build a weighted daily series M from their nitrate and ask how well M predicts s (Spearman, raw and residual).
 
   Variant 1 (naive):    weight_i = area(B_i) / area(B)          -- full basin area; nested basins OVERLAP
                         so an inner site is counted inside every basin that contains it (double-count).
@@ -11,9 +10,7 @@ weighted daily series M from their nitrate and ask how well M predicts s (Spearm
                         avoids double-counting s1, whose signal s2 already carries.  (= the user's
                         M = area(B1)/area(B3)·s1 + area(B2-B1)/area(B3)·s2 .)
 
-Because B_i ⊂ B for every upstream site, overlap area = area(B_i). Spearman is scale-invariant, so the
-/area(B) denominator does not affect the correlation -- only the RELATIVE weighting (v1 vs v2) does, and
-that only differs when B contains a nested CHAIN of monitored sites.
+Because B_i ⊂ B for every upstream site, overlap area = area(B_i). Spearman is scale-invariant, so the /area(B) denominator does not affect the correlation -- only the RELATIVE weighting (v1 vs v2) does, and that only differs when B contains a nested CHAIN of monitored sites.
 """
 
 import networkx as nx

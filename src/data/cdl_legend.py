@@ -1,9 +1,6 @@
 """CDL byte-code -> crop-class lookup + remap (cdl_to_class).
 
-Data side, not build: the read path (access.lookup_crop) imports it, so it cannot live in
-src/build. `cdl_legend` is the raw USDA CDL code -> name table; `cdl_to_class` collapses codes
-into the agronomic classes the model uses (Corn, Soybeans, Alfalfa, Hay_Pasture, Small_Grains,
-Fallow, Nonag, Other), which become the crops_global columns.
+Data side, not build: the read path (access.lookup_crop) imports it, so it cannot live in src/build. `cdl_legend` is the raw USDA CDL code -> name table; `cdl_to_class` collapses codes into the agronomic classes the model uses (Corn, Soybeans, Alfalfa, Hay_Pasture, Small_Grains, Fallow, Nonag, Other), which become the crops_global columns.
 """
 
 cdl_legend = {

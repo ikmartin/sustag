@@ -1,12 +1,8 @@
 """Surplus visualization helpers for the widget (colormap + statewide heatmap PNG).
 
-Kept out of access.py so the lean read path stays free of matplotlib/PIL. The per-site *pixel*
-heatmap from the old tree is intentionally dropped (its ~1GB pixel parquets were removed in the
-re-grain); the widget colours the Voronoi rain-grid cells via surplus_to_hex(access.get_surplus)
-and overlays the pre-rendered statewide PNG instead.
+Kept out of access.py so the lean read path stays free of matplotlib/PIL. The per-site *pixel* heatmap from the old tree is intentionally dropped (its ~1GB pixel parquets were removed in the re-grain); the widget colours the Voronoi rain-grid cells via surplus_to_hex(access.get_surplus) and overlays the pre-rendered statewide PNG instead.
 
-Data (src/data/processed/surplus/): meta/surplus_stats.csv (global min/max for a consistent
-colour scale) + images/iowa_surplus_{year}.png (+ .json bounds).
+Data (src/data/processed/surplus/): meta/surplus_stats.csv (global min/max for a consistent colour scale) + images/iowa_surplus_{year}.png (+ .json bounds).
 """
 
 import base64

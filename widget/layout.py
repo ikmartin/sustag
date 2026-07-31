@@ -1,7 +1,6 @@
 """Top-level page layout.
 
-The viewport is divided into two columns: map (80 %) on the left and the
-tools panel (20 %) on the right.  Both fill the full screen height.
+The viewport is divided into two columns: map (80 %) on the left and the tools panel (20 %) on the right.  Both fill the full screen height.
 """
 
 from dash import html, dcc

@@ -1,15 +1,8 @@
 """Build processed/comid_attrs.parquet: static, COMID-keyed basin attributes.
 
-Pipeline A of the static-data additions. One row per NHDPlus reach in the region, keyed by the
-integer COMID, carrying both the CAT_ (local incremental catchment) and TOT_ (upstream-accumulated)
-form of each attribute. Joined at feature time by the basin's outlet COMID (features.site_static);
-the TOT_ columns are the between-site model features, the CAT_ columns are carried for the reach-
-level choropleth / local-character diagnostics.
+Pipeline A of the static-data additions. One row per NHDPlus reach in the region, keyed by the integer COMID, carrying both the CAT_ (local incremental catchment) and TOT_ (upstream-accumulated) form of each attribute. Joined at feature time by the basin's outlet COMID (features.site_static); the TOT_ columns are the between-site model features, the CAT_ columns are carried for the reach- level choropleth / local-character diagnostics.
 
-Sources are ScienceBase items from the USGS "Select Attributes for NHDPlusV2.1 Reach Catchments"
-release (Wieczorek et al., DOI 10.5066/F7765D7V). Each ships a `{NAME}_CONUS.zip` with a
-comma-delimited `{NAME}_CONUS.txt` whose header is `COMID, CAT_x, CAT_NODATA, ACC_x, ACC_NODATA,
-TOT_x, TOT_NODATA`. Adding an attribute is one ATTR_SOURCES row.
+Sources are ScienceBase items from the USGS "Select Attributes for NHDPlusV2.1 Reach Catchments" release (Wieczorek et al., DOI 10.5066/F7765D7V). Each ships a `{NAME}_CONUS.zip` with a comma-delimited `{NAME}_CONUS.txt` whose header is `COMID, CAT_x, CAT_NODATA, ACC_x, ACC_NODATA, TOT_x, TOT_NODATA`. Adding an attribute is one ATTR_SOURCES row.
 
 INGEST TRAPS handled here (see notes/future-work-report.md 6):
   - Parse the CSV HEADER, not the FGDC XML: the TILES92 XML mislabels TOT_TILES92 as ACC_TILES92.
@@ -20,12 +13,9 @@ INGEST TRAPS handled here (see notes/future-work-report.md 6):
   - The ScienceBase `?f=__disk__` URLs churn and the `manager/.../parquet` copies are broken HTML;
     fetch_sciencebase resolves the current URL by stable file NAME and pins the CSV zip.
 
-Deferred (append an ATTR_SOURCES row + a parse hook): SPARROW (needs a column whitelist against
-calibration-leak flux_* columns, comid>0 filter, IncAreaKm2==0 guard, log-sentinel handling, and
-upstream accumulation since it is incremental-catchment not pre-accumulated), StreamCat, N-inputs.
+Deferred (append an ATTR_SOURCES row + a parse hook): SPARROW (needs a column whitelist against calibration-leak flux_* columns, comid>0 filter, IncAreaKm2==0 guard, log-sentinel handling, and upstream accumulation since it is incremental-catchment not pre-accumulated), StreamCat, N-inputs.
 
-Output: src/data/processed/comid_attrs.parquet (committed). Raw zips: src/data/raw/comid_attrs/
-(gitignored).
+Output: src/data/processed/comid_attrs.parquet (committed). Raw zips: src/data/raw/comid_attrs/ (gitignored).
 
 Usage
 -----
@@ -56,8 +46,7 @@ _NODATA_SENTINEL = -9999
 
 @dataclass
 class AttrSource:
-    """One ScienceBase COMID-attribute item. cat_col/tot_col are found by prefix, not hardcoded --
-    the header carries exactly one CAT_* (besides CAT_NODATA) and one TOT_* (besides TOT_NODATA)."""
+    """One ScienceBase COMID-attribute item. cat_col/tot_col are found by prefix, not hardcoded -- the header carries exactly one CAT_* (besides CAT_NODATA) and one TOT_* (besides TOT_NODATA)."""
 
     name: str  # -> output columns cat_{name}, tot_{name}
     item: str  # ScienceBase item id

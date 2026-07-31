@@ -1,10 +1,8 @@
 """Compute drainage basins (v0-v3) per site and select a preferred basin.
 
-The D8 raster primitives (direction500m.png loader, pixel mapping, geo-referencing) live in
-src/data/d8.py (shared with the runtime site_view), so this builder imports them from there.
+The D8 raster primitives (direction500m.png loader, pixel mapping, geo-referencing) live in src/data/d8.py (shared with the runtime site_view), so this builder imports them from there.
 
-basin0 : NWIS authoritative -- NLDI nwissite, addressed by uid. USGS SITES ONLY. Real COMID.
-basin1 : NEAREST-FLOWLINE SNAP. Find the closest NHD reach to the sensor, then take that COMID's
+basin0 : NWIS authoritative -- NLDI nwissite, addressed by uid. USGS SITES ONLY. Real COMID. basin1 : NEAREST-FLOWLINE SNAP. Find the closest NHD reach to the sensor, then take that COMID's
          upstream basin. The default for everything without a basin0. Real COMID.
 basin2 : CONTAINING CATCHMENT -- NLDI /comid/position, i.e. whatever catchment polygon the point
          falls inside. Kept as a cross-check only; see below for why it is not the default.
@@ -20,30 +18,16 @@ WHY basin1 IS THE SNAP AND NOT /comid/position:
     15.6 km2, understating the basin by 98.5% -- silently. 2% of Iowa reaches have zero-area
     catchments, 305 of them at order >= 4, so this is a live hazard for any mainstem pin.
 
-WHY basin0 STILL EXISTS: where a site has an NWIS id, the authority's own delineation beats
-inferring one from coordinates.
+WHY basin0 STILL EXISTS: where a site has an NWIS id, the authority's own delineation beats inferring one from coordinates.
 
 COMID is the join key for the pre-accumulated USGS/EPA attribute tables (TOT_/CAT_/ACC_ prefixes:
-tile drainage, base-flow index, subsurface contact time, SPARROW yields). It is a property of the
-sensor's snapped reach, not of the polygon, so it must always come from the authority (NLDI) and
-never be copied between delineations.
+tile drainage, base-flow index, subsurface contact time, SPARROW yields). It is a property of the sensor's snapped reach, not of the polygon, so it must always come from the authority (NLDI) and never be copied between delineations.
 
-THE ARCHIVE (.preferred_basin_archive.csv) is a read-only cache of reviewed selections. It is
-consulted to OVERRIDE the auto rule in _build_preferred_csv; nothing in this repo writes it, so it
-is refreshed by hand after a review pass. --recalculate deliberately ignores it: that is a HARD
-RESET, re-picking every site from the auto rule so the sites can be re-reviewed and the cache
-rewritten. Dropping manual basin3/basin4 selections is the intent, not a failure mode.
+THE ARCHIVE (.preferred_basin_archive.csv) is a read-only cache of reviewed selections. It is consulted to OVERRIDE the auto rule in _build_preferred_csv; nothing in this repo writes it, so it is refreshed by hand after a review pass. --recalculate deliberately ignores it: that is a HARD RESET, re-picking every site from the auto rule so the sites can be re-reviewed and the cache rewritten. Dropping manual basin3/basin4 selections is the intent, not a failure mode.
 
-The legacy "archive matches -> nothing to do" early-exit and the reconstruct-from-archive restore
-path were dropped. This builder recomputes any missing {0,1,2,3} parquet (respecting --force) and
-always rewrites preferred_basin.csv. It is a rebuild path, not a hot loop.
+The legacy "archive matches -> nothing to do" early-exit and the reconstruct-from-archive restore path were dropped. This builder recomputes any missing {0,1,2,3} parquet (respecting --force) and always rewrites preferred_basin.csv. It is a rebuild path, not a hot loop.
 
-Outputs: processed/basins/data/{uid}_basin{0,1,2,3}.parquet, processed/basins/meta/preferred_basin.csv.
-Site coords <- processed/water/meta/site_location_metadata.csv.
-BOTH basin1 and flag_river read processed/map_overlays/iowa_flowlines.parquet, so make_data.py runs
-_make_map_overlays BEFORE this builder. A missing layer disables flag_river with a warning, but
-basin1 RAISES -- silently degrading the default delineation to the weaker /comid/position method is
-exactly the failure this redesign exists to prevent.
+Outputs: processed/basins/data/{uid}_basin{0,1,2,3}.parquet, processed/basins/meta/preferred_basin.csv. Site coords <- processed/water/meta/site_location_metadata.csv. BOTH basin1 and flag_river read processed/map_overlays/iowa_flowlines.parquet, so make_features.py runs _make_map_overlays BEFORE this builder. A missing layer disables flag_river with a warning, but basin1 RAISES -- silently degrading the default delineation to the weaker /comid/position method is exactly the failure this redesign exists to prevent.
 
 Usage
 -----
@@ -150,9 +134,7 @@ def _basin0_eligible(uid: str) -> bool:
 def _fetch_site_comid(uid: str, timeout: int = 60) -> int | None:
     """COMID of the reach an NWIS site is registered on.
 
-    The /basin endpoint returns empty properties, so the comid needs this separate GET against the
-    site endpoint. Returns None rather than raising if the site is absent from NLDI -- a basin with
-    a missing comid still beats no basin.
+    The /basin endpoint returns empty properties, so the comid needs this separate GET against the site endpoint. Returns None rather than raising if the site is absent from NLDI -- a basin with a missing comid still beats no basin.
     """
     resp = requests.get(f"{_NLDI_BASE}/nwissite/{uid}", params={"f": "json"}, timeout=timeout)
     resp.raise_for_status()
@@ -182,8 +164,7 @@ def _basin_for_comid(uid: str, comid: int, timeout: int = 60) -> gpd.GeoDataFram
 def _compute_basin0(uid: str, lat: float, lon: float, timeout: int = 60) -> gpd.GeoDataFrame | None:
     """Authoritative NWIS basin, addressed by site uid. USGS only; None for anything else.
 
-    Returning None (rather than raising) for non-USGS uids means _build_type logs a skip and never
-    writes, so no non-USGS basin0 parquet can be created even under --force.
+    Returning None (rather than raising) for non-USGS uids means _build_type logs a skip and never writes, so no non-USGS basin0 parquet can be created even under --force.
     """
     if not _basin0_eligible(uid):
         return None
@@ -218,21 +199,13 @@ def snap_comid(
 ) -> tuple[int, float, str]:
     """COMID of the NHD reach the sensor sits on. Returns (comid, distance_m, name).
 
-    Base rule -- nearest by distance, then among reaches within SNAP_TIE_TOLERANCE_M of the closest,
-    the largest upstream drainage area (resolves confluences toward the mainstem).
+    Base rule -- nearest by distance, then among reaches within SNAP_TIE_TOLERANCE_M of the closest, the largest upstream drainage area (resolves confluences toward the mainstem).
 
-    Area refinement -- when reported_area_km2 is given, disambiguate among reaches within
-    SNAP_AREA_MATCH_RADIUS_M by matching that area in log-space instead of taking the strictly
-    nearest reach, UNLESS the best match is worse than SNAP_AREA_MATCH_MAX_LOGERR (probable bad
-    coordinates -> fall back to nearest and let flag_area_mismatch_v3 flag it). Reported areas only
-    exist for known sites, so a deploy-path map pin (reported_area_km2=None) always gets the base
-    rule -- the two paths stay identical wherever no area is available.
+    Area refinement -- when reported_area_km2 is given, disambiguate among reaches within SNAP_AREA_MATCH_RADIUS_M by matching that area in log-space instead of taking the strictly nearest reach, UNLESS the best match is worse than SNAP_AREA_MATCH_MAX_LOGERR (probable bad coordinates -> fall back to nearest and let flag_area_mismatch_v3 flag it). Reported areas only exist for known sites, so a deploy-path map pin (reported_area_km2=None) always gets the base rule -- the two paths stay identical wherever no area is available.
 
-    Reaches with TotDASqKM == 0 (NHDPlus divergence artifacts with no catchment) are never valid
-    targets and are excluded first -- they are the reaches /comid/position kept mis-snapping to.
+    Reaches with TotDASqKM == 0 (NHDPlus divergence artifacts with no catchment) are never valid targets and are excluded first -- they are the reaches /comid/position kept mis-snapping to.
 
-    Raises ValueError outside the flowlines extent. Falling back to /comid/position there would
-    silently reintroduce the lateral-snap bug this function exists to fix.
+    Raises ValueError outside the flowlines extent. Falling back to /comid/position there would silently reintroduce the lateral-snap bug this function exists to fix.
     """
     pt = gpd.GeoDataFrame(geometry=[Point(lon, lat)], crs="EPSG:4326").to_crs(EQUAL_AREA_CRS).geometry.iloc[0]
     sindex = sindex if sindex is not None else flowlines.sindex
@@ -278,12 +251,9 @@ def _compute_basin1(
 ) -> gpd.GeoDataFrame:
     """NEAREST-FLOWLINE SNAP basin -- the default delineation.
 
-    Snaps to the closest NHD reach and takes that COMID's upstream basin, instead of trusting
-    /comid/position to pick the right reach. See the module docstring for why (WQS0061).
+    Snaps to the closest NHD reach and takes that COMID's upstream basin, instead of trusting /comid/position to pick the right reach. See the module docstring for why (WQS0061).
 
-    reported_area_km2, when known, refines reach selection (see snap_comid). It is passed for known
-    sites and left None for an arbitrary map pin, so the deploy path always gets the pure-nearest
-    rule.
+    reported_area_km2, when known, refines reach selection (see snap_comid). It is passed for known sites and left None for an arbitrary map pin, so the deploy path always gets the pure-nearest rule.
     """
     if flowlines is None:
         flowlines = _load_flowlines()
@@ -300,9 +270,7 @@ def _compute_basin1(
 def _compute_basin2(uid: str, lat: float, lon: float, timeout: int = 60) -> gpd.GeoDataFrame:
     """CONTAINING-CATCHMENT basin -- NLDI /comid/position. Cross-check only, never the default.
 
-    Returns whichever catchment polygon the point falls inside, which is NOT necessarily the reach
-    the sensor sits on: mainstem reaches at divergences have no catchment of their own, so a point
-    on the mainstem resolves to a neighbouring tributary.
+    Returns whichever catchment polygon the point falls inside, which is NOT necessarily the reach the sensor sits on: mainstem reaches at divergences have no catchment of their own, so a point on the mainstem resolves to a neighbouring tributary.
     """
     pos = requests.get(
         f"{_NLDI_BASE}/comid/position", params={"coords": f"POINT({lon} {lat})", "f": "json"}, timeout=timeout
@@ -390,11 +358,7 @@ _FLOWLINES_PATH = _SRC / "data" / "processed" / "map_overlays" / "iowa_flowlines
 def _load_flowlines() -> gpd.GeoDataFrame | None:
     """NHD flowlines with TotDASqKM, projected to equal-area. None if unavailable.
 
-    Built by _make_map_overlays.py, which make_data.py runs BEFORE basins for this reason. The
-    layer is currently clipped to Iowa (streamorde >= 3); to generalize, re-run that builder over
-    a wider geometry -- pynhd's NHD("flowline_mr").bygeom works anywhere. A site outside the cached
-    extent simply finds no flowlines and flag_river comes out False, so coverage gaps degrade to a
-    missing warning rather than a wrong answer.
+    Built by _make_map_overlays.py, which make_features.py runs BEFORE basins for this reason. The layer is currently clipped to Iowa (streamorde >= 3); to generalize, re-run that builder over a wider geometry -- pynhd's NHD("flowline_mr").bygeom works anywhere. A site outside the cached extent simply finds no flowlines and flag_river comes out False, so coverage gaps degrade to a missing warning rather than a wrong answer.
     """
     if not _FLOWLINES_PATH.exists():
         print(f"  flag_river: {_FLOWLINES_PATH.name} not found -- flag will be False for every site.")
@@ -425,8 +389,7 @@ def _nearby_river(lat: float, lon: float, flowlines, sindex) -> tuple[float, str
 def _area_mismatch(base: float, other: float) -> bool:
     """Whether `other` differs from `base` by more than AREA_FLAG_MISMATCH_RATIO.
 
-    Always relative to `base` (basin1, the default delineation). NaN or a zero base -> False, so
-    a missing cross-check reads as "nothing to say" rather than as a flag.
+    Always relative to `base` (basin1, the default delineation). NaN or a zero base -> False, so a missing cross-check reads as "nothing to say" rather than as a flag.
     """
     if math.isnan(base) or math.isnan(other) or base <= 0:
         return False
@@ -436,8 +399,7 @@ def _area_mismatch(base: float, other: float) -> bool:
 def _preferred_area(basin_type: int, basin_name: str, area: dict) -> float:
     """Area of the selected basin. Types 0-3 come from the scan; type 4 is read off disk.
 
-    basin4 files are written by the widget (access.update_basin), which does a bare to_parquet on a
-    frame that may carry geometry ALONE -- so area_km2 cannot be assumed present.
+    basin4 files are written by the widget (access.update_basin), which does a bare to_parquet on a frame that may carry geometry ALONE -- so area_km2 cannot be assumed present.
     """
     if basin_type in (0, 1, 2, 3):
         return area[basin_type]

@@ -1,15 +1,8 @@
 """Build weather_global_{year}.parquet -- the global daily weather table at the IEM-cell grain.
 
-Phase 3 of the re-grain refactor. Weather was already global in the old tree
-(make_global_weather.py -> global_grid_weather_{year}.parquet); this ports it to the new
-interim location and name. Per-site weather is now a *view* -- a slice of this table by
-(global_node_id, date) with node_id attached -- served on the read side (see src/data/site_view
-/ access), not materialized per site. Verified: a per-site slice of the global table equals the
-old {uid}_weather.parquet byte for byte.
+Phase 3 of the re-grain refactor. Weather was already global in the old tree (make_global_weather.py -> global_grid_weather_{year}.parquet); this ports it to the new interim location and name. Per-site weather is now a *view* -- a slice of this table by (global_node_id, date) with node_id attached -- served on the read side (see src/data/site_view / access), not materialized per site. Verified: a per-site slice of the global table equals the old {uid}_weather.parquet byte for byte.
 
-For every IEM cell in the region bbox and every day of a year, IEM precip is joined to bilinearly
-interpolated gridMET meteorology on (date, global_node_id). global_node_id is the canonical IEM
-grid row index, so vals[global_node_id] is a direct precip lookup and the per-site joins line up.
+For every IEM cell in the region bbox and every day of a year, IEM precip is joined to bilinearly interpolated gridMET meteorology on (date, global_node_id). global_node_id is the canonical IEM grid row index, so vals[global_node_id] is a direct precip lookup and the per-site joins line up.
 
 Output (src/data/interim/weather_global_{year}.parquet) -- the full gridMET variable set:
     date, global_node_id,
@@ -22,10 +15,7 @@ Output (src/data/interim/weather_global_{year}.parquet) -- the full gridMET vari
     burning_index, energy_release (NFDRS indices),
     fuel_moisture_100h (%), fuel_moisture_1000h (%).
 
-NOTE: this is a heavy NETWORK build (gridMET + IEM downloads across all years). The legacy files
-(data/weather/weather_global/global_grid_weather_{year}.parquet) carry only the old 8-variable
-schema, so the copy+rename migration shortcut no longer applies -- the added gridMET variables
-require a genuine re-download (python -m src.build._make_weather --force).
+NOTE: this is a heavy NETWORK build (gridMET + IEM downloads across all years). The legacy files (data/weather/weather_global/global_grid_weather_{year}.parquet) carry only the old 8-variable schema, so the copy+rename migration shortcut no longer applies -- the added gridMET variables require a genuine re-download (python -m src.build._make_weather --force).
 
 Usage
 -----
@@ -52,10 +42,11 @@ _SRC = _THIS_DIR.parent                               # src/
 sys.path.insert(0, str(_SRC.parent))                  # repo root on path
 
 from src.build._make_grid import _download_shapefile, _parse_day_gdf, IEM_GRID_DATE
-from src.build.config import get_region_bbox
+from src.build.config import get_covariate_bbox
 from src.data.crs import EQUAL_AREA_CRS
 
 _INTERIM_DIR = _SRC / "data" / "interim"
+_GRID_GLOBAL_FILE = _INTERIM_DIR / "grid_global.parquet"
 _GRIDMET_CACHE = _SRC / "data" / "raw" / "weather" / "gridMET_raw"
 
 # Point pygridmet's NetCDF cache at raw/weather/gridMET_raw/ before importing pygridmet.
@@ -109,8 +100,7 @@ _TILE_BUFFER = 0.1  # deg, > 1 gridMET cell (~0.042 deg)
 
 
 def _parse_day_values(zip_path: Path, expected_n: int) -> np.ndarray | None:
-    """RAINFALL (inches) for every IEM cell, in record order (geometry-free read). Positionally
-    aligned to the canonical IEM grid, so vals[global_node_id] is a cell's precip."""
+    """RAINFALL (inches) for every IEM cell, in record order (geometry-free read). Positionally aligned to the canonical IEM grid, so vals[global_node_id] is a cell's precip."""
     try:
         df = gpd.read_file(f"/vsizip/{zip_path}", ignore_geometry=True)
     except Exception:
@@ -123,22 +113,41 @@ def _parse_day_values(zip_path: Path, expected_n: int) -> np.ndarray | None:
     return df["rainfall"].to_numpy()
 
 
-def _iem_cells() -> pd.DataFrame:
-    """The entire IEM grid: global_node_id (row index), lon, lat (centroid, WGS84)."""
-    day = _parse_day_gdf(_download_shapefile(IEM_GRID_DATE), IEM_GRID_DATE).to_crs(EQUAL_AREA_CRS)
-    ll = day.geometry.centroid.to_crs("EPSG:4326")
+def _grid_cells() -> pd.DataFrame:
+    """The canonical covariate grid: global_node_id, lon, lat (gridMET cell centroids) from grid_global.parquet. This is now the grid basis (weather samples gridMET at these centroids), NOT the IEM grid -- so out-of-Iowa cells exist."""
+    if not _GRID_GLOBAL_FILE.exists():
+        raise RuntimeError(f"{_GRID_GLOBAL_FILE} missing; run _make_grid first.")
+    g = gpd.read_parquet(_GRID_GLOBAL_FILE)
     return pd.DataFrame(
         {
-            "global_node_id": np.arange(len(day), dtype="int64"),
-            "lon": ll.x.to_numpy(),
-            "lat": ll.y.to_numpy(),
+            "global_node_id": g["global_node_id"].to_numpy().astype("int64"),
+            "lon": g["lon"].to_numpy(),
+            "lat": g["lat"].to_numpy(),
         }
     )
 
 
+def _iem_row_lookup(cells: pd.DataFrame) -> tuple[np.ndarray, int]:
+    """Map each covariate-grid cell to the IEM cell-row containing its centroid (-1 outside the Iowa IEM footprint), plus the IEM cell count. IEM precip for a grid cell is then vals[iem_row]; cells outside Iowa get NaN precip_in_1d. Computed once."""
+    iem = _parse_day_gdf(_download_shapefile(IEM_GRID_DATE), IEM_GRID_DATE)  # geometry, EPSG:4326, row == IEM id
+    iem = iem.reset_index(drop=True)
+    n_ref = len(iem)
+    iem = iem.assign(iem_row=np.arange(n_ref, dtype="int64"))[["iem_row", "geometry"]]
+    pts = gpd.GeoDataFrame(
+        {"grid_i": np.arange(len(cells), dtype="int64")},
+        geometry=gpd.points_from_xy(cells["lon"], cells["lat"]),
+        crs="EPSG:4326",
+    )
+    joined = gpd.sjoin(pts, iem, how="left", predicate="within")
+    joined = joined.dropna(subset=["iem_row"]).drop_duplicates("grid_i")  # shared edges -> keep first
+    row = np.full(len(cells), -1, dtype="int64")
+    if len(joined):
+        row[joined["grid_i"].to_numpy()] = joined["iem_row"].to_numpy().astype("int64")
+    return row, n_ref
+
+
 def _get_bygeom_retry(bbox: tuple, dates: tuple, attempts: int = 6) -> xr.Dataset:
-    """get_bygeom with patient exponential-backoff retries (the gridMET NCSS server intermittently
-    rejects valid requests under load)."""
+    """get_bygeom with patient exponential-backoff retries (the gridMET NCSS server intermittently rejects valid requests under load)."""
     import time
     from pygridmet.exceptions import InputRangeError
 
@@ -205,18 +214,21 @@ def _assemble(gm: pd.DataFrame, prec: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def _iem_precip_year(year: int, cells: pd.DataFrame, dates: pd.DatetimeIndex, n_ref: int) -> pd.DataFrame:
-    """IEM precip (inches) for every (day, cell) in `year` via vals[global_node_id]."""
+def _iem_precip_year(
+    year: int, cells: pd.DataFrame, dates: pd.DatetimeIndex, n_ref: int, iem_row: np.ndarray
+) -> pd.DataFrame:
+    """IEM precip (inches) for every (day, cell) in `year`, mapped grid-cell -> IEM row via `iem_row` (positional over `cells`). Cells outside the Iowa IEM footprint (iem_row < 0) stay NaN."""
     gids = cells["global_node_id"].to_numpy()
+    m = iem_row >= 0  # positional mask of cells that have an IEM cell
     precip = np.full((len(dates), len(gids)), np.nan)
     for i, d in enumerate(dates):
         zp = _download_shapefile(d.date())
         if zp is None:
             continue
-        vals = _parse_day_values(zp, n_ref)
+        vals = _parse_day_values(zp, n_ref)  # IEM precip indexed by IEM row
         if vals is None:
             continue
-        precip[i] = vals[gids]
+        precip[i, m] = vals[iem_row[m]]
     return pd.DataFrame(
         {
             "date": np.repeat(dates.values, len(gids)),
@@ -227,20 +239,18 @@ def _iem_precip_year(year: int, cells: pd.DataFrame, dates: pd.DatetimeIndex, n_
 
 
 def _existing_precip(out: Path) -> pd.DataFrame:
-    """Reuse IEM precip_in_1d from an existing weather_global_{year}.parquet: a --gridmet-only
-    rebuild re-fetches ONLY gridMET, so the (unchanged) IEM precip is spliced back from the prior
-    file rather than re-downloaded/re-parsed. `out` is not modified until the final tmp.replace(out),
-    so reading it here (before any write) is safe."""
+    """Reuse IEM precip_in_1d from an existing weather_global_{year}.parquet: a --gridmet-only rebuild re-fetches ONLY gridMET, so the (unchanged) IEM precip is spliced back from the prior file rather than re-downloaded/re-parsed. `out` is not modified until the final tmp.replace(out), so reading it here (before any write) is safe."""
     prec = pd.read_parquet(out, columns=["date", "global_node_id", "precip_in_1d"])
     prec["date"] = pd.to_datetime(prec["date"]).dt.normalize()
     return prec
 
 
-def build_year(year: int, cells: pd.DataFrame, bbox: tuple, n_ref: int, gridmet_only: bool = False) -> None:
+def build_year(
+    year: int, cells: pd.DataFrame, bbox: tuple, n_ref: int, iem_row: np.ndarray, gridmet_only: bool = False
+) -> None:
     """Build weather_global_{year}.parquet, streaming one month at a time (peak memory ~1 month).
 
-    gridmet_only re-fetches ONLY the gridMET variables and reuses precip_in_1d from the existing
-    file (no IEM re-download/re-parse); the caller guarantees `out` exists in that mode."""
+    gridmet_only re-fetches ONLY the gridMET variables and reuses precip_in_1d from the existing file (no IEM re-download/re-parse); the caller guarantees `out` exists in that mode."""
     cutoff = pd.Timestamp.today().normalize() - pd.DateOffset(months=1)  # gridMET publishes with a lag
     out = _INTERIM_DIR / f"weather_global_{year}.parquet"
     tmp = out.with_suffix(".tmp.parquet")
@@ -260,7 +270,7 @@ def build_year(year: int, cells: pd.DataFrame, bbox: tuple, n_ref: int, gridmet_
             if prior_prec is not None:
                 prec = prior_prec[prior_prec["date"].isin(set(dates))].reset_index(drop=True)
             else:
-                prec = _iem_precip_year(year, cells, dates, n_ref)
+                prec = _iem_precip_year(year, cells, dates, n_ref, iem_row)
             df = _assemble(gm, prec)
             table = pa.Table.from_pandas(df, preserve_index=False)
             if writer is None:
@@ -290,20 +300,20 @@ def build_year(year: int, cells: pd.DataFrame, bbox: tuple, n_ref: int, gridmet_
 def build_weather_global(years: list[int] | None = None, force: bool = False, gridmet_only: bool = False) -> None:
     """Build/refresh the yearly global weather files (IEM cells in the region bbox).
 
-    gridmet_only rebuilds only years that already exist, re-fetching gridMET and reusing their IEM
-    precip_in_1d (no IEM re-download). Years with no existing file are skipped in that mode."""
+    gridmet_only rebuilds only years that already exist, re-fetching gridMET and reusing their IEM precip_in_1d (no IEM re-download). Years with no existing file are skipped in that mode."""
     _INTERIM_DIR.mkdir(parents=True, exist_ok=True)
 
-    all_cells = _iem_cells()  # full IEM grid (global_node_id == IEM row index)
-    n_ref = len(all_cells)
+    cells = _grid_cells()  # the covariate grid (gridMET cells over covariate_bbox), global_node_id
+    iem_row, n_ref = _iem_row_lookup(cells)  # per-cell IEM row (-1 outside Iowa) for precip_in_1d
 
-    min_lon, min_lat, max_lon, max_lat = get_region_bbox()
-    in_region = all_cells.lon.between(min_lon, max_lon) & all_cells.lat.between(min_lat, max_lat)
-    cells = all_cells[in_region].reset_index(drop=True)
-
+    min_lon, min_lat, max_lon, max_lat = get_covariate_bbox()
     buf = 0.1  # deg, > 1 gridMET cell so edge cells interpolate cleanly
     bbox = (min_lon - buf, min_lat - buf, max_lon + buf, max_lat + buf)
-    print(f"Global weather: {len(cells):,} of {n_ref:,} IEM cells in region | bbox {tuple(round(b, 2) for b in bbox)}")
+    n_iowa = int((iem_row >= 0).sum())
+    print(
+        f"Global weather: {len(cells):,} covariate-grid cells | {n_iowa:,} with IEM precip (in Iowa) "
+        f"| bbox {tuple(round(b, 2) for b in bbox)}"
+    )
 
     years = years or ALL_YEARS
     failed = []
@@ -316,7 +326,7 @@ def build_weather_global(years: list[int] | None = None, force: bool = False, gr
             print(f"  {year}: exists, skipping")
             continue
         try:
-            build_year(year, cells, bbox, n_ref, gridmet_only=gridmet_only)
+            build_year(year, cells, bbox, n_ref, iem_row, gridmet_only=gridmet_only)
         except Exception as e:
             failed.append(year)
             print(f"  {year}: FAILED ({type(e).__name__}: {str(e)[:90]}) — re-run to fill it in")

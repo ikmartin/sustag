@@ -16,6 +16,7 @@ See also: data/aux/make_aux.py (build_basin_graph / get_basin_graph).
 from __future__ import annotations
 
 import networkx as nx
+import numpy as np
 import pandas as pd
 from sklearn.model_selection import GroupKFold
 
@@ -58,7 +59,8 @@ def build_conflict_graph(buffer: str = _DEFAULT_BUFFER) -> nx.Graph:
     Nodes <-> sites. An edge a—b is added when one site is contained in the other AND the sites overlap temporally (see the `overlaps` method). Due to some sites being incredibly close, some basins DO actually coincide, creating cycles in this graph.
     """
     spatial = get_basin_graph().to_undirected()
-    spans = {s: nitrate_span(s) for s in get_site_ids()}
+    # Keyed on the GRAPH's nodes, not get_site_ids(). get_basin_graph adds nodes implicitly from the containment edge list, so it carries every site with a basin (123) while the water cohort carries only those surviving the site filter (116). Keyed on the cohort, the 7 extras missed the lookup and `spans.get` returned None -- indistinguishable from "no nitrate record" at the call site below, so `overlaps` was False and EVERY edge touching them was silently dropped. They became conflict-free singletons that holdout_split could place opposite sites they genuinely conflict with, which is exactly the leak this module exists to prevent (audit_split, which builds its spans over train|test, then reported them as 'hard').
+    spans = {s: nitrate_span(s) for s in spatial.nodes}
 
     conflict = nx.Graph()
     conflict.add_nodes_from(spatial.nodes)
@@ -71,8 +73,7 @@ def build_conflict_graph(buffer: str = _DEFAULT_BUFFER) -> nx.Graph:
 def split_groups(buffer: str = _DEFAULT_BUFFER) -> dict[str, int]:
     """Map each site_uid to an integer group id (its conflict component).
 
-    All sites within a group must stay on the same side of any train/test split.
-    Sites with no hard conflict are singleton groups.
+    All sites within a group must stay on the same side of any train/test split. Sites with no hard conflict are singleton groups.
     """
     conflict = build_conflict_graph(buffer=buffer)
     groups: dict[str, int] = {}
@@ -128,6 +129,40 @@ def holdout_split(test_size: float = 0.2, buffer: str = _DEFAULT_BUFFER, seed: i
             test.update(members)
     train = [s for s in all_sites if s not in test]
     return train, sorted(test)
+
+
+def lodo_neighbours(d_km: float, sites=None, prefer: str = "flow") -> dict[str, set[str]]:
+    """{site -> the containment-connected sites within `d_km` of it}. The LODO_d buffer.
+
+    Edge distances come from the metric columns `_make_aux` writes onto processed/aux/basin_containment_graph.parquet, so nothing is recomputed here. `prefer="flow"` uses along-network distance (`flow_dist_m`) and falls back to straight-line (`euc_dist_m`) on the ~7% of edges where the D8 network cannot route child to parent; `prefer="euc"` forces straight-line. An edge whose chosen distance is NaN is treated as WITHIN the buffer -- the conservative reading, since an unresolvable distance is not evidence of separation.
+    """
+    g = get_basin_graph().to_undirected()
+    keep = set(sites) if sites is not None else set(get_site_ids())
+    d_m = float(d_km) * 1000.0
+    out: dict[str, set[str]] = {s: set() for s in keep}
+    for a, b, attr in g.edges(data=True):
+        if a not in keep or b not in keep:
+            continue
+        primary, backup = ("flow_dist_m", "euc_dist_m") if prefer == "flow" else ("euc_dist_m", "flow_dist_m")
+        dist = attr.get(primary)
+        if dist is None or (isinstance(dist, float) and np.isnan(dist)):
+            dist = attr.get(backup)
+        if dist is None or (isinstance(dist, float) and np.isnan(dist)) or dist <= d_m:
+            out[a].add(b)
+            out[b].add(a)
+    return out
+
+
+def lodo_folds(sites, d_km: float, prefer: str = "flow") -> list[tuple[str, set[str]]]:
+    """LODO_d folds: [(test_site, sites_excluded_from_training), ...], one per site.
+
+    The excluded set is the test site plus its `lodo_neighbours` -- those rows belong to NEITHER train nor test, which is why this cannot be expressed as a GroupKFold `groups` vector.
+
+    Positioning (see the plan / notes/future-cv-work-report.md): LODO_d sits between LOSO and LOFO. LOSO leaves a site's nested neighbours in training, so the direct leakage channel stays open; LOFO discards a whole family (up to ~25% of rows), which is more pessimistic than deployment, where the model trains on every available sensor. LODO_d closes the leakage channel while keeping ~120 of 123 sites in training. NOTE it does not increase the test site's distance to the nearest TRAINING site (that saturates around 22 km at any d, because close neighbours on other rivers are not containment-connected) -- it is a leakage control, not a spatial one.
+    """
+    order = list(sites)
+    nbrs = lodo_neighbours(d_km, sites=order, prefer=prefer)
+    return [(s, {s} | nbrs.get(s, set())) for s in order]
 
 
 def audit_split(train_sites, test_sites, buffer: str = _DEFAULT_BUFFER) -> pd.DataFrame:

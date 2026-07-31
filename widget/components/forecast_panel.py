@@ -1,8 +1,6 @@
 """Forecast panel: drop a pin -> predicted nitrate + P(violation) timeseries at that point.
 
-The UI (year dropdown, Run button, results, graph) lives in map_panel._build_forecast_section; this
-module owns the run_forecast callback and the figure. The model seam is model_interface
-(forecast_virtual_site -> the deploy build_virtual_basin/virtual_recipe/predict chain).
+The UI (year dropdown, Run button, results, graph) lives in map_panel._build_forecast_section; this module owns the run_forecast callback and the figure. The model seam is model_interface (forecast_virtual_site -> the deploy build_virtual_basin/virtual_recipe/predict chain).
 
 Two renderers of the same graph:
   * `_forecast_figure`  -> interactive Plotly figure shown on screen.
@@ -88,8 +86,7 @@ def _forecast_figure(vf, year) -> go.Figure:
 
 
 def _forecast_payload(vf, year, site_label) -> dict:
-    """JSON-safe snapshot of a forecast (stashed in a dcc.Store so the download callback can rebuild
-    the figure without re-running the several-second forecast)."""
+    """JSON-safe snapshot of a forecast (stashed in a dcc.Store so the download callback can rebuild the figure without re-running the several-second forecast)."""
     idx = vf.reg.index
 
     def _clean(s):  # align to the nitrate index; NaN -> None so the Store's JSON stays valid

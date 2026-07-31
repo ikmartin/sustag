@@ -1,0 +1,11 @@
+family,n_sites_coloc,n_sites_ours,median_results_coloc,median_results_ours
+nitrate_grab,42,34,10,39
+spec_cond,49,34,16,94
+ph,47,33,13,50
+phosphorus,40,33,9,34
+reduced_n,41,32,9,41
+sediment,28,30,19,48
+turbidity,29,30,6,12
+chloride,40,24,10,59
+silica,36,21,11,42
+doc,25,15,8,15

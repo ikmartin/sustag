@@ -1,8 +1,6 @@
 """Download and clip the Crop Data Layer data to a bounding box.
 
-Ported from the legacy data/crops/clip_crops.py. Standalone preprocessing tool -- NOT imported by
-_make_crops.py, which simply assumes the clips already exist. Run this first (whenever you add
-years) to build or refresh that cache. Two sources of national rasters:
+Ported from the legacy data/crops/clip_crops.py. Standalone preprocessing tool -- NOT imported by _make_crops.py, which simply assumes the clips already exist. Run this first (whenever you add years) to build or refresh that cache. Two sources of national rasters:
 
   1. Manual national files (preferred for the long time series): download the CONUS CDL GeoTIFFs
      from the NASS National Download page and unzip them into src/data/raw/crops/national/:
@@ -13,11 +11,7 @@ years) to build or refresh that cache. Two sources of national rasters:
   2. Scripted CropScape download (--download): request a server-side regional clip from the NASS
      GetCDLFile service and stream it (with resume) into src/data/raw/crops/downloaded/.
 
-Either way the national/downloaded raster is windowed down to the shared region bbox
-(config [region].bbox_wgs84, deliberately larger than the basins so a basin edit never forces a
-re-clip) and cached as cdl_clip_{year}.tif (class codes, EPSG:5070). raw/crops/ is gitignored, so
-this is only needed to *regenerate* crops from scratch -- the committed crops_global.parquet
-supersedes it for normal use.
+Either way the national/downloaded raster is windowed down to the shared region bbox (config [region].bbox_wgs84, deliberately larger than the basins so a basin edit never forces a re-clip) and cached as cdl_clip_{year}.tif (class codes, EPSG:5070). raw/crops/ is gitignored, so this is only needed to *regenerate* crops from scratch -- the committed crops_global.parquet supersedes it for normal use.
 
 Usage
 -----
@@ -48,12 +42,12 @@ _DOWNLOAD_DIR = _RAW_DIR / "downloaded"  # raw CropScape downloads, before clipp
 _CLIP_DIR = _RAW_DIR / "clipped"  # cached regional clips (what _make_crops reads)
 
 sys.path.insert(0, str(_THIS_DIR.parents[2]))  # repo root -> import src.build.config
-from src.build.config import get_region_bbox, get_config
+from src.build.config import get_covariate_bbox, get_config
 
 # ── Region to keep, in WGS84 (lon/lat) ───────────────────────────────────────
-# Shared region from pipeline_config.toml [region].bbox_wgs84 as
-# (min_lon, min_lat, max_lon, max_lat). Edit that file to adjust the clip margin.
-BBOX_WGS84 = get_region_bbox()
+# The CDL clip extent is the covariate_bbox (the box enclosing all basins), read at USE time via
+# get_covariate_bbox() -- NOT frozen at import -- so a covariate_bbox written mid-build by
+# _make_region is picked up.
 
 # Filenames encode year and resolution: {year}_{res}m_cdls.
 _FNAME_RE = re.compile(r"(\d{4})_(\d+)m_cdls", re.IGNORECASE)
@@ -77,9 +71,7 @@ def _download_path(year: int) -> Path:
 def find_national_files() -> dict[int, Path]:
     """Map year -> national CDL GeoTIFF found anywhere under raw/crops/national/.
 
-    Accepts both 30 m and 10 m files; if both exist for a year, prefers 30 m
-    (keeps the time series at one resolution). Searches recursively because the
-    NASS zips unzip into a per-year subfolder.
+    Accepts both 30 m and 10 m files; if both exist for a year, prefers 30 m (keeps the time series at one resolution). Searches recursively because the NASS zips unzip into a per-year subfolder.
     """
     found: dict[int, Path] = {}
     if not _NATIONAL_DIR.exists():
@@ -98,13 +90,12 @@ def find_national_files() -> dict[int, Path]:
 def clip_to_bbox(src_path: Path, out_path: Path) -> tuple[int, int]:
     """Window a national CDL raster down to BBOX_WGS84 and write it out.
 
-    Returns (width, height) of the clip. Preserves CRS, class codes, nodata and
-    the CDL colormap; compresses output with LZW.
+    Returns (width, height) of the clip. Preserves CRS, class codes, nodata and the CDL colormap; compresses output with LZW.
     """
     with rasterio.open(src_path) as src:
         # Reproject the WGS84 box into the raster's CRS (EPSG:5070). densify_pts
         # follows the curved Albers edges so the envelope safely encloses the box.
-        left, bottom, right, top = transform_bounds("EPSG:4326", src.crs, *BBOX_WGS84, densify_pts=21)
+        left, bottom, right, top = transform_bounds("EPSG:4326", src.crs, *get_covariate_bbox(), densify_pts=21)
         window = from_bounds(left, bottom, right, top, src.transform).round_offsets().round_lengths()
 
         # The source must fully contain the clip region. A smaller source (e.g. a
@@ -118,7 +109,7 @@ def clip_to_bbox(src_path: Path, out_path: Path) -> tuple[int, int]:
         ):
             raise ValueError(
                 f"Clip region is not fully contained in source '{src_path.name}'. "
-                f"The source raster is smaller than the region {BBOX_WGS84} — "
+                f"The source raster is smaller than the region {get_covariate_bbox()} — "
                 f"re-download the full region before clipping."
             )
 
@@ -145,13 +136,9 @@ def clip_to_bbox(src_path: Path, out_path: Path) -> tuple[int, int]:
 
 
 def _stream_with_resume(url: str, tmp_path: Path, max_retries: int = 6, chunk_size: int = 1 << 20) -> None:
-    """Stream a download to tmp_path, retrying with backoff and resuming from
-    wherever a dropped connection left off (NASS's GetCDLFile cache files
-    support Range requests since they're served as plain static files).
+    """Stream a download to tmp_path, retrying with backoff and resuming from wherever a dropped connection left off (NASS's GetCDLFile cache files support Range requests since they're served as plain static files).
 
-    If the server ever ignores our Range header and sends a fresh 200 instead
-    of a 206, we detect that and restart tmp_path from scratch rather than
-    silently corrupting it by appending mismatched bytes.
+    If the server ever ignores our Range header and sends a fresh 200 instead of a 206, we detect that and restart tmp_path from scratch rather than silently corrupting it by appending mismatched bytes.
     """
     for attempt in range(1, max_retries + 1):
         existing = tmp_path.stat().st_size if tmp_path.exists() else 0
@@ -199,10 +186,7 @@ def _stream_with_resume(url: str, tmp_path: Path, max_retries: int = 6, chunk_si
 def _get_with_retry(url: str, max_retries: int = 5, timeout: int = 300, **kwargs) -> requests.Response:
     """GET with retries/backoff and a generous timeout.
 
-    Used for the GetCDLFile metadata request, which makes NASS generate the
-    clip server-side before it can respond — for larger regions that can take
-    well over a minute, so this needs both a longer timeout than a normal
-    request and the ability to just try again if it times out anyway.
+    Used for the GetCDLFile metadata request, which makes NASS generate the clip server-side before it can respond — for larger regions that can take well over a minute, so this needs both a longer timeout than a normal request and the ability to just try again if it times out anyway.
     """
     for attempt in range(1, max_retries + 1):
         try:
@@ -217,13 +201,11 @@ def _get_with_retry(url: str, max_retries: int = 5, timeout: int = 300, **kwargs
 
 
 def download_source(year: int) -> Path | None:
-    """Download a regional CDL clip for `year` from the NASS CropScape GetCDLFile service into
-    raw/crops/downloaded/, returning the raster path (or None on failure). Skips the (slow, flaky)
-    download when the raw file is already on disk -- delete it to force a fresh download."""
+    """Download a regional CDL clip for `year` from the NASS CropScape GetCDLFile service into raw/crops/downloaded/, returning the raster path (or None on failure). Skips the (slow, flaky) download when the raw file is already on disk -- delete it to force a fresh download."""
     raw_path = _download_path(year)
 
     if not raw_path.exists():
-        minx, miny, maxx, maxy = get_region_bbox(albers=True)
+        minx, miny, maxx, maxy = get_covariate_bbox(albers=True)
         albers_bbox = f"{minx:.0f},{miny:.0f},{maxx:.0f},{maxy:.0f}"
         url = f"https://nassgeodata.gmu.edu/axis2/services/CDLService/GetCDLFile?year={year}&bbox={albers_bbox}"
 
@@ -282,7 +264,7 @@ def main(force: bool = False, years: list = None, download: bool = False) -> Non
         years = set(range(cfg["year_start"], cfg["year_end"] + 1))
     years = set(years)
 
-    if BBOX_WGS84 is None:
+    if not get_covariate_bbox():
         raise ValueError("Set [region].bbox_wgs84 in pipeline_config.toml before running.")
 
     done = [y for y in sorted(years) if _clip_path(y).exists()]
@@ -307,7 +289,7 @@ def main(force: bool = False, years: list = None, download: bool = False) -> Non
         w, h = clip_to_bbox(file_to_clip, out)
         print(f"  {year}: {file_to_clip.name} -> {out.name}  ({w}x{h} px, {_human(out.stat().st_size)})")
 
-    print(f"Region (WGS84): {BBOX_WGS84}")
+    print(f"Region (WGS84): {get_covariate_bbox()}")
     print(f"Clipping {len(years)} file(s) to this region.")
     for year in sorted(years):
         if year in files:  # a manual national file to clip

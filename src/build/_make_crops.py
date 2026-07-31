@@ -1,15 +1,8 @@
-"""Build crops_global.parquet: CDL pixel counts per (global_node_id, year), aggregated ONCE
-over grid_global.
+"""Build crops_global.parquet: CDL pixel counts per (global_node_id, year), aggregated ONCE over grid_global.
 
-Phase 1 of the re-grain refactor. The old builder (data/crops/make_crops.py) rasterized each
-site's cells over the site's own CDL window and wrote one {uid}_crops_grid.parquet per site --
-recomputing the same cell's counts once per containing basin. Here we rasterize the whole
-grid_global tessellation over the full CDL extent, once per year, keyed by global_node_id. A
-site's crops are then just crops_global.merge(site_view, on="global_node_id").
+Phase 1 of the re-grain refactor. The old builder (data/crops/make_crops.py) rasterized each site's cells over the site's own CDL window and wrote one {uid}_crops_grid.parquet per site -- recomputing the same cell's counts once per containing basin. Here we rasterize the whole grid_global tessellation over the full CDL extent, once per year, keyed by global_node_id. A site's crops are then just crops_global.merge(site_view, on="global_node_id").
 
-Because a pixel is assigned to the Voronoi cell whose polygon contains its centre, and the
-global Voronoi cells are identical to the old per-basin cells (Phase 0 verified cell_area to
-machine precision), the per-cell counts match the old per-site outputs (parity-checked).
+Because a pixel is assigned to the Voronoi cell whose polygon contains its centre, and the global Voronoi cells are identical to the old per-basin cells (Phase 0 verified cell_area to machine precision), the per-cell counts match the old per-site outputs (parity-checked).
 
 Output (src/data/interim/crops_global.parquet), one row per (global_node_id, year):
     global_node_id  int64
@@ -63,8 +56,7 @@ def _clip_path(year: int) -> Path:
 
 
 def _build_luts(remap) -> tuple[list[str], np.ndarray]:
-    """From a code->class remap, build the sorted class list and a 256-entry code->class-index
-    lookup (for vectorized counting)."""
+    """From a code->class remap, build the sorted class list and a 256-entry code->class-index lookup (for vectorized counting)."""
     labels = [remap(c) for c in range(256)]
     classes = sorted(set(labels))
     idx = {c: i for i, c in enumerate(classes)}
@@ -73,8 +65,7 @@ def _build_luts(remap) -> tuple[list[str], np.ndarray]:
 
 
 def _read_window(clip_path: Path, bounds):
-    """Read the CDL band over `bounds` (in the clip CRS). Returns (band, transform, crs) or
-    (None, None, None) if the bounds fall outside the clip."""
+    """Read the CDL band over `bounds` (in the clip CRS). Returns (band, transform, crs) or (None, None, None) if the bounds fall outside the clip."""
     minx, miny, maxx, maxy = bounds
     with rasterio.open(clip_path) as s:
         window = from_bounds(minx, miny, maxx, maxy, s.transform).round_offsets().round_lengths()
@@ -88,8 +79,7 @@ def _blocked_counts(node_raster: np.ndarray, band: np.ndarray, code_to_classidx:
                     n_nodes: int, n_classes: int) -> np.ndarray:
     """Per-(cell, class) pixel counts, accumulated over row blocks to cap transient memory.
 
-    node_raster holds cell-row-position+1 (0 = outside any cell); band holds CDL codes
-    (0 = background). Returns an (n_nodes, n_classes) int64 count array.
+    node_raster holds cell-row-position+1 (0 = outside any cell); band holds CDL codes (0 = background). Returns an (n_nodes, n_classes) int64 count array.
     """
     flat = np.zeros(n_nodes * n_classes, dtype=np.int64)
     H = node_raster.shape[0]
@@ -108,8 +98,7 @@ def _blocked_counts(node_raster: np.ndarray, band: np.ndarray, code_to_classidx:
 def aggregate_crops_global(grid, years, classes, code_to_classidx) -> pd.DataFrame | None:
     """Pixel counts per (global_node_id, year), one column per class, over grid_global.
 
-    Rasterizes the grid cells once per unique clip transform (two exist -- 30 m and 56 m CDL
-    eras) and reuses the burned raster for every year sharing it.
+    Rasterizes the grid cells once per unique clip transform (two exist -- 30 m and 56 m CDL eras) and reuses the burned raster for every year sharing it.
     """
     n_nodes, n_classes = len(grid), len(classes)
     gids = grid["global_node_id"].to_numpy()

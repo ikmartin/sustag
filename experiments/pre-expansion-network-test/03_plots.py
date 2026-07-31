@@ -1,8 +1,5 @@
 """Step 3: figures (PNG, Agg backend). Four graphs telling the story:
-  fig1_raw_vs_residual.png   -- why the raw correlation is misleading (seasonality) and the residual is the real test
-  fig2_excess_by_hop.png     -- THE headline: residual excess is strong at 1 hop, gone by 2
-  fig3_resid_distributions.png -- the full distributions, not just means
-  fig4_resid_vs_distance.png -- Euclidean distance is a poor axis for this (motivates the graph, at 1 hop)
+  fig1_raw_vs_residual.png   -- why the raw correlation is misleading (seasonality) and the residual is the real test fig2_excess_by_hop.png     -- THE headline: residual excess is strong at 1 hop, gone by 2 fig3_resid_distributions.png -- the full distributions, not just means fig4_resid_vs_distance.png -- Euclidean distance is a poor axis for this (motivates the graph, at 1 hop)
 """
 
 import matplotlib

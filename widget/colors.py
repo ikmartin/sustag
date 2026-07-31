@@ -1,8 +1,6 @@
 """Map layer color palette.
 
-Each entry is a dict with 'stroke' and/or 'fill' keys (CSS color strings).
-Surplus gradient is stored as (hue, saturation, lightness) HSL tuples so the
-interpolation in map_panel stays in the same color space.
+Each entry is a dict with 'stroke' and/or 'fill' keys (CSS color strings). Surplus gradient is stored as (hue, saturation, lightness) HSL tuples so the interpolation in map_panel stays in the same color space.
 """
 
 # Lazy deployment safeguard. When True, the Debug tab's "confirm" button is INERT -- it makes no
@@ -111,7 +109,6 @@ EXPLORE_DEFAULTS = {
 
 
 def default(key, fallback=None):
-    """Initial value for an Explore-tab control id (see EXPLORE_DEFAULTS). Lists are copied so a
-    Dash component can never mutate the shared default in place."""
+    """Initial value for an Explore-tab control id (see EXPLORE_DEFAULTS). Lists are copied so a Dash component can never mutate the shared default in place."""
     v = EXPLORE_DEFAULTS.get(key, fallback)
     return list(v) if isinstance(v, list) else v

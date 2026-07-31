@@ -11,16 +11,14 @@ Area     : draw a rectangle or free-form polygon to bulk-select monitoring sites
 
 Shared state written by this module
 ------------------------------------
-region-geom       : GeoJSON geometry of the current point or area selection.
-active-graph-site : site_uid of the monitoring site whose timeseries is shown
+region-geom       : GeoJSON geometry of the current point or area selection. active-graph-site : site_uid of the monitoring site whose timeseries is shown
                     in the info panel graph.  Set by clicking a site marker or
                     a row in the Sites Selected table.
 selected-sites    : list of site_uids currently highlighted on the map.
 
 Layer slots
 -----------
-The map contains several named `dl.LayerGroup` elements that act as render
-slots.  This module owns their layout placement; other panels populate them:
+The map contains several named `dl.LayerGroup` elements that act as render slots.  This module owns their layout placement; other panels populate them:
   mapunit-layer  : reserved for future use
   forecast-layer : populated by forecast_panel
 """
@@ -301,9 +299,7 @@ def _sites_in_polygon(geojson_geom):
 def make_iwqis_markers(selected_uids=None, visible_uids=None):
     """Build small clickable circle markers for the IWQIS sites.
 
-    Each marker uses bubblingMouseEvents=False so clicking it does not also
-    trigger the map's click handler. Each marker has a pattern-matching id
-    so on_iwqis_marker_click can tell which site was clicked.
+    Each marker uses bubblingMouseEvents=False so clicking it does not also trigger the map's click handler. Each marker has a pattern-matching id so on_iwqis_marker_click can tell which site was clicked.
 
     visible_uids : set or None
         If provided, only markers whose site_uid is in this set are rendered.
@@ -338,8 +334,7 @@ def make_iwqis_markers(selected_uids=None, visible_uids=None):
 
 @functools.lru_cache(maxsize=1)
 def _fake_bad_site_points(n=77, seed=1234):
-    """`n` deterministic points sampled from Iowa river flowline vertices (so they sit ON rivers).
-    PRESENTATION-ONLY. Cached once (the geojson read is the only cost)."""
+    """`n` deterministic points sampled from Iowa river flowline vertices (so they sit ON rivers). PRESENTATION-ONLY. Cached once (the geojson read is the only cost)."""
     data = json.loads(_FLOWLINES_ASSET.read_text())
     coords = []  # every vertex across all flowlines, as [lon, lat]
     for feat in data.get("features", []):
@@ -354,9 +349,7 @@ def _fake_bad_site_points(n=77, seed=1234):
 
 
 def make_fake_bad_site_markers(n=77, green_frac=0.6, seed=1234):
-    """PRESENTATION-ONLY fake sensor dots scattered along Iowa rivers: `n` circle markers, ~green_frac
-    green (SITE_DEFAULT) and the rest blue (SITE_USGS), styled to match the real IWQIS/USGS markers
-    but with NO id -> non-interactive (they never trigger the site-select callback). Deterministic."""
+    """PRESENTATION-ONLY fake sensor dots scattered along Iowa rivers: `n` circle markers, ~green_frac green (SITE_DEFAULT) and the rest blue (SITE_USGS), styled to match the real IWQIS/USGS markers but with NO id -> non-interactive (they never trigger the site-select callback). Deterministic."""
     pts = _fake_bad_site_points(n, seed)
     n_green = int(round(len(pts) * green_frac))  # 60% green, 40% blue by default
     return [
@@ -480,11 +473,7 @@ def _cell_tooltip(row, crop_cols):
 
 @functools.lru_cache(maxsize=64)
 def _rain_grid_features(uid, year, mode="surplus"):
-    """GeoJSON (lon/lat) of a site's rain cells, each with a per-cell colour and a tooltip joining
-    surplus + crop stats for `year`. `mode` picks the colour: 'surplus' (nitrogen-surplus gradient,
-    the default) or 'crop' (dominant CDL crop, colors.CROP_COLORS). Raises FileNotFoundError if the
-    rain grid hasn't been built. Cached per (uid, year, mode) -- the result is passed read-only to
-    dl.GeoJSON, so callers must not mutate it."""
+    """GeoJSON (lon/lat) of a site's rain cells, each with a per-cell colour and a tooltip joining surplus + crop stats for `year`. `mode` picks the colour: 'surplus' (nitrogen-surplus gradient, the default) or 'crop' (dominant CDL crop, colors.CROP_COLORS). Raises FileNotFoundError if the rain grid hasn't been built. Cached per (uid, year, mode) -- the result is passed read-only to dl.GeoJSON, so callers must not mutate it."""
     grid = access.get_grid(uid).to_crs("EPSG:4326")
     cells = grid[["node_id", "geometry"] + [c for c in ("cell_area", "frac_cell_in_basin", "dist_to_sensor") if c in grid.columns]]
 

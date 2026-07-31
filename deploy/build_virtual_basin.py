@@ -28,12 +28,9 @@ def _flowlines():
 
 
 def delineate_basin_for_pin(lat: float, lon: float, timeout: int = 60) -> gpd.GeoDataFrame:
-    """Upstream basin for an arbitrary (lat, lon), delineated by the SAME nearest-flowline snap as
-    training sites (not /comid/position, which mis-snaps mainstem pins to a neighbouring tributary).
+    """Upstream basin for an arbitrary (lat, lon), delineated by the SAME nearest-flowline snap as training sites (not /comid/position, which mis-snaps mainstem pins to a neighbouring tributary).
 
-    Returns `[site_uid, comid, area_km2, geometry]` carrying the authoritative COMID -- required for
-    the COMID-keyed static features (features._basin_comid). No reported area at a pin, so pure
-    nearest. Raises ValueError outside the flowlines extent (no silent lateral-snap fallback).
+    Returns `[site_uid, comid, area_km2, geometry]` carrying the authoritative COMID -- required for the COMID-keyed static features (features._basin_comid). No reported area at a pin, so pure nearest. Raises ValueError outside the flowlines extent (no silent lateral-snap fallback).
     """
     from src.build._make_basins import _compute_basin1
 

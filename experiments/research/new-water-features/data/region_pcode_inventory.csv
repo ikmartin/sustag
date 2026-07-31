@@ -1,0 +1,178 @@
+parameter_code,n_sites,param,n_sites_active,family,in_core
+00065,3636,Gage height,1592,stage,True
+00060,3506,Discharge,1335,discharge,True
+72019,982,"Water level, depth LSD",469,groundwater,False
+00010,937,"Temperature, water",329,water_temp,True
+00045,752,Precipitation,309,precip_site,False
+63160,509,"Stream level, NAVD88",498,stage,False
+00095,426,Specific cond at 25C,141,spec_cond,True
+62611,399,"Elevation, GW, NAVD88",214,groundwater,False
+80155,368,Suspnd sedmnt disch,27,sediment,False
+80154,328,Suspnd sedmnt conc,29,sediment,False
+00300,260,Dissolved oxygen,95,diss_oxy,True
+91050,165,"Phosphorus, wu",36,phosphorus,False
+63680,159,"Turbidity, FNU",88,turbidity,False
+00400,152,pH,60,ph,True
+00020,143,"Temperature, air",86,-,False
+91055,83,Susp solids at 105C,19,sediment,False
+99133,82,"NO3+NO2,water,insitu as N",50,nitrate,True
+00665,71,"Phosphorus, wu as P",44,phosphorus,False
+00530,68,Suspended solids,19,sediment,False
+72253,52,"Temperature, soil",9,soil_temp,False
+99234,49,Autosampler count,43,-,False
+00052,49,Relative humidity,9,-,False
+91057,48,"NH3+orgN, wu as N",24,reduced_n,False
+62615,43,"Elevation, lake/res, NAVD88",35,-,False
+72255,43,Mean water velocity,37,velocity,False
+91060,43,"Orthophosphate, diss",19,-,False
+70969,39,DCP battery voltage,24,-,False
+00625,38,"NH3+orgN, wu, conc as N",24,reduced_n,False
+74207,36,Soil moisture,6,soil_moisture,False
+00036,35,Wind direction,8,-,False
+72181,34,"Moisture content, soil fract",18,soil_moisture,False
+62961,31,"Ammonia, dissolved as N",13,reduced_n,False
+00671,30,"Orthophosphate, wf as P",18,phosphorus,False
+00608,29,"Ammonia, wf as N",13,reduced_n,False
+00035,29,Wind speed,5,-,False
+62846,27,"Temperature, soil",3,soil_temp,False
+00301,26,Diss oxygen saturtn,10,diss_oxy,True
+91061,26,"NO3+NO2, dissolved as N",14,-,False
+91049,26,"NO3+NO2, wu as N",6,-,False
+00631,26,"NO3+NO2, wf as N",14,nitrate,False
+75969,25,Air pressure,12,-,False
+90095,25,"SpecCond,wu25degCLab",0,spec_cond,False
+00021,23,"Temperature, air",6,-,False
+99772,23,Precipitation,17,precip_site,False
+70290,23,"Chloride, dissolved",4,chloride,False
+72254,22,Sensor velocity,17,velocity,False
+00011,22,"Temperature, water",9,water_temp,False
+83554,21,"NO3+NO2, w, total as N",11,-,False
+32316,21,"fChl, water, in situ",18,chlorophyll,False
+62625,20,Wind speed,3,-,False
+54152,19,"Oxygen, soil gas, uncor",16,-,False
+54153,19,"Carbon dioxide,soil gas,uncor",15,-,False
+72252,19,"Solar Radiation, ave",2,-,False
+32319,18,"fPC, water, in situ",14,phycocyanin,False
+99270,17,Instrument filter pressure,11,-,False
+72241,17,Absolute pressure,11,-,False
+54636,16,"Total hydrocarbons, soil gas",14,-,False
+62610,16,"Elevation, GW, NGVD29",2,groundwater,False
+00940,15,"Chloride, wf",4,chloride,False
+99409,15,"Susp sediment,wu,est",11,sediment,False
+81206,14,"Phosphorus, wd",2,phosphorus,False
+72020,13,"Elevation, NGVD29",0,-,False
+62614,13,"Elevation, lake/res, NGVD29",8,-,False
+91048,12,"Ammonia, wu",0,-,False
+81026,12,"Water content, snow",0,-,False
+00054,12,Reservoir storage,4,-,False
+99986,11,"Solar Radiation, ave",2,-,False
+51289,11,"OrthoPO4, in situ as P",5,phosphorus,False
+63158,10,"Stream level, NGVD29",8,stage,False
+63675,10,"Turbidity, NTU",4,turbidity,False
+45587,10,"Temp, internal, DCP",0,-,False
+32295,10,"fDOM, water, in situ",2,fdom,False
+91058,10,"Total nitrogen, wu",0,-,False
+72213,9,"Turbidity, FBRU",5,turbidity,False
+00666,8,"Phosphorus, wf",5,phosphorus,False
+99987,8,"Solar Radiation, tot",1,-,False
+72176,7,"Temperature, sensor",0,-,False
+72205,7,"Bulk conductance, sl",2,-,False
+70302,7,Dissolved solids,0,-,False
+00025,7,Air pressure,2,-,False
+32315,7,"Relative fChl, water, in situ",2,chlorophyll,False
+82373,6,Sample frequency,0,-,False
+91007,6,"Phosphorus, wu",5,-,False
+32321,6,"Relative fPC, water, in situ",2,phycocyanin,False
+00090,6,Redox potential,0,-,False
+62600,6,"Elevation, correct BP, NGVD29",0,-,False
+72240,5,CO2 at water surface,1,-,False
+72277,5,"Datum offset, elevWL",0,-,False
+72192,5,"Precipitation, cumul",2,-,False
+32318,5,"DEPRECATED Chlorophylls,in situ",0,chlorophyll,False
+62361,5,"DEPRECATED Chlorophyll, in situ",0,chlorophyll,False
+99416,5,"Phosphorus, wu, est",4,phosphorus,False
+00050,5,Evaporation Rate,0,-,False
+00630,5,"NO3+NO2, wu, conc as N",5,nitrate,False
+91056,4,"LOI of susp solids, rate",0,-,False
+72130,4,"PET, Penman method",0,-,False
+04116,4,"PCBs, wu, rate",0,-,False
+99435,4,"Total nitrogen, wu, estim",3,-,False
+32322,4,"Relative fDOM, water, in situ",4,fdom,False
+72159,4,Evapotranspiration rate,0,-,False
+91604,4,"CO2, w, diss, in situ",3,-,False
+72400,4,"Relative fTrypto water,insitu",4,-,False
+72335,4,"Elevation, NAVD88",4,-,False
+91047,3,"Organic nitrogen, wu",0,-,False
+99246,3,"Upper 90% limit, SSC",0,-,False
+00201,3,Incident light total,0,-,False
+80297,3,"SS load, regres ss",1,-,False
+99237,3,ADVM S/N ratio,0,-,False
+32209,3,"Chlorophyll a, fm,c",0,chlorophyll,False
+80301,3,Suspnd sedmnt disch,2,-,False
+61035,3,Voltage,0,-,False
+00200,3,Incident light,0,-,False
+99247,3,"Lower 90% limit, SSC",0,-,False
+63682,3,"Turbidity, FBU",1,turbidity,False
+00059,3,"Flow rate, instantaneous",1,-,False
+72147,3,"Depth, sensor",1,-,False
+62608,3,Solar radiation down,0,-,False
+99404,2,"Chloride, wf, estim",2,-,False
+70289,2,"Chloride, dissolved",2,-,False
+99968,2,Signal strength,0,-,False
+00650,2,"Phosphate, wu",1,-,False
+72125,2,"WaterVaporPres, calc",0,-,False
+72152,2,Wet exposure time,0,-,False
+72153,2,Dry exposure time,0,-,False
+81904,2,"Stream velocity, point",0,-,False
+72156,2,Datalogger scan time,0,-,False
+72158,2,Collector lid cycles,0,-,False
+70300,2,Diss solids dry at 180C,0,-,False
+00193,2,"Precipitation, defined period",0,-,False
+72269,2,Wind gust speed,0,-,False
+99220,2,"Chloride, wu",2,-,False
+54158,2,"Carbon dioxide, soil gas, corr",1,-,False
+72359,2,"Evapotranspiration, total",1,-,False
+72294,2,Mean water velocity,2,-,False
+99235,2,Equip alarm status,0,-,False
+99272,1,Groundwater flow velocity,1,-,False
+00053,1,Surface area,1,-,False
+00047,1,"Pressure, diss gases",0,-,False
+99253,1,"Lower 90% limit, SSL",0,-,False
+99413,1,"NH3+orgN, wf, estim regress",0,-,False
+99407,1,"E coli, by regr",0,-,False
+91603,1,"Methane, wf, diss, in situ",1,-,False
+99271,1,Groundwater flow direction,1,-,False
+00063,1,No of sampling pts,0,-,False
+99137,1,"Nitrate, in situ as N",0,nitrate,False
+00070,1,"DEPRECATED Turbidity, Jackson",0,turbidity,False
+99252,1,"Upper 90% limit, SSL",0,-,False
+99402,1,"Suspended solids, estimated",0,-,False
+32330,1,"fDOM, w, in situ",0,fdom,False
+91059,1,"Orthophosphate, wu",0,-,False
+82127,1,Wind speed,1,-,False
+70953,1,"Chloro a, phyto, cf",0,chlorophyll,False
+71845,1,"Ammonia, wu as NH4",1,-,False
+71850,1,"Nitrate, wu",0,-,False
+71994,1,VolumeWaterFiltered,0,-,False
+72001,1,"Depth, hole, LSD",0,-,False
+70227,1,"Direction,StreamFlow",0,-,False
+62969,1,Sensible_heat flux,1,-,False
+72126,1,Std dev of wind dir,1,-,False
+62968,1,Latent_heat flux,1,-,False
+62609,1,Net solar radiation,0,-,False
+72199,1,"Depth, water column",1,-,False
+62607,1,Air pressure,1,-,False
+72214,1,"Elevation, lake/res, IGLD",1,-,False
+72238,1,SCB,0,-,False
+62602,1,"Atmos press, corr",0,-,False
+72243,1,Discharge,0,-,False
+61055,1,"Water level, depth MP",1,-,False
+72320,1,Air gap,1,-,False
+72321,1,Stream velocity,0,-,False
+72431,1,Cosmic ray neutron,1,-,False
+50042,1,Discharge,0,-,False
+75971,1,Transducer excitaton,0,-,False
+49956,1,DistObsrvPntSampLoc,0,-,False
+70391,1,"Chloride flux, wf, by regres",1,-,False
+80156,1,Total sediment disch,0,-,False
+72124,1,Net radiation,0,-,False
