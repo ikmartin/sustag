@@ -1,3 +1,137 @@
+# CLF Model 27 
+
+| | |
+|-|-|
+| **Timestamp:** | [2026-08-01T18:19:24Z] | 
+|**Recipe:** | island_CLF  |
+|**Name:** | treat_drop_island_CLF  |
+|**Notes:** | <no notes>  |
+|**True Lofo:** | F|
+|**# Features:** | 116|
+| **List of Features:** | surplus_kgha_sd_b2, rest_of_state_nitrate_lag1, surplus_kgha_mean_b2, rest_of_state_nitrate_lag3, roll_n_avg_except_this7d, pct_small_grains_mean_b2, surplus_kgha_mean_b1, pct_hay_pasture_sd_b1, pct_corn_mean_b1, pct_hay_pasture_mean_b2, roll_n_avg_except_this14d, tile_frac_basin, pct_hay_pasture_sd_b2, pct_alfalfa_sd_b2, pct_corn_mean_b0, pct_corn_mean_b2, tot_tiles92, surplus_kgha_mean_b0, pct_other_sd_b1, pct_hay_pasture_mean_b1, pct_alfalfa_mean_b2, pct_soybeans_mean_b1, pct_soybeans_sd_b0, pct_fallow_mean_b0, pct_fallow_sd_b0, tile_frac_ag, pct_fallow_sd_b1, lon, pct_nonag_b0, pct_corn_b0, pct_fallow_mean_b1, pct_nonag_sd_b1, pct_small_grains_mean_b0, pct_nonag_mean_b0, roll_n_avg_except_this60d, pct_nonag_sd_b0, pct_soybeans_mean_b0, pct_nonag_mean_b1, Alfalfa, tot_contact, pct_alfalfa_sd_b1, doy_sin, Nonag, surplus_kgha_sd_b0, lat, pct_alfalfa_mean_b0, pct_small_grains_sd_b2, pct_other_mean_b1, pct_small_grains_mean_b1, pct_other_sd_b0, pct_corn_sd_b2, pct_hay_pasture_sd_b0, surplus_kgha_sd_b1, Hay_Pasture, pct_fallow_mean_b2, pct_corn_b1, pct_other_b1, surplus_kgha_norm_b0, pct_small_grains_sd_b0, mean_dist_to_sensor, pct_hay_pasture_b2, pct_soybeans_b0, pct_other_mean_b0, log_basin_area, pct_corn_sd_b0, fuel_moisture_1000h_b2, Corn, pct_corn_sd_b1, pct_soybeans_mean_b2, surplus_kgha_norm_b2, pct_soybeans_b2, doy_sin2, Fallow, pct_soybeans_b1, pct_other_mean_b2, fuel_moisture_1000h_b1, doy_cos, pct_small_grains_sd_b1, surplus_kgha_expT_b0, pct_alfalfa_b2, pct_other_sd_b2, pct_fallow_b0, surplus_kgha_expT_b1, pct_nonag_sd_b2, surplus_kgha_norm_b1, pct_nonag_mean_b2, Small_Grains, pct_hay_pasture_mean_b0, pct_corn_b2, Soybeans, pct_fallow_b2, pct_other_b2, pct_hay_pasture_b0, fuel_moisture_1000h_b0, pct_fallow_b1, Other, pct_nonag_b2, pct_alfalfa_mean_b1, pct_soybeans_sd_b1, pct_alfalfa_b0, cat_contact, pct_nonag_b1, surplus_kgha_expT_b2, pct_small_grains_b0, pct_fallow_sd_b2, max_dist_to_sensor, tot_bfi, cat_bfi, pct_hay_pasture_b1, pct_small_grains_b1, pct_other_b0, pct_alfalfa_b1, pct_small_grains_b2, pct_alfalfa_sd_b0, pct_soybeans_sd_b2, doy_cos2  | 
+
+### Scores:
+| n_sites | n_families | n_rows | n_feat | loso_auc | lofo_prauc | lofo_auc | lofo_prauc_lift |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 109 | 28 | 169407 | 116 | 0.9023 | 0.7017 | 0.8726 | 2.9678 |
+
+| lofo_recall_at_f2 | lofo_fdr_at_f2 | lofo_brier | base | lofo_between_rate_r2 | lofo_macro_auc |
+| --- | --- | --- | --- | --- | --- |
+| 0.9019 | 0.5509 | 0.1168 | 0.2364 | 0.4826 | 0.8865 |
+
+### Decision thresholds:
+
+Base rate 0.2364 (in the scored rows) — 'never alarm' is 76.4% accurate. Lift is precision ÷ base rate at that point.
+
+| beta | tau | recall | fdr | precision | accuracy | fpr | lift |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 0.1 | 0.8847 | 0.1383 | 0.0888 | 0.9112 | 0.7931 | 0.0042 | 3.8537 |
+| 0.5 | 0.5888 | 0.4602 | 0.2392 | 0.7608 | 0.8381 | 0.0448 | 3.2175 |
+| 1.0 | 0.2691 | 0.6980 | 0.4093 | 0.5907 | 0.8142 | 0.1498 | 2.4980 |
+| 1.5 | 0.1278 | 0.8468 | 0.5064 | 0.4936 | 0.7584 | 0.2690 | 2.0877 |
+| 1.8 | 0.0937 | 0.8890 | 0.5393 | 0.4607 | 0.7277 | 0.3222 | 1.9486 |
+| 2.0 | 0.0833 | 0.9019 | 0.5509 | 0.4491 | 0.7152 | 0.3425 | 1.8995 |
+| 2.2 | 0.0833 | 0.9019 | 0.5509 | 0.4491 | 0.7152 | 0.3425 | 1.8995 |
+| 2.5 | 0.0720 | 0.9140 | 0.5672 | 0.4328 | 0.6965 | 0.3709 | 1.8306 |
+| 2.8 | 0.0565 | 0.9324 | 0.5939 | 0.4061 | 0.6615 | 0.4223 | 1.7173 |
+| 3.0 | 0.0564 | 0.9326 | 0.5944 | 0.4056 | 0.6610 | 0.4232 | 1.7155 |
+| 3.5 | 0.0326 | 0.9640 | 0.6475 | 0.3525 | 0.5727 | 0.5484 | 1.4906 |
+| 4.0 | 0.0257 | 0.9741 | 0.6659 | 0.3341 | 0.5349 | 0.6011 | 1.4131 |
+| 4.5 | 0.0196 | 0.9836 | 0.6845 | 0.3155 | 0.4915 | 0.6608 | 1.3344 |
+| 5.0 | 0.0196 | 0.9836 | 0.6845 | 0.3155 | 0.4915 | 0.6608 | 1.3344 |
+
+---
+
+# CLF Model 26 
+
+| | |
+|-|-|
+| **Timestamp:** | [2026-08-01T18:17:00Z] | 
+|**Recipe:** | island_CLF  |
+|**Name:** | treat_all_island_CLF  |
+|**Notes:** | <no notes>  |
+|**True Lofo:** | F|
+|**# Features:** | 116|
+| **List of Features:** | surplus_kgha_sd_b2, surplus_kgha_mean_b2, rest_of_state_nitrate_lag1, rest_of_state_nitrate_lag3, surplus_kgha_mean_b1, roll_n_avg_except_this7d, tile_frac_basin, pct_corn_mean_b1, pct_hay_pasture_sd_b1, pct_small_grains_mean_b2, surplus_kgha_mean_b0, pct_corn_mean_b2, roll_n_avg_except_this14d, tot_tiles92, pct_soybeans_sd_b0, pct_hay_pasture_mean_b2, pct_hay_pasture_sd_b2, pct_alfalfa_sd_b2, pct_hay_pasture_mean_b1, pct_fallow_mean_b0, pct_soybeans_mean_b1, pct_fallow_sd_b1, tile_frac_ag, pct_nonag_mean_b0, pct_corn_mean_b0, pct_nonag_mean_b1, pct_fallow_mean_b1, pct_other_sd_b1, pct_small_grains_mean_b0, pct_fallow_sd_b0, lon, pct_nonag_sd_b1, pct_hay_pasture_b2, pct_soybeans_mean_b0, pct_nonag_b0, log_basin_area, surplus_kgha_sd_b0, roll_n_avg_except_this60d, tot_contact, pct_nonag_mean_b2, doy_sin, pct_fallow_mean_b2, Nonag, pct_soybeans_mean_b2, pct_alfalfa_sd_b1, pct_alfalfa_mean_b2, pct_corn_sd_b1, pct_alfalfa_mean_b0, pct_nonag_sd_b0, pct_hay_pasture_sd_b0, surplus_kgha_sd_b1, pct_alfalfa_mean_b1, pct_nonag_b1, pct_other_mean_b1, pct_other_sd_b0, pct_corn_b1, pct_small_grains_sd_b0, mean_dist_to_sensor, pct_corn_b0, pct_corn_sd_b0, pct_small_grains_mean_b1, Alfalfa, pct_other_b1, pct_soybeans_b0, pct_small_grains_sd_b2, pct_soybeans_sd_b1, surplus_kgha_norm_b1, pct_other_mean_b0, surplus_kgha_norm_b0, max_dist_to_sensor, fuel_moisture_1000h_b2, lat, pct_nonag_sd_b2, Corn, pct_small_grains_sd_b1, doy_sin2, pct_corn_sd_b2, doy_cos, surplus_kgha_norm_b2, Small_Grains, fuel_moisture_1000h_b0, Fallow, pct_alfalfa_b2, pct_fallow_b0, pct_hay_pasture_b0, pct_other_b0, pct_nonag_b2, surplus_kgha_expT_b1, pct_alfalfa_sd_b0, pct_soybeans_b1, Hay_Pasture, surplus_kgha_expT_b0, Other, fuel_moisture_1000h_b1, pct_hay_pasture_mean_b0, pct_fallow_sd_b2, pct_other_sd_b2, pct_alfalfa_b0, pct_other_b2, pct_soybeans_b2, cat_contact, pct_hay_pasture_b1, pct_soybeans_sd_b2, surplus_kgha_expT_b2, pct_other_mean_b2, tot_bfi, pct_fallow_b2, pct_fallow_b1, pct_small_grains_b0, pct_small_grains_b2, pct_corn_b2, cat_bfi, Soybeans, pct_small_grains_b1, pct_alfalfa_b1, doy_cos2  | 
+
+### Scores:
+| n_sites | n_families | n_rows | n_feat | loso_auc | lofo_prauc | lofo_auc | lofo_prauc_lift |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 116 | 30 | 175973 | 116 | 0.8900 | 0.6874 | 0.8675 | 2.9568 |
+
+| lofo_recall_at_f2 | lofo_fdr_at_f2 | lofo_brier | base | lofo_between_rate_r2 | lofo_macro_auc |
+| --- | --- | --- | --- | --- | --- |
+| 0.8905 | 0.5589 | 0.1172 | 0.2325 | 0.4180 | 0.8794 |
+
+### Decision thresholds:
+
+Base rate 0.2325 (in the scored rows) — 'never alarm' is 76.8% accurate. Lift is precision ÷ base rate at that point.
+
+| beta | tau | recall | fdr | precision | accuracy | fpr | lift |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 0.1 | 0.8793 | 0.1382 | 0.1210 | 0.8790 | 0.7952 | 0.0058 | 3.7811 |
+| 0.5 | 0.5215 | 0.4862 | 0.2695 | 0.7305 | 0.8388 | 0.0543 | 3.1420 |
+| 1.0 | 0.2532 | 0.6924 | 0.4075 | 0.5925 | 0.8178 | 0.1443 | 2.5484 |
+| 1.5 | 0.1386 | 0.8175 | 0.4927 | 0.5073 | 0.7730 | 0.2405 | 2.1821 |
+| 1.8 | 0.0953 | 0.8725 | 0.5408 | 0.4592 | 0.7315 | 0.3112 | 1.9753 |
+| 2.0 | 0.0815 | 0.8905 | 0.5589 | 0.4411 | 0.7122 | 0.3418 | 1.8973 |
+| 2.2 | 0.0727 | 0.9014 | 0.5711 | 0.4289 | 0.6981 | 0.3635 | 1.8450 |
+| 2.5 | 0.0632 | 0.9137 | 0.5854 | 0.4146 | 0.6800 | 0.3908 | 1.7832 |
+| 2.8 | 0.0578 | 0.9205 | 0.5945 | 0.4055 | 0.6678 | 0.4087 | 1.7444 |
+| 3.0 | 0.0578 | 0.9205 | 0.5945 | 0.4055 | 0.6678 | 0.4087 | 1.7444 |
+| 3.5 | 0.0316 | 0.9553 | 0.6559 | 0.3441 | 0.5662 | 0.5517 | 1.4799 |
+| 4.0 | 0.0257 | 0.9655 | 0.6737 | 0.3263 | 0.5285 | 0.6038 | 1.4035 |
+| 4.5 | 0.0179 | 0.9798 | 0.6998 | 0.3002 | 0.4643 | 0.6918 | 1.2913 |
+| 5.0 | 0.0179 | 0.9798 | 0.6998 | 0.3002 | 0.4643 | 0.6918 | 1.2913 |
+
+---
+
+# REG Model 25 
+
+| | |
+|-|-|
+| **Timestamp:** | [2026-08-01T18:09:12Z] | 
+|**Recipe:** | island_REG  |
+|**Name:** | treat_drop_island_REG  |
+|**Notes:** | <no notes>  |
+|**True Lofo:** | F|
+|**# Features:** | 81|
+| **List of Features:** | surplus_kgha_mean_b1, surplus_kgha_mean_b2, roll_n_avg_except_this7d, pct_corn_mean_b0, pct_corn_mean_b1, rest_of_state_nitrate_lag1, tot_tiles92, tile_frac_basin, pct_fallow_mean_b1, pct_nonag_mean_b1, pct_soybeans_mean_b2, rest_of_state_nitrate_lag3, pct_hay_pasture_mean_b1, pct_hay_pasture_mean_b2, pct_small_grains_mean_b1, tile_frac_ag, surplus_kgha_mean_b0, tot_contact, lon, pct_hay_pasture_mean_b0, pct_corn_mean_b2, pct_fallow_mean_b0, pct_soybeans_mean_b1, pct_nonag_mean_b0, roll_n_avg_except_this14d, pct_corn_b0, pct_fallow_mean_b2, pct_small_grains_mean_b2, tot_bfi, pct_alfalfa_mean_b0, pct_other_mean_b1, pct_small_grains_mean_b0, cat_contact, pct_other_mean_b2, pct_nonag_b1, pct_alfalfa_mean_b1, pct_soybeans_mean_b0, cat_bfi, pct_corn_b1, surplus_kgha_norm_b2, pct_alfalfa_mean_b2, pct_nonag_b0, pct_hay_pasture_b0, lat, fuel_moisture_1000h_b2, roll_n_avg_except_this60d, pct_nonag_mean_b2, pct_other_b0, pct_fallow_b0, pct_hay_pasture_b2, surplus_kgha_norm_b1, pct_other_mean_b0, pct_alfalfa_b2, pct_soybeans_b0, pct_soybeans_b1, surplus_kgha_expT_b1, pct_other_b1, surplus_kgha_expT_b2, pct_corn_b2, pct_small_grains_b2, surplus_kgha_expT_b0, surplus_kgha_norm_b0, pct_alfalfa_b0, pct_hay_pasture_b1, pct_fallow_b2, log_basin_area, doy_sin2, mean_dist_to_sensor, pct_alfalfa_b1, pct_small_grains_b0, pct_nonag_b2, pct_fallow_b1, pct_other_b2, doy_sin, pct_soybeans_b2, pct_small_grains_b1, max_dist_to_sensor, fuel_moisture_1000h_b1, fuel_moisture_1000h_b0, doy_cos, doy_cos2  | 
+
+### Scores:
+| n_sites | n_families | n_rows | n_feat | loso_r2 | lofo_r2 | lofo_rmse | lofo_between_r2 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 109 | 28 | 169407 | 81 | 0.5638 | 0.4926 | 3.8091 | 0.5585 |
+
+| lofo_within_r2 | lofo_macro_r2 |
+| --- | --- |
+| 0.4447 | 0.1836 |
+
+---
+
+# REG Model 24 
+
+| | |
+|-|-|
+| **Timestamp:** | [2026-08-01T18:07:23Z] | 
+|**Recipe:** | island_REG  |
+|**Name:** | treat_all_island_REG  |
+|**Notes:** | <no notes>  |
+|**True Lofo:** | F|
+|**# Features:** | 81|
+| **List of Features:** | surplus_kgha_mean_b1, pct_corn_mean_b0, roll_n_avg_except_this7d, surplus_kgha_mean_b2, pct_corn_mean_b1, tile_frac_basin, pct_soybeans_mean_b2, rest_of_state_nitrate_lag1, tot_tiles92, pct_fallow_mean_b1, pct_small_grains_mean_b2, tile_frac_ag, pct_hay_pasture_mean_b1, rest_of_state_nitrate_lag3, pct_fallow_mean_b0, surplus_kgha_mean_b0, pct_hay_pasture_mean_b2, lon, pct_nonag_mean_b1, tot_contact, pct_corn_mean_b2, pct_small_grains_mean_b1, pct_nonag_mean_b2, pct_soybeans_mean_b1, pct_small_grains_mean_b0, pct_fallow_mean_b2, pct_hay_pasture_mean_b0, tot_bfi, pct_other_mean_b2, roll_n_avg_except_this14d, pct_soybeans_mean_b0, pct_nonag_mean_b0, pct_small_grains_b2, pct_corn_b0, pct_hay_pasture_b2, pct_alfalfa_mean_b0, pct_alfalfa_mean_b2, cat_bfi, pct_corn_b1, fuel_moisture_1000h_b2, pct_other_mean_b1, pct_hay_pasture_b0, surplus_kgha_norm_b2, cat_contact, pct_nonag_b0, pct_alfalfa_b2, pct_other_b0, pct_soybeans_b2, roll_n_avg_except_this60d, surplus_kgha_norm_b1, pct_nonag_b1, log_basin_area, pct_alfalfa_b0, lat, surplus_kgha_expT_b2, pct_corn_b2, pct_alfalfa_mean_b1, pct_other_b1, pct_soybeans_b0, pct_soybeans_b1, pct_other_b2, pct_fallow_b0, pct_hay_pasture_b1, pct_other_mean_b0, surplus_kgha_expT_b0, surplus_kgha_expT_b1, pct_small_grains_b0, pct_fallow_b2, max_dist_to_sensor, doy_sin, pct_alfalfa_b1, mean_dist_to_sensor, doy_sin2, surplus_kgha_norm_b0, pct_nonag_b2, pct_small_grains_b1, pct_fallow_b1, fuel_moisture_1000h_b1, fuel_moisture_1000h_b0, doy_cos, doy_cos2  | 
+
+### Scores:
+| n_sites | n_families | n_rows | n_feat | loso_r2 | lofo_r2 | lofo_rmse | lofo_between_r2 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 116 | 30 | 175973 | 81 | 0.5042 | 0.4183 | 4.1434 | 0.3672 |
+
+| lofo_within_r2 | lofo_macro_r2 |
+| --- | --- |
+| 0.3967 | 0.1920 |
+
+---
+
 # CLF Model 23 
 
 | | |

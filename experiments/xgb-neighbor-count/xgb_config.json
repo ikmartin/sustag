@@ -1,0 +1,84 @@
+{
+  "_provenance": {
+    "status": "tuned -- RECONSTRUCTED from tune_<task>.csv, not written by the tuner",
+    "arm": "nearest_4_nbr_rednt_area",
+    "n_sites": 116,
+    "git_sha": "faa17bb",
+    "written": "2026-08-01T01:52:00Z",
+    "tuner": "tune_config.py (PID 79244, started 2026-07-31T20:27Z, exited 2026-08-01T01:45:51Z)",
+    "search_minutes": 318,
+    "sanity": {
+      "reg": {
+        "arm": "island_REG",
+        "n_feat": 81,
+        "headline": "lofo_r2",
+        "noise_floor": 0.0085,
+        "settled": 0.418909,
+        "settled_n_estimators": 200,
+        "provisional": 0.418319,
+        "provisional_n_estimators": 480,
+        "delta": 0.00059,
+        "costs_narrow_arm": false
+      },
+      "clf": {
+        "arm": "island_CLF",
+        "n_feat": 116,
+        "headline": "lofo_prauc",
+        "noise_floor": 0.0037,
+        "settled": 0.689274,
+        "settled_n_estimators": 250,
+        "provisional": 0.687401,
+        "provisional_n_estimators": 580,
+        "delta": 0.001873,
+        "costs_narrow_arm": false
+      }
+    },
+    "reconstruction": "The tuner completed both searches (233 configs x 2 tasks, all 6 stages, CSVs intact) and then died after the search and before writing this file; cause not determined, stderr was lost with the launching shell. These configs are read from the STAGE 6/6 confirmation rows, which are the settled point re-scored as a unit -- they are labelled \"DEFAULT (inherited)\" only because that stage searches no axis (tune_config.py:166,177), and they do not match the pinned inherited reference at tune_config.py:77.",
+    "selection_metric_caveat": "Ranked on lofo_r2 / lofo_prauc, discounted by NOISE_CEILING per doubling of fit cost. Those are the pooled metrics aug-01.md T1.2b retires. Valid for ranking the 27 arms against each other (paired, shared config); NOT a config to ship.",
+    "evidence": {
+      "reg": {
+        "headline": "lofo_r2",
+        "settled_score": 0.491294,
+        "best_raw_over_all_configs": 0.49866,
+        "cost_rule_concession": 0.007366,
+        "best_k": 200,
+        "fit_cost": 560.0,
+        "at_ceiling": 0.488,
+        "n_configs_scored": 233
+      },
+      "clf": {
+        "headline": "lofo_prauc",
+        "settled_score": 0.755208,
+        "best_raw_over_all_configs": 0.755208,
+        "cost_rule_concession": 0.0,
+        "best_k": 250,
+        "fit_cost": 1400.0,
+        "at_ceiling": 0.7449,
+        "n_configs_scored": 233
+      }
+    },
+    "sanity_note": "Narrow-arm check run separately on 2026-08-01 after the tuner crashed before writing this file: `--task both --sanity-only` (no --write, which would have overwritten search_minutes with the 2-minute sanity run). Neither task loses more than one noise floor on the island arm at the shared config; both deltas are positive, i.e. the settled config is marginally BETTER on the narrow arm than the provisional one it replaces, at 2.3-2.4x fewer trees."
+  },
+  "reg": {
+    "learning_rate": 0.05,
+    "max_depth": 3,
+    "min_child_weight": 1231.811,
+    "subsample": 0.7,
+    "colsample_bytree": 0.5,
+    "reg_lambda": 1231.811,
+    "reg_alpha": 0.0,
+    "random_state": 42,
+    "n_estimators": 200
+  },
+  "clf": {
+    "learning_rate": 0.05,
+    "max_depth": 4,
+    "min_child_weight": 21.97987780739091,
+    "subsample": 0.7,
+    "colsample_bytree": 0.5,
+    "reg_lambda": 659.396334,
+    "reg_alpha": 0.0,
+    "random_state": 42,
+    "n_estimators": 250
+  }
+}

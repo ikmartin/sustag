@@ -88,36 +88,53 @@ MIN_NITRATE_ROWS = 10_000
 MIN_CELL_COVERAGE = 0.5
 
 
-def _cell_coverage(all_sites: list[str]) -> dict[str, float]:
-    """{site_uid: Sum(frac_cell_in_basin)} -- the basin's area in units of covariate CELLS.
+def _coverage_basin(uid: str):
+    """The polygon to measure coverage on: the site's PREFERRED basin, else its basin1 delineation straight off disk.
 
-    ORDERING: this runs in the WATER build, which precedes make_features -- so until basins AND grid_global exist this returns {} and the filter is a no-op, taking effect on the next pass. Same shape as the big_basin list: a geometry-derived criterion that can only be applied once the geometry is built.
+    The fallback is what makes this filter self-sustaining rather than self-defeating. preferred_basin.csv is rewritten wholesale from the WATER CONTRACT by _make_basins, so the moment this filter drops a site, that site loses its row on the next feature build -- and a filter that could only judge sites listed there would stop seeing exactly the sites it exists to remove. They come back on the following pass, the contract grows, the rows return, they are dropped again: the cohort oscillates (measured 2026-07-31: 116 <-> 123, readmitting WQS0109, whose 0.25 coverage is documented to break every multi-bucket recipe).
+
+    Basin parquets are never deleted when a site leaves the contract, so reading one directly breaks the cycle. basin1 is the primary NLDI delineation and is what the auto rule prefers whenever the authoritative basin0 is absent; every currently-dropped site has one.
+    """
+    from src.data.access import get_basin
+
+    try:
+        return get_basin(uid, type=0)  # preferred, when preferred_basin.csv still carries the site
+    except (KeyError, FileNotFoundError):
+        return get_basin(uid, type=1)  # contract-independent fallback -- see above
+
+
+def _cell_coverage(all_sites: list[str]) -> tuple[dict[str, float], dict[str, str]]:
+    """({site_uid: Sum(frac_cell_in_basin)}, {site_uid: why_unjudged}) -- the basin's area in units of covariate CELLS.
+
+    ORDERING: this runs in the WATER build, which precedes make_features -- so until basins AND grid_global exist it judges nothing and the filter is a no-op, taking effect on the next pass. Same shape as the big_basin list: a geometry-derived criterion that can only be applied once the geometry is built. It does NOT, however, depend on the water contract -- see _coverage_basin.
 
     Deliberately computed from the basin polygon intersected with grid_global, via site_view's own _grid_basin_fractions, rather than by calling get_grid: it reuses the exact function the pipeline will use (so the number cannot drift from the real frac_cell_in_basin), and it needs NO per-site grid and NO D8 flow field -- which matters because the D8 walk is precisely what fails on the sites this filter exists to remove.
+
+    Sites that cannot be measured are returned SEPARATELY rather than silently dropped from the mapping. A site with no delineation at all and a site with corrupt geometry are both kept by the caller, but only one of them is a data problem, and previously neither was distinguishable from "measured and fine".
     """
     try:
-        from src.data.access import get_basin, get_basin_metadata
         from src.data.crs import EQUAL_AREA_CRS
         from src.data.site_view import _grid_basin_fractions, _grid_global
 
-        built = set(get_basin_metadata()["site_uid"].astype(str))
         gg = _grid_global()
     except Exception as e:
-        print(f"  [note] basins/grid_global not built yet ({type(e).__name__}); tiny-basin filter is a no-op.")
-        return {}
+        print(f"  [note] grid_global not built yet ({type(e).__name__}); tiny-basin filter is a no-op.")
+        return {}, {}
 
-    cover = {}
+    cover, unjudged = {}, {}
     for uid in all_sites:
-        if uid not in built:
-            continue
         try:
-            poly = get_basin(uid).to_crs(EQUAL_AREA_CRS).geometry.union_all()
-            members = gg[gg.geometry.intersects(poly)]
-            # a basin touching no cell at all scores 0 and is dropped -- there is nothing to aggregate
-            cover[uid] = float(_grid_basin_fractions(poly, members).sum()) if len(members) else 0.0
-        except Exception:
-            continue  # unreadable geometry -> unjudged, so kept (a filter must not drop on an error)
-    return cover
+            poly = _coverage_basin(uid).to_crs(EQUAL_AREA_CRS).geometry.union_all()
+        except (KeyError, FileNotFoundError):
+            unjudged[uid] = "no basin delineation on disk"
+            continue
+        except Exception as e:  # unreadable geometry -> unjudged, so kept (a filter must not drop on an error)
+            unjudged[uid] = f"{type(e).__name__}: {e}"
+            continue
+        members = gg[gg.geometry.intersects(poly)]
+        # a basin touching no cell at all scores 0 and is dropped -- there is nothing to aggregate
+        cover[uid] = float(_grid_basin_fractions(poly, members).sum()) if len(members) else 0.0
+    return cover, unjudged
 
 # detector thresholds (physical / behavioral), mirrored from the site_stats.py study
 _HI = 50.0  # mg/L as N: above this is implausible for a surface nitrate sensor
@@ -489,9 +506,12 @@ def filter_sites(plots: bool = True) -> dict:
     # OVERSIZED (size): hub basins excluded for LOFO health. Intersected with the candidate universe so a stale config entry can't silently claim to have excluded a site that isn't here.
     oversized = set(_oversized()) & set(all_sites)
 
-    # TINY (size): basins owning less than MIN_CELL_COVERAGE of one covariate cell, where the aggregation has nothing real to measure. Only sites with a built basin are judged; the rest are unjudged and therefore kept.
-    coverage = _cell_coverage(all_sites)
+    # TINY (size): basins owning less than MIN_CELL_COVERAGE of one covariate cell, where the aggregation has nothing real to measure. Judged from the basin polygon on disk, NOT from the water contract, so a site this filter drops stays judgeable on the next pass -- see _coverage_basin. Sites with no delineation at all are unjudged and therefore kept, but they are reported rather than silently indistinguishable from measured-and-fine.
+    coverage, unjudged = _cell_coverage(all_sites)
     tiny = {u for u, c in coverage.items() if c < MIN_CELL_COVERAGE}
+    if unjudged:
+        print(f"  [warn] {len(unjudged)} site(s) could not be size-judged and are KEPT: "
+              f"{', '.join(sorted(unjudged)[:6])}{' ...' if len(unjudged) > 6 else ''}")
 
     # GOOD = all - short - KNOWN_BAD - oversized - tiny  (flagged is advisory, NOT subtracted here).
     good = set(all_sites) - short - set(KNOWN_BAD) - oversized - tiny
@@ -510,6 +530,8 @@ def filter_sites(plots: bool = True) -> dict:
         "oversized_sites": sorted(oversized),
         # basins below MIN_CELL_COVERAGE -- they own less than half a covariate cell, so their aggregated covariates are slivers of cells lying mostly outside the basin. uid -> cell coverage, so the reason a site was dropped is legible without recomputing geometry.
         "tiny_sites": {u: round(coverage[u], 3) for u in sorted(tiny)},
+        # sites the size filter could NOT measure (no delineation on disk, or unreadable geometry) -- kept by default, but recorded so "unjudged" is never mistaken for "judged and fine". An entry here means the basin build has a hole.
+        "unjudged_sites": {u: unjudged[u] for u in sorted(unjudged)},
         # sites whose localized defects were auto-scrubbed into interim/water (uid -> removal counts); make_water reads the cleaned file for these.
         "cleaned_sites": {u: cleaned[u] for u in sorted(cleaned)},
         # flagged sites the review recommends ADDING to KNOWN_BAD (unrecoverable corruption; sites already in KNOWN_BAD are excluded, hence "additions")

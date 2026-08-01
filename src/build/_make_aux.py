@@ -65,15 +65,18 @@ def _euclid_m(a: str, b: str) -> float:
     return float(_GEOD.inv(lon_a, lat_a, lon_b, lat_b)[2])
 
 
-def _flow_dists_for_parent(parent: str, children: list[str]) -> dict[str, float]:
+def _flow_dists_for_parent(parent: str, children: list[str], parent_area_m2: float | None = None) -> dict[str, float]:
     """Along-network distance (m) from each child's sensor down to `parent`'s outlet.
 
-    One D8 flow field per PARENT, reused across its children -- the BFS is the expensive step and d8 caches it per rounded (lat, lon), so edges are grouped by parent to pay it once. Returns NaN where the parent is outside the raster extent or the child's pixel is unreachable (the latter means the D8 network disagrees with the point-in-polygon containment, which is worth knowing rather than silently filling)."""
+    One D8 flow field per PARENT, reused across its children -- the BFS is the expensive step and d8 caches it per rounded (lat, lon), so edges are grouped by parent to pay it once. Returns NaN where the parent is outside the raster extent or the child's pixel is unreachable (the latter means the D8 network disagrees with the point-in-polygon containment, which is worth knowing rather than silently filling).
+
+    `parent_area_m2` constrains pour-point snapping so the parent's outlet cannot land on a larger neighbouring river -- see d8._snap_outlet. It must be passed in already materialised, never looked up here: get_basin_area reads the site's grid, and building that grid calls back into this same flow-field function.
+    """
     from src.data import d8
 
     try:
         lon_p, lat_p = get_location(parent)
-        field = d8.flow_distance_field_ll(lat_p, lon_p)
+        field = d8.flow_distance_field_ll(lat_p, lon_p, parent_area_m2)
     except (ValueError, IndexError, KeyError):
         return {c: float("nan") for c in children}
 
@@ -153,7 +156,8 @@ def save_basin_graph() -> pd.DataFrame:
     print(f"computing flow distances over {len(by_parent)} parent basins (one D8 field each)...")
     flow: dict[tuple[str, str], float] = {}
     for i, (p, kids) in enumerate(sorted(by_parent.items()), 1):
-        for c, d in _flow_dists_for_parent(p, kids).items():
+        # area[p], NOT area.get(p): a miss must raise here. Passing None falls through to _snap_outlet's unconstrained window-relative branch -- the exact rule that mis-snapped 28 of 116 sites -- so a lookup hole would silently reinstate the bug instead of failing. `area` is built from `parents` two lines up, so a miss is a refactor error, and the next loop already reads area[parent] directly.
+        for c, d in _flow_dists_for_parent(p, kids, area[p]).items():
             flow[(c, p)] = d
         if i % 10 == 0 or i == len(by_parent):
             print(f"  {i}/{len(by_parent)} parents")

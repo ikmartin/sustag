@@ -411,12 +411,12 @@ def grid_build_env() -> dict:
 
     Mtimes alone cannot see this. The 2026-07-27 grids were built from an unmodified basin polygon, an older grid_global, and byte-identical site_view.py -- and still disagreed with a live rebuild on frac_cell_in_basin for every BOUNDARY cell (interior cells, frac=1, all matched). That is the signature of the basin outline landing a sub-metre away, i.e. the EPSG:4326 -> EPSG:5070 datum transform resolving to a different pipeline, which depends on the installed PROJ version and on whichever grids sit in PROJ's cache. Recording the stack makes that visible instead of silent.
 
-    site_view.py's mtime is included because it defines what a grid IS; a change there invalidates every artifact regardless of the data.
+    site_view.py's mtime is included because it defines what a grid IS; a change there invalidates every artifact regardless of the data. d8.py's is included for the same reason and was missing until 2026-07-31: it owns pour-point snapping, so it decides which outlet `dist_to_sensor` is measured to. Without it, a snapping fix left every cached grid reading as current and the corrected distances never reached a single consumer.
     """
     import shapely
     import pyproj
 
-    from src.data import site_view
+    from src.data import d8, site_view
 
     return {
         "shapely": shapely.__version__,
@@ -424,6 +424,7 @@ def grid_build_env() -> dict:
         "pyproj": pyproj.__version__,
         "proj": pyproj.proj_version_str,
         "site_view_mtime_ns": Path(site_view.__file__).stat().st_mtime_ns,
+        "d8_mtime_ns": Path(d8.__file__).stat().st_mtime_ns,
     }
 
 

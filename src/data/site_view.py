@@ -74,7 +74,8 @@ def build_site_view(basin: gpd.GeoDataFrame, sensor_lat: float, sensor_lon: floa
 
     members.insert(0, "node_id", np.arange(len(members), dtype="int64"))
     try:
-        field = d8.flow_distance_field_ll(sensor_lat, sensor_lon)
+        # The basin polygon is the expected drainage area, and it constrains pour-point snapping so a small basin's sensor cannot snap onto a neighbouring big river (see d8._snap_outlet). Taken from the polygon already reprojected above rather than from access.get_basin_area, for two reasons: get_basin_area is DEFINED over this function's own output, so calling it here recurses; and the real and virtual paths must derive the area identically or they resolve different outlets and selftest.test_virtual_equals_real fails.
+        field = d8.flow_distance_field_ll(sensor_lat, sensor_lon, basin_poly.area)
         members["dist_to_sensor"] = _grid_node_distances(members, field)
     except Exception as e:
         print(f"  [warn] {label}: dist_to_sensor unavailable ({e}); column set to NaN")

@@ -1,0 +1,1876 @@
+config,stage,seed,k,lofo_r2
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,50,0.3573118987541889
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,100,0.4399764976578433
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,150,0.466799221777723
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,200,0.4784441055012763
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,250,0.4822741427540215
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,300,0.4832470142934655
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,350,0.4849766446705551
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,400,0.4856286442383232
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,450,0.4877356886701129
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,500,0.489214184475341
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,550,0.4901143845761551
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,560,0.4899916830557324
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,570,0.4902870593975852
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,580,0.490723986126384
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,590,0.4907240806246755
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,600,0.4914572253707584
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,610,0.4918687194877084
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,620,0.4921233949685395
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,630,0.4918121071463665
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,640,0.4914891090954388
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,650,0.4912359091024844
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,660,0.4912734301604288
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,670,0.4909878761363699
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,680,0.4911097782132867
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,690,0.4911842279654085
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,700,0.4912219761898008
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,750,0.4906044424845942
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,800,0.490164580575288
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,850,0.4897314287128241
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,900,0.4895419850126172
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,950,0.4894337118924013
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,1000,0.4894534488771001
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,1050,0.4888441194268959
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,1100,0.4877785496427163
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,1150,0.4873548664694076
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,1200,0.4869959767369753
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,1250,0.4868440961416845
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,1300,0.486575653068995
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,1350,0.4857243958261683
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,1400,0.4849679480177521
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,1450,0.4843801702979892
+DEFAULT (inherited),STAGE 1/6 depth x lr,42,1500,0.4838688637384026
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,50,0.2193133963305852
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,100,0.3384633598390596
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,150,0.3974037842856174
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,200,0.4298755931144896
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,250,0.4498503587244341
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,300,0.4599084869396385
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,350,0.4666824779335443
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,400,0.4694181787833036
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,450,0.4717436433949948
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,500,0.4728135912245862
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,550,0.4749803897871857
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,600,0.4758857086143004
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,650,0.4767339702886971
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,700,0.4779985960084963
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,750,0.4777042835955587
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,800,0.4780806770356002
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,850,0.4780336087066178
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,900,0.477680183376711
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,950,0.4777073616707938
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1000,0.4787435313038716
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1050,0.4789713067220411
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1100,0.4790830032140319
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1150,0.479646742301403
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1200,0.4798149188117416
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1250,0.4797977350247741
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1300,0.4806070279910726
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1350,0.4808781298918819
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1400,0.4806911556786043
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1450,0.481196203285357
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1500,0.4817416042303771
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1550,0.4822848394443558
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1600,0.4823841993895704
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1650,0.4829927696343458
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1660,0.4831639789725094
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1670,0.4831500426850399
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1680,0.4833652955273638
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1690,0.4833781688526981
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1700,0.4833641633742211
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1710,0.4830500201510979
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1720,0.4831095436367678
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1730,0.4829924232320791
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1740,0.4830930443381267
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1750,0.4829482717237074
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1800,0.4832345975752108
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1850,0.4833136161072574
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1860,0.4832622855121637
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1870,0.4832852738046482
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1880,0.4832568405594754
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1890,0.4833172836749027
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1900,0.4833242030222514
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1910,0.483305805697751
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1920,0.4832174517881157
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1930,0.483262156051036
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1940,0.4832192702753957
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,1950,0.4831284294336238
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,2000,0.4828656453994077
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,2050,0.4831442101035559
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,2100,0.4828212151512352
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,2150,0.4830781543004988
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,2200,0.4831237035613444
+"depth=3, lr=0.01",STAGE 1/6 depth x lr,42,2250,0.4833027825577117
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,50,0.3428135610863755
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,100,0.4362262952829039
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,150,0.4673551757218084
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,200,0.4771681778552559
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,250,0.4801104585406819
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,300,0.4804618689726474
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,350,0.4831375398137196
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,400,0.4820575368159668
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,450,0.48115840927313
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,500,0.4822212631849577
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,550,0.4839151307406986
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,600,0.4864222547114202
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,650,0.4875957579302747
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,700,0.4883938855780693
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,750,0.4887603831377607
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,800,0.4892935120341735
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,810,0.4895122398600401
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,820,0.4897700932357441
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,830,0.4897827386845744
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,840,0.4896478896534307
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,850,0.489389714605016
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,860,0.489535723073717
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,870,0.4893254835142681
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,880,0.4893825343879592
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,890,0.4895178669780635
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,900,0.4894265429776947
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,910,0.4896344197497074
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,920,0.4895756214022696
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,930,0.4891643779620183
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,940,0.4887331000743045
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,950,0.4889913457778017
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,1000,0.4888275831306641
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,1050,0.4888320334685334
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,1100,0.4886455907385204
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,1150,0.4885701727391583
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,1200,0.4879084249598421
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,1250,0.4878896106691982
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,1300,0.4886914469019047
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,1350,0.4883283304172031
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,1400,0.4880486800461066
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,1450,0.4881026330627414
+"depth=3, lr=0.02",STAGE 1/6 depth x lr,42,1500,0.4880782676281704
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,50,0.4535531979149257
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,100,0.4763677558168898
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,150,0.4806468196468683
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,200,0.4814524018181195
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,250,0.4844050525851855
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,300,0.4853760215338998
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,350,0.4865627814844824
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,360,0.4869356301412588
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,370,0.4871535868110654
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,380,0.4873511105543449
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,390,0.487707913010073
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,400,0.4867854929662903
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,410,0.4863064722570833
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,420,0.4861433688894991
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,430,0.4866704496370538
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,440,0.4876688868271434
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,450,0.4874865700975154
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,460,0.4865295661152647
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,470,0.4861264720825051
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,480,0.4860340376640748
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,490,0.4857902690282291
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,500,0.4857897195855361
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,550,0.4831966543999781
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,600,0.4821552767492806
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,650,0.4816041513979064
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,700,0.4808312429498391
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,750,0.4802270706279318
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,800,0.4811867716672984
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,850,0.4812860986773692
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,900,0.482714321116376
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,950,0.4809288769176921
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,1000,0.4797266686514507
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,1050,0.4784973888122159
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,1100,0.4779906438341914
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,1150,0.4769053090271254
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,1200,0.4767933602566653
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,1250,0.475966314243297
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,1300,0.4753954331763831
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,1350,0.4747036207205971
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,1400,0.4729432792598503
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,1450,0.4718642542002512
+"depth=3, lr=0.05",STAGE 1/6 depth x lr,42,1500,0.4723149529151023
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,50,0.239877129685411
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,100,0.3605024151653531
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,150,0.4137081129902354
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,200,0.4410587503553113
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,250,0.4581342001814812
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,300,0.4672119703708135
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,350,0.4730740372180906
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,400,0.4775171745345603
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,450,0.4802249500030812
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,500,0.4818854114286782
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,550,0.4836664252577889
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,600,0.4847135789973874
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,650,0.4857565957487603
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,700,0.4866236964598227
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,750,0.4869091276508885
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,800,0.4877165268929588
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,850,0.4883390398938251
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,900,0.4886027591458054
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,950,0.4890636755709849
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,1000,0.4892955446298679
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,1050,0.4895761939775677
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,1100,0.4902251233111983
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,1150,0.4907066816782438
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,1200,0.4903601069920152
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,1250,0.490479384130298
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,1300,0.4907828198421022
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,1350,0.4907583895009649
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,1400,0.4909316301449153
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,1410,0.4908268032577546
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,1420,0.4910115123593597
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,1430,0.491267569749068
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,1440,0.4911314482880201
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,1450,0.4912171047175572
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,1460,0.4912722087747392
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,1470,0.4911347679790123
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,1480,0.4910823894003304
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,1490,0.4912748235631015
+"depth=4, lr=0.01",STAGE 1/6 depth x lr,42,1500,0.4913306240509872
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,50,0.3573118987541889
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,100,0.4399764976578433
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,150,0.466799221777723
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,200,0.4784441055012763
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,250,0.4822741427540215
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,300,0.4832470142934655
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,350,0.4849766446705551
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,400,0.4856286442383232
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,450,0.4877356886701129
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,500,0.489214184475341
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,550,0.4901143845761551
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,560,0.4899916830557324
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,570,0.4902870593975852
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,580,0.490723986126384
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,590,0.4907240806246755
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,600,0.4914572253707584
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,610,0.4918687194877084
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,620,0.4921233949685395
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,630,0.4918121071463665
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,640,0.4914891090954388
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,650,0.4912359091024844
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,660,0.4912734301604288
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,670,0.4909878761363699
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,680,0.4911097782132867
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,690,0.4911842279654085
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,700,0.4912219761898008
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,750,0.4906044424845942
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,800,0.490164580575288
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,850,0.4897314287128241
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,900,0.4895419850126172
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,950,0.4894337118924013
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,1000,0.4894534488771001
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,1050,0.4888441194268959
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,1100,0.4877785496427163
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,1150,0.4873548664694076
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,1200,0.4869959767369753
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,1250,0.4868440961416845
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,1300,0.486575653068995
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,1350,0.4857243958261683
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,1400,0.4849679480177521
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,1450,0.4843801702979892
+"depth=4, lr=0.02",STAGE 1/6 depth x lr,42,1500,0.4838688637384026
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,50,0.4579059341698354
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,100,0.4805144641571054
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,110,0.4815379239618912
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,120,0.4830254739812587
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,130,0.484690754860866
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,140,0.4865518360591967
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,150,0.4868909581118419
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,160,0.4869554756961546
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,170,0.4890750574486504
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,180,0.4890252121775318
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,190,0.487961334673419
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,200,0.487819688569595
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,210,0.486997384810828
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,220,0.4874481738930774
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,230,0.4880066977740709
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,240,0.4871396842110169
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,250,0.4862876267227687
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,300,0.4854737617142002
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,350,0.4844012019605361
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,400,0.4844995039787559
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,450,0.4835868323340682
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,500,0.4823969591319285
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,550,0.4829027532819668
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,600,0.4809317102945329
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,650,0.4798991131423712
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,700,0.4802567670811712
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,750,0.4785170685982864
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,800,0.47652267847107
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,850,0.4759640428824698
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,900,0.4755471396545766
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,950,0.4733395458610726
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,1000,0.4721947450934106
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,1050,0.4708782829815511
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,1100,0.4684606301894406
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,1150,0.4680453608867527
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,1200,0.4691251951716391
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,1250,0.4683073994070789
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,1300,0.4673668688917826
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,1350,0.4673501420699935
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,1400,0.4672878767903488
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,1450,0.466678554778214
+"depth=4, lr=0.05",STAGE 1/6 depth x lr,42,1500,0.4657438352897235
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,50,0.2487035273451031
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,100,0.3668664746543993
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,150,0.4203684868664017
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,200,0.445511753027437
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,250,0.460298059061675
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,300,0.4703696450802482
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,350,0.475608330384871
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,400,0.4792639826811244
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,450,0.4817554181682356
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,500,0.4829731312897087
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,550,0.4832572367225954
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,600,0.4844986270991589
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,650,0.4863791835907297
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,700,0.4874060226423925
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,750,0.4874443144280284
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,800,0.4890254433019098
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,850,0.4895533348436551
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,900,0.4893178292816188
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,950,0.4893139571784044
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,1000,0.4892683712508111
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,1050,0.4895200012593576
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,1100,0.4896323209444416
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,1150,0.489769397906851
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,1200,0.4903073952634028
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,1250,0.4904960798764957
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,1300,0.4909027727668076
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,1350,0.491023410334053
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,1400,0.4910670233464421
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,1410,0.4908764303328374
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,1420,0.4908314132973935
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,1430,0.4909816857377458
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,1440,0.4912297134509245
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,1450,0.4912437668943743
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,1460,0.4911498264935806
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,1470,0.4913534540922344
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,1480,0.4912340426527702
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,1490,0.4911787638130287
+"depth=5, lr=0.01",STAGE 1/6 depth x lr,42,1500,0.4912289886002252
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,50,0.3689713167184282
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,100,0.4510655364029625
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,150,0.4741875758354683
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,200,0.4841002781650244
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,250,0.4885540009908374
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,300,0.4909210531356748
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,350,0.4919588169355605
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,400,0.494451811040532
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,450,0.4945790780270677
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,500,0.4963962830210355
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,550,0.4969740543642307
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,600,0.4971453798934274
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,650,0.4976975725732324
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,700,0.4976770060729981
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,750,0.4981651940188427
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,760,0.4982322593864784
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,770,0.4983821852955363
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,780,0.4984698004847326
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,790,0.4986601835136901
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,800,0.4986263916115601
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,810,0.4984544863736205
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,820,0.4983235408961315
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,830,0.4985546818520079
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,840,0.4983214871064173
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,850,0.4986250827038518
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,860,0.4985512477287376
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,870,0.4982734507969566
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,880,0.4983442394185334
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,890,0.4983575662136695
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,900,0.4983362783052916
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,950,0.4981448466848985
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,1000,0.4980698174548953
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,1050,0.4973419706969628
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,1100,0.4966570979051192
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,1150,0.4963485592983292
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,1200,0.4957593043851709
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,1250,0.4955985774834659
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,1300,0.4952310804121902
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,1350,0.4950204391388852
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,1400,0.4938250027261142
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,1450,0.4932686563389742
+"depth=5, lr=0.02",STAGE 1/6 depth x lr,42,1500,0.4932242104952488
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,50,0.4611453215070886
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,100,0.4789835965420088
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,150,0.4863635617173742
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,160,0.4884521114755058
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,170,0.4893316759052013
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,180,0.4903432072668228
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,190,0.4916035891970723
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,200,0.4911336824300143
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,210,0.4902561862320722
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,220,0.4902163524957541
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,230,0.4906417000333568
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,240,0.4898349860707923
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,250,0.4886849740502883
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,260,0.4876479670841896
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,270,0.4874501684438272
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,280,0.4875257234933661
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,290,0.4883193796826669
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,300,0.4879802603962996
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,350,0.4869998275058057
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,400,0.4836191721060587
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,450,0.4816264691270093
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,500,0.4790448140255271
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,550,0.4783703620501131
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,600,0.4768334593891055
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,650,0.4763137366359721
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,700,0.4726294918449606
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,750,0.471098573640304
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,800,0.4696549111290531
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,850,0.4681405522765827
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,900,0.4670759979376987
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,950,0.465890534506387
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,1000,0.4664070566508931
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,1050,0.4652720025241799
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,1100,0.4620631920616962
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,1150,0.4610436194700448
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,1200,0.4597199943236185
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,1250,0.4582973346477512
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,1300,0.4552518926555264
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,1350,0.4539511546335908
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,1400,0.4539329449305309
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,1450,0.4530487920829674
+"depth=5, lr=0.05",STAGE 1/6 depth x lr,42,1500,0.4514370127682231
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,50,0.2573884595867692
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,100,0.3754371712810715
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,150,0.4252087905299579
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,200,0.4488306298984683
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,250,0.4631611078494775
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,300,0.4708113437293494
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,350,0.4760977395677499
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,400,0.480129642048578
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,450,0.4827348872667214
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,500,0.4845152943685502
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,550,0.4859137088978
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,600,0.4871171210636347
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,650,0.4878909367217376
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,700,0.4889251406556902
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,750,0.4892735798517273
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,800,0.490190814414126
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,850,0.4905871466621417
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,900,0.4908067485985701
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,950,0.4906689190605637
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,1000,0.4910591238919773
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,1050,0.4909206930019812
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,1100,0.4912028521009974
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,1150,0.4913096214989416
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,1200,0.4913853167056794
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,1250,0.4917843647677742
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,1260,0.4919235468187581
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,1270,0.4921261595153766
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,1280,0.4922354675875893
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,1290,0.4922200499445817
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,1300,0.4921442667516863
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,1310,0.4920900900793233
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,1320,0.4921650195868284
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,1330,0.4922498990122221
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,1340,0.4922004666162135
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,1350,0.4921873576264665
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,1360,0.4922463513632552
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,1370,0.4922007813050054
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,1380,0.492094408251736
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,1390,0.4921476123599974
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,1400,0.4921065797832181
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,1450,0.4919681703506804
+"depth=6, lr=0.01",STAGE 1/6 depth x lr,42,1500,0.4918422925349163
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,50,0.3744926190719261
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,100,0.447858624156493
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,150,0.4715464193409625
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,200,0.4817067767817556
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,250,0.48614038554356
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,300,0.488682232187404
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,350,0.4896780788910979
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,400,0.4914904191866903
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,450,0.4918168734087749
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,460,0.4918597626247626
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,470,0.4921533241112704
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,480,0.4924995684843418
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,490,0.4925468742422372
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,500,0.4926623086950681
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,510,0.4927573353875382
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,520,0.4927193181013851
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,530,0.4926278174847003
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,540,0.4927183121155875
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,550,0.4926570866854824
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,560,0.4926509072795855
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,570,0.4922538353813871
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,580,0.4920949433149112
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,590,0.4920554690092726
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,600,0.4920363342306793
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,650,0.4925249010334541
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,700,0.4925878572529726
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,750,0.4919653835194487
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,800,0.4918086288530706
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,850,0.4918375672604274
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,900,0.490767507507553
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,950,0.4906962493468531
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,1000,0.4911241117135434
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,1050,0.4904542664895123
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,1100,0.4898784323261771
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,1150,0.4892512797477696
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,1200,0.4893841948303027
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,1250,0.4894299971733991
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,1300,0.4889811466663234
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,1350,0.4887360763524628
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,1400,0.4886569414345024
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,1450,0.4883251537587867
+"depth=6, lr=0.02",STAGE 1/6 depth x lr,42,1500,0.4877138012624022
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,50,0.4671292304064505
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,100,0.4850326294531262
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,150,0.4900622602163688
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,200,0.4914178904685025
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,250,0.4924477516010751
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,260,0.4924071202471564
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,270,0.4932986521001152
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,280,0.4935645975761409
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,290,0.4941883502382203
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,300,0.4947652166306359
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,310,0.494855609003806
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,320,0.494580298400154
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,330,0.4940142248671739
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,340,0.4933131330227051
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,350,0.4932621697772392
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,360,0.4928423949213372
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,370,0.4929672159831986
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,380,0.492927639748003
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,390,0.4923275516807948
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,400,0.4911781613811448
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,450,0.4905044491792866
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,500,0.4891825832380704
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,550,0.4881193562500928
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,600,0.4865754023356674
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,650,0.4840678347179664
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,700,0.482660302973232
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,750,0.4814596077747014
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,800,0.4809714650306194
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,850,0.4789387937289547
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,900,0.4775102236120384
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,950,0.4763860753720086
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,1000,0.4758533007340904
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,1050,0.4755152070675819
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,1100,0.4742264726896127
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,1150,0.4736878514029142
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,1200,0.4725952341772793
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,1250,0.4715341791802994
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,1300,0.4716662362271638
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,1350,0.4715464878029438
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,1400,0.471711022451163
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,1450,0.4710840455739412
+"depth=6, lr=0.05",STAGE 1/6 depth x lr,42,1500,0.4705295146013265
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,50,0.4579059341698354
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,100,0.4805144641571054
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,110,0.4815379239618912
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,120,0.4830254739812587
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,130,0.484690754860866
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,140,0.4865518360591967
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,150,0.4868909581118419
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,160,0.4869554756961546
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,170,0.4890750574486504
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,180,0.4890252121775318
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,190,0.487961334673419
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,200,0.487819688569595
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,210,0.486997384810828
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,220,0.4874481738930774
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,230,0.4880066977740709
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,240,0.4871396842110169
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,250,0.4862876267227687
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,300,0.4854737617142002
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,350,0.4844012019605361
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,400,0.4844995039787559
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,450,0.4835868323340682
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,500,0.4823969591319285
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,550,0.4829027532819668
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,600,0.4809317102945329
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,650,0.4798991131423712
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,700,0.4802567670811712
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,750,0.4785170685982864
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,800,0.47652267847107
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,850,0.4759640428824698
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,900,0.4755471396545766
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,950,0.4733395458610726
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,1000,0.4721947450934106
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,1050,0.4708782829815511
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,1100,0.4684606301894406
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,1150,0.4680453608867527
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,1200,0.4691251951716391
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,1250,0.4683073994070789
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,1300,0.4673668688917826
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,1350,0.4673501420699935
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,1400,0.4672878767903488
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,1450,0.466678554778214
+DEFAULT (inherited),STAGE 2/6 depth+lam,42,1500,0.4657438352897235
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,50,0.451187172043119
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,100,0.4783147366523677
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,150,0.4796047226667482
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,200,0.477508504315705
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,250,0.4787829865776989
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,300,0.4815789685766451
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,350,0.4830577778705757
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,400,0.484561528236484
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,410,0.4839608451087683
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,420,0.4844472485784279
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,430,0.4850694300963724
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,440,0.4867398722184382
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,450,0.4856757826255048
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,460,0.4857780170535326
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,470,0.485763214404358
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,480,0.4852944388173877
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,490,0.484972382101794
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,500,0.4854339991918932
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,510,0.486258649947498
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,520,0.4855727716682179
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,530,0.4855996190023889
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,540,0.4863766188419949
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,550,0.4859424439847777
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,560,0.4854722370030657
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,570,0.4855841792182119
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,580,0.4857216443006201
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,590,0.4853173711048814
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,600,0.4846018142517279
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,650,0.4856743723086781
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,700,0.4846586677581024
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,750,0.4844389212241979
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,800,0.4847170241329124
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,850,0.4841353749201508
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,900,0.4831407133671087
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,950,0.4824820256182321
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,1000,0.4810371778952897
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,1050,0.4804250079599295
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,1100,0.4802473908133835
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,1150,0.4806146116046703
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,1200,0.4801162173129992
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,1250,0.4803393437532967
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,1300,0.4797692506314661
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,1350,0.4791422478835933
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,1400,0.4790232952344968
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,1450,0.4790190992303675
+"lr=0.05, depth=3, lam=0.002(25)",STAGE 2/6 depth+lam,42,1500,0.4784297053946246
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,50,0.443438897729926
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,100,0.4734920724203745
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,150,0.4789644933056868
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,200,0.4777205552604031
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,250,0.4781809135195622
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,300,0.479428485737747
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,350,0.4807499173298322
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,360,0.4807355750405804
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,370,0.4810628836034621
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,380,0.4812966782142184
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,390,0.4818600319126476
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,400,0.4823817318806729
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,410,0.481807878125442
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,420,0.4818756675599501
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,430,0.4825358506647669
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,440,0.4821713864817116
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,450,0.4818796546809015
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,460,0.4817901730906753
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,470,0.480945629075833
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,480,0.4818852018458991
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,490,0.481213495825139
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,500,0.4812100291501455
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,550,0.4811082114091812
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,600,0.4814141854133118
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,650,0.4815839447448591
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,700,0.481343398248406
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,750,0.4798799586508528
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,800,0.4801803018636725
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,850,0.4804546636586623
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,900,0.4804732828853111
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,950,0.4805946362657464
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,1000,0.4798014199991317
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,1050,0.479039666621274
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,1100,0.4783533242014907
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,1150,0.4788894044864205
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,1200,0.478017362676682
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,1250,0.477804285880594
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,1300,0.4777054600390689
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,1350,0.4771076835005268
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,1400,0.4772467773988931
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,1450,0.4770010285956509
+"lr=0.05, depth=3, lam=0.02(246)",STAGE 2/6 depth+lam,42,1500,0.4768788548613617
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,50,0.4385565405864009
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,100,0.477995635948151
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,150,0.483738397949398
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,160,0.4860651810985686
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,170,0.4867066048238204
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,180,0.4872039766273687
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,190,0.4867257652301956
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,200,0.4873491745395464
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,210,0.4874615239185129
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,220,0.4872171356167271
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,230,0.487653566710556
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,240,0.4867776088761022
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,250,0.4868778930139595
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,260,0.4870001058643664
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,270,0.4874131276126942
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,280,0.4871599108548486
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,290,0.486787737569006
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,300,0.48599285896932
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,350,0.4866537327576291
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,400,0.4849819825182051
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,450,0.4845458528389615
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,500,0.484302777563118
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,550,0.4838178955712386
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,600,0.4840069155815856
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,650,0.484081358407056
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,700,0.4845517350468262
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,750,0.4846320473454961
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,800,0.4846681089779032
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,850,0.4843257091687901
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,900,0.4839496453858315
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,950,0.4834197631771219
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,1000,0.4827593319357364
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,1050,0.4824794447462254
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,1100,0.4820517166453579
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,1150,0.4824641424235432
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,1200,0.4819517162654626
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,1250,0.4817425408195546
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,1300,0.481901124197325
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,1350,0.4818179479918125
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,1400,0.481847805267154
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,1450,0.4815346154126153
+"lr=0.05, depth=3, lam=0.1(1232)",STAGE 2/6 depth+lam,42,1500,0.4814327259118265
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,50,0.4161724470589435
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,100,0.4663811608241185
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,150,0.4789805690517317
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,200,0.4829157462053968
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,250,0.4866784325784914
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,300,0.4874698156525213
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,350,0.4872007792486165
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,400,0.4865199646376453
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,450,0.4862626309394756
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,500,0.4869244496581899
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,550,0.4862340981963212
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,600,0.4870696930011287
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,650,0.4870635440019243
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,700,0.4872866617736168
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,750,0.4872430215485979
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,800,0.4869453615852693
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,850,0.4882874619631844
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,900,0.4883553058524419
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,950,0.4887948184429403
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,1000,0.4888981463054888
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,1010,0.4891715955744122
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,1020,0.4891968452676172
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,1030,0.489428894233044
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,1040,0.4894720757116825
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,1050,0.4896734712917541
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,1060,0.489636348394191
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,1070,0.4895000305041956
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,1080,0.4891150098158674
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,1090,0.4890721756790371
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,1100,0.4889744479701663
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,1150,0.4889770177521568
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,1200,0.4889451084651396
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,1250,0.4890765707929244
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,1300,0.4887186475229084
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,1350,0.4888044163890074
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,1400,0.4891013274796189
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,1450,0.488976861275439
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,1460,0.4890532361531075
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,1470,0.4891599594789163
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,1480,0.4892729787642391
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,1490,0.4891853661385433
+"lr=0.05, depth=3, lam=0.3(3695)",STAGE 2/6 depth+lam,42,1500,0.4892359629182822
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,50,0.4570194758055409
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,100,0.4737083277074977
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,150,0.4821442525495162
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,200,0.4842197503147095
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,210,0.4862973064982485
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,220,0.4872402729792141
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,230,0.4872722322562638
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,240,0.4876671009440327
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,250,0.4874229739414286
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,260,0.4872799986577482
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,270,0.4866369531900141
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,280,0.4860123238558249
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,290,0.4846894816955339
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,300,0.4850874430087815
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,350,0.4834098438695151
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,360,0.4835536412926017
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,370,0.4838633259481087
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,380,0.4846992394675855
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,390,0.4850722060085239
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,400,0.4854892941667049
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,410,0.4852537512667414
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,420,0.4846141293356347
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,430,0.484144279415395
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,440,0.4839671331844363
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,450,0.4834405202506397
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,500,0.4814994174533255
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,550,0.4811351928712212
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,600,0.4803716463122587
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,650,0.4787739200581371
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,700,0.4776719486433204
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,750,0.4760158988532967
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,800,0.4758041682071736
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,850,0.4759959652021306
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,900,0.4748331938273619
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,950,0.4746281251601005
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,1000,0.474495076454525
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,1050,0.4728635845806317
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,1100,0.4722288908604505
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,1150,0.4715822824891862
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,1200,0.4709843544127825
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,1250,0.4701899755829034
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,1300,0.4684008226779075
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,1350,0.467861243041521
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,1400,0.4671774702136447
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,1450,0.467013743030071
+"lr=0.05, depth=4, lam=0.002(12)",STAGE 2/6 depth+lam,42,1500,0.466509199698224
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,50,0.4531770969451127
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,100,0.4779008186528418
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,150,0.4843299852326259
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,200,0.4837452930863321
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,250,0.4855422768058204
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,300,0.4867027116489101
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,350,0.4871874838927861
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,400,0.4865938549919631
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,450,0.4858889202824039
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,500,0.4868191494049
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,510,0.4863918337843728
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,520,0.4866451551157381
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,530,0.4870125510608389
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,540,0.4874803842365381
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,550,0.4875010933631546
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,560,0.4876502995713688
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,570,0.4878000410282949
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,580,0.4879821596588187
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,590,0.4882213221759638
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,600,0.4872761736520379
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,610,0.4873060529968528
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,620,0.4871350347868207
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,630,0.48681330314189
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,640,0.486973326208561
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,650,0.4867816827861043
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,700,0.4865562599637699
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,750,0.4863389480491024
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,800,0.4858140320747088
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,850,0.486036082113052
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,900,0.4854231822077742
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,950,0.484672983862205
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,1000,0.4847372758072175
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,1050,0.4844212937328843
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,1100,0.4853811804785802
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,1150,0.4852756052104074
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,1200,0.4860295248769753
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,1250,0.4862498163501668
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,1300,0.4865314366724107
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,1350,0.4863418118267535
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,1400,0.4866841274133552
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,1450,0.4865777908741207
+"lr=0.05, depth=4, lam=0.02(123)",STAGE 2/6 depth+lam,42,1500,0.4865590415685831
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,50,0.446564675623564
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,100,0.4768498699747129
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,150,0.4808216869317975
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,200,0.4855927237046493
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,210,0.485678552103631
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,220,0.4857367191376125
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,230,0.4857384662067117
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,240,0.4862429763092057
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,250,0.4866984314926575
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,260,0.4873096666015839
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,270,0.4877045227993767
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,280,0.4872261056720611
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,290,0.4868545437152463
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,300,0.4871327055665614
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,310,0.4869537671605234
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,320,0.4866970658185461
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,330,0.4868163082750432
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,340,0.4861615341407602
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,350,0.4860359613653398
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,400,0.4855375296008312
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,450,0.4849135203974896
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,500,0.4846848240958608
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,550,0.4843125532061658
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,600,0.4842748903450575
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,650,0.483859998872916
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,700,0.4837144413386434
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,750,0.4834487479123542
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,800,0.4827674905160906
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,850,0.4817765574753514
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,900,0.4810646655307337
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,950,0.4807878411236325
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,1000,0.4803453696475982
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,1050,0.4803634268798555
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,1100,0.4801988939915304
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,1150,0.4800363470648002
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,1200,0.4800210656215873
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,1250,0.4793916621156702
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,1300,0.4791477562595022
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,1350,0.4790624389067437
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,1400,0.4790511141234957
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,1450,0.4788087796088215
+"lr=0.05, depth=4, lam=0.1(616)",STAGE 2/6 depth+lam,42,1500,0.4788803904345335
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,50,0.4366979560264773
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,100,0.4733812680828092
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,150,0.4803582408418955
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,200,0.4842286166951975
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,250,0.4849031014682177
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,300,0.484953452098803
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,350,0.4846061470103813
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,400,0.4855081346485476
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,450,0.4855903985043722
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,500,0.48657254073397
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,550,0.4869194027276493
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,560,0.486441056644029
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,570,0.4863907001585493
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,580,0.4867427776508262
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,590,0.486986749265453
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,600,0.4871297054951333
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,610,0.487427555543274
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,620,0.4874055752582528
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,630,0.4875462777424115
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,640,0.4873252107969982
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,650,0.4871972844285566
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,660,0.4873676628206834
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,670,0.4870628209816411
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,680,0.4867384636756942
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,690,0.4867318068612027
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,700,0.4865409200337862
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,750,0.4863719130526653
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,800,0.4860944665609964
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,850,0.4859709802211731
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,900,0.4854889515206219
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,950,0.4857196573635348
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,1000,0.4851355620627582
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,1050,0.4850856319689695
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,1100,0.4845631926824887
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,1150,0.4841849449141234
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,1200,0.4840241323309615
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,1250,0.4839547386762096
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,1300,0.4833984985311708
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,1350,0.4830118064157773
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,1400,0.4830200993314357
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,1450,0.4827828092541327
+"lr=0.05, depth=4, lam=0.3(1848)",STAGE 2/6 depth+lam,42,1500,0.4826304484880561
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,50,0.4612513530975691
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,100,0.4838215796174762
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,110,0.4842631932941172
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,120,0.4836608148969717
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,130,0.4847901159305459
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,140,0.4873536401872744
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,150,0.4871658888646575
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,160,0.4868087131220548
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,170,0.4876137603745365
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,180,0.4875390470125768
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,190,0.4869951361473869
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,200,0.4862644541978808
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,210,0.4856799274904035
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,220,0.485615341969637
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,230,0.4870287484911627
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,240,0.4863220214162737
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,250,0.4861206089754526
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,300,0.4853117153133324
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,350,0.4823671369917451
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,400,0.4799973495571784
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,450,0.4776091786689797
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,500,0.4754934535071234
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,550,0.4739028572478921
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,600,0.4728527140413453
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,650,0.4728987985331818
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,700,0.4726275825252493
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,750,0.4715182750093478
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,800,0.4718126316449066
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,850,0.4711454840718748
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,900,0.4707022901765938
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,950,0.469173244167683
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,1000,0.4695238868748317
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,1050,0.4684137235917422
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,1100,0.4674060805459306
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,1150,0.4656701856876399
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,1200,0.4663827280025114
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,1250,0.4661642367627794
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,1300,0.4652605186065077
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,1350,0.4652099082565791
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,1400,0.4649808798106144
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,1450,0.4651277179668196
+"lr=0.05, depth=5, lam=0.002(6)",STAGE 2/6 depth+lam,42,1500,0.4640254682622076
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,50,0.4618416830161286
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,100,0.4838008256474778
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,150,0.4901087957164975
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,200,0.4896622136813275
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,250,0.4896035741061797
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,300,0.4905016720498792
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,310,0.4912722046032484
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,320,0.4918982125982968
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,330,0.4920339551425845
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,340,0.4918433948281359
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,350,0.4916830438839351
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,360,0.4922889927824507
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,370,0.492353181629671
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,380,0.4922465443961493
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,390,0.4916184982052589
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,400,0.491393379549901
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,410,0.4909479812080223
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,420,0.490915520741062
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,430,0.4908804766851536
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,440,0.4905911489419186
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,450,0.4902795930051752
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,500,0.4881453187840736
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,550,0.4875129999026207
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,600,0.4870006618170995
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,650,0.4876433469562146
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,700,0.4869151164824283
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,750,0.4870388531696091
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,800,0.4862852729426484
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,850,0.4856929646863254
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,900,0.485459033432959
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,950,0.4857328730386456
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,1000,0.4850222405864803
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,1050,0.4842530333278776
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,1100,0.4850307737898965
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,1150,0.4846429833320295
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,1200,0.4846991079197121
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,1250,0.4839441194806471
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,1300,0.4836793999741411
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,1350,0.4836958332669905
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,1400,0.4837111176219213
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,1450,0.4835862380011232
+"lr=0.05, depth=5, lam=0.02(62)",STAGE 2/6 depth+lam,42,1500,0.4836813903114603
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,50,0.4563765911524557
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,100,0.4806954676176126
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,150,0.4878843821853417
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,200,0.4887898044421692
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,250,0.4889878089019657
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,260,0.4890225146394777
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,270,0.48873955640255
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,280,0.4888376114394962
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,290,0.4892437995668912
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,300,0.4893565743225623
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,310,0.4897005123737222
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,320,0.489211060498861
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,330,0.4890393033646075
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,340,0.4894232621612778
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,350,0.4895776063079784
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,360,0.4896878355170683
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,370,0.4893079997676295
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,380,0.489141559449896
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,390,0.4893729134186233
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,400,0.4891654275877571
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,450,0.4889197326906713
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,500,0.4876695012379978
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,550,0.4877318025615779
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,600,0.4874956484073407
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,650,0.4874600022527937
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,700,0.4871873257507384
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,750,0.4873625334562311
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,800,0.4867318473562725
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,850,0.4866097098092986
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,900,0.4866282169741664
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,950,0.486352196846415
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,1000,0.4862812809032023
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,1050,0.4859979234666359
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,1100,0.4856748161553038
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,1150,0.4859767586390726
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,1200,0.4856685346827949
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,1250,0.4853675774638694
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,1300,0.4849846351210061
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,1350,0.4849788739361234
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,1400,0.4849092332418218
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,1450,0.4851541694225059
+"lr=0.05, depth=5, lam=0.1(308)",STAGE 2/6 depth+lam,42,1500,0.4848965896308952
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,50,0.4514034287359121
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,100,0.4828078491602962
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,150,0.4877032444330371
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,200,0.4875251619611395
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,250,0.4869692162118239
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,300,0.487862719154114
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,310,0.4879738697174544
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,320,0.4883599458231328
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,330,0.4883138080524725
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,340,0.4880039703764445
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,350,0.4879603258509578
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,360,0.4880426486636194
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,370,0.4879733027956588
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,380,0.4881560130525957
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,390,0.4879576114324885
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,400,0.4881567905806521
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,410,0.4882754343654616
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,420,0.4883696930302846
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,430,0.4880669618874992
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,440,0.487907155770887
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,450,0.487953379229802
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,500,0.4878497659142591
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,550,0.4878351735074214
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,600,0.4871706885251282
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,650,0.4863487706029384
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,700,0.4863360108783731
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,750,0.4862627675385683
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,800,0.4864443671504623
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,850,0.4867594833618758
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,900,0.4865954346694985
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,950,0.4865003507127856
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,1000,0.4861015174831443
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,1050,0.4856385957463577
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,1100,0.4854335334018766
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,1150,0.4852477592457155
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,1200,0.4854255560094545
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,1250,0.4851249017460831
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,1300,0.4849822933624034
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,1350,0.485018682034425
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,1400,0.4849895621876992
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,1450,0.4843877465573847
+"lr=0.05, depth=5, lam=0.3(924)",STAGE 2/6 depth+lam,42,1500,0.4844643725091689
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,50,0.4608006673848583
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,100,0.4816184270169525
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,150,0.4847128510398799
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,200,0.4843913197546092
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,210,0.4843470132070913
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,220,0.4855115875063954
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,230,0.4863723381274939
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,240,0.4863671186513383
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,250,0.486616495800125
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,260,0.4875147331015269
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,270,0.4876133266122257
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,280,0.4875160353210671
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,290,0.486666435981272
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,300,0.4862439172376038
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,310,0.4862071370989134
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,320,0.4856189532488003
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,330,0.4852455189970565
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,340,0.4848124848265736
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,350,0.4844678690273389
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,400,0.4829497409058986
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,450,0.4805862406435437
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,500,0.4797380899183791
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,550,0.4783018575244135
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,600,0.4779980157231356
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,650,0.4761734058022284
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,700,0.4747805160547107
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,750,0.4728384456475262
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,800,0.4705702609557673
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,850,0.4694222753052279
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,900,0.4684848604771705
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,950,0.4667057798069152
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,1000,0.4663974622824678
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,1050,0.4657613001500914
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,1100,0.4646792638996952
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,1150,0.4637806438692796
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,1200,0.4633263260334027
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,1250,0.4619807415122209
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,1300,0.4621818468990211
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,1350,0.4611749579572335
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,1400,0.4606539506894757
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,1450,0.460077909755736
+"lr=0.05, depth=6, lam=0.002(3)",STAGE 2/6 depth+lam,42,1500,0.4582541074340051
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,50,0.4625543312828083
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,100,0.4835843968758365
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,150,0.4899584311460133
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,200,0.4906126139379306
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,250,0.4901762500426452
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,260,0.490537922477265
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,270,0.4902792725126409
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,280,0.4907985029004987
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,290,0.4916387935457703
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,300,0.4919612214385221
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,310,0.4922162939996422
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,320,0.4920528608971514
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,330,0.4919241720614709
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,340,0.4913571100895251
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,350,0.4910071685003448
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,360,0.4914741051863056
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,370,0.4914091340557424
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,380,0.4908679241398245
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,390,0.4911929579947823
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,400,0.4913908865410135
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,410,0.4908968674200696
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,420,0.4906942354547515
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,430,0.4902376112870102
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,440,0.4904599474080934
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,450,0.4902232442164381
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,500,0.4888512491447799
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,550,0.4883939985243302
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,600,0.4890820552983292
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,650,0.4890278876786835
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,700,0.4899555767572605
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,750,0.4901333942769369
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,800,0.4894418726300926
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,850,0.4892676748253316
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,900,0.4901531368235219
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,950,0.4907539368005272
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,1000,0.490558825911605
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,1050,0.4893343993442769
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,1100,0.4882052920156908
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,1150,0.4881259403412217
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,1200,0.4879494505192818
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,1250,0.487678165408557
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,1300,0.4866973132411563
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,1350,0.4870794086948413
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,1400,0.4869124862173046
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,1450,0.4859655427205822
+"lr=0.05, depth=6, lam=0.02(31)",STAGE 2/6 depth+lam,42,1500,0.4856438710640895
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,50,0.4625355363358606
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,100,0.4836817086162454
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,150,0.486132875124962
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,200,0.4872894876436581
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,250,0.488840745822882
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,300,0.4890171316653785
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,310,0.4891490985359396
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,320,0.4886697837019524
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,330,0.489011479240411
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,340,0.4890130241268344
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,350,0.489242147334865
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,360,0.4896360900342927
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,370,0.4894799231720437
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,380,0.4889447336218823
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,390,0.4892233316397927
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,400,0.489389723685554
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,410,0.4890957714135835
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,420,0.4888238234403271
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,430,0.4892740452761398
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,440,0.4892334650268003
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,450,0.4890426518126136
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,500,0.4889534946966475
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,550,0.4891903352706429
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,600,0.488641808450402
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,650,0.4886953836799852
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,700,0.4889582430304359
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,750,0.4886666434523125
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,800,0.4884007885167811
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,850,0.4882428249102333
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,900,0.4878319782813317
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,950,0.4872256260041095
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,1000,0.4874367228201092
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,1050,0.4876569737640889
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,1100,0.4874876289193816
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,1150,0.4872560262120763
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,1200,0.4873012210953871
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,1250,0.4871238534488996
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,1300,0.4868931932495185
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,1350,0.4868138470146004
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,1400,0.4860894782974436
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,1450,0.4862163527933826
+"lr=0.05, depth=6, lam=0.1(154)",STAGE 2/6 depth+lam,42,1500,0.4863260086553155
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,50,0.4479711060906504
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,100,0.4729724709757621
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,150,0.4795330404003298
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,200,0.4801091074178668
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,250,0.4824105751577041
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,260,0.4828626641689221
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,270,0.4827668645914075
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,280,0.4829687241240483
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,290,0.4835018572794824
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,300,0.4839685437699994
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,310,0.4839688752816222
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,320,0.4839304705677567
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,330,0.4839173113923321
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,340,0.4836013316939623
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,350,0.4836150256350463
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,360,0.4834420101886749
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,370,0.4829913751393703
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,380,0.48309907513538
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,390,0.4834505938646452
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,400,0.4834577136268438
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,450,0.4830146426501088
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,500,0.4826806583187354
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,550,0.4829018364044153
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,600,0.4821772943998194
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,650,0.4817406937271253
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,700,0.4826178834056545
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,750,0.4820055068610164
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,800,0.4818210070068834
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,850,0.481691917151835
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,900,0.481532734057581
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,950,0.4815730384424456
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,1000,0.4811363588623918
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,1050,0.4805581525051714
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,1100,0.4796849245700747
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,1150,0.4790963637791526
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,1200,0.478798394810121
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,1250,0.478691792310096
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,1300,0.4781517738206885
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,1350,0.4779339599884689
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,1400,0.4776775751921218
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,1450,0.4772188049820728
+"lr=0.05, depth=6, lam=0.3(462)",STAGE 2/6 depth+lam,42,1500,0.4767973929180162
+DEFAULT (inherited),STAGE 3/6 mcw,42,50,0.4385565405864009
+DEFAULT (inherited),STAGE 3/6 mcw,42,100,0.477995635948151
+DEFAULT (inherited),STAGE 3/6 mcw,42,150,0.483738397949398
+DEFAULT (inherited),STAGE 3/6 mcw,42,160,0.4860651810985686
+DEFAULT (inherited),STAGE 3/6 mcw,42,170,0.4867066048238204
+DEFAULT (inherited),STAGE 3/6 mcw,42,180,0.4872039766273687
+DEFAULT (inherited),STAGE 3/6 mcw,42,190,0.4867257652301956
+DEFAULT (inherited),STAGE 3/6 mcw,42,200,0.4873491745395464
+DEFAULT (inherited),STAGE 3/6 mcw,42,210,0.4874615239185129
+DEFAULT (inherited),STAGE 3/6 mcw,42,220,0.4872171356167271
+DEFAULT (inherited),STAGE 3/6 mcw,42,230,0.487653566710556
+DEFAULT (inherited),STAGE 3/6 mcw,42,240,0.4867776088761022
+DEFAULT (inherited),STAGE 3/6 mcw,42,250,0.4868778930139595
+DEFAULT (inherited),STAGE 3/6 mcw,42,260,0.4870001058643664
+DEFAULT (inherited),STAGE 3/6 mcw,42,270,0.4874131276126942
+DEFAULT (inherited),STAGE 3/6 mcw,42,280,0.4871599108548486
+DEFAULT (inherited),STAGE 3/6 mcw,42,290,0.486787737569006
+DEFAULT (inherited),STAGE 3/6 mcw,42,300,0.48599285896932
+DEFAULT (inherited),STAGE 3/6 mcw,42,350,0.4866537327576291
+DEFAULT (inherited),STAGE 3/6 mcw,42,400,0.4849819825182051
+DEFAULT (inherited),STAGE 3/6 mcw,42,450,0.4845458528389615
+DEFAULT (inherited),STAGE 3/6 mcw,42,500,0.484302777563118
+DEFAULT (inherited),STAGE 3/6 mcw,42,550,0.4838178955712386
+DEFAULT (inherited),STAGE 3/6 mcw,42,600,0.4840069155815856
+DEFAULT (inherited),STAGE 3/6 mcw,42,650,0.484081358407056
+DEFAULT (inherited),STAGE 3/6 mcw,42,700,0.4845517350468262
+DEFAULT (inherited),STAGE 3/6 mcw,42,750,0.4846320473454961
+DEFAULT (inherited),STAGE 3/6 mcw,42,800,0.4846681089779032
+DEFAULT (inherited),STAGE 3/6 mcw,42,850,0.4843257091687901
+DEFAULT (inherited),STAGE 3/6 mcw,42,900,0.4839496453858315
+DEFAULT (inherited),STAGE 3/6 mcw,42,950,0.4834197631771219
+DEFAULT (inherited),STAGE 3/6 mcw,42,1000,0.4827593319357364
+DEFAULT (inherited),STAGE 3/6 mcw,42,1050,0.4824794447462254
+DEFAULT (inherited),STAGE 3/6 mcw,42,1100,0.4820517166453579
+DEFAULT (inherited),STAGE 3/6 mcw,42,1150,0.4824641424235432
+DEFAULT (inherited),STAGE 3/6 mcw,42,1200,0.4819517162654626
+DEFAULT (inherited),STAGE 3/6 mcw,42,1250,0.4817425408195546
+DEFAULT (inherited),STAGE 3/6 mcw,42,1300,0.481901124197325
+DEFAULT (inherited),STAGE 3/6 mcw,42,1350,0.4818179479918125
+DEFAULT (inherited),STAGE 3/6 mcw,42,1400,0.481847805267154
+DEFAULT (inherited),STAGE 3/6 mcw,42,1450,0.4815346154126153
+DEFAULT (inherited),STAGE 3/6 mcw,42,1500,0.4814327259118265
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,50,0.4385561911150534
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,100,0.4779935169058523
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,150,0.4837356707274796
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,160,0.4860649912242619
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,170,0.4867459871669285
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,180,0.4872426821512562
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,190,0.4868444959281089
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,200,0.4874111421058766
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,210,0.4870021510211424
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,220,0.4874321804388376
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,230,0.4878811504458654
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,240,0.4873094798597303
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,250,0.4873013705855162
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,260,0.4874425640588281
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,270,0.4876048633965031
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,280,0.4876091834198917
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,290,0.487312960050946
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,300,0.4863240681694016
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,350,0.4867089615460201
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,400,0.4853965400719169
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,450,0.4854987918294846
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,500,0.4856918518106742
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,550,0.4846206533452711
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,600,0.4846349520353733
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,650,0.4852179344784498
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,700,0.4848117584791048
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,750,0.4847645653404743
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,800,0.4844554510431011
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,850,0.4842125727476355
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,900,0.4840676394160462
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,950,0.4840944865256937
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,1000,0.4830053665230192
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,1050,0.4827217375345198
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,1100,0.482521898527172
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,1150,0.4825144890565932
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,1200,0.4818898290779887
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,1250,0.4818651239465611
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,1300,0.4821243820634052
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,1350,0.4825524143441154
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,1400,0.4826161764930152
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,1450,0.4828503091404246
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.002(25)",STAGE 3/6 mcw,42,1500,0.483079675533079
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,50,0.4379908862162519
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,100,0.479508810547628
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,150,0.4852817055439622
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,160,0.4867232272013887
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,170,0.4873578033213772
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,180,0.4879603538000124
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,190,0.4877812739240107
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,200,0.4878657036069208
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,210,0.4868491595294585
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,220,0.4866855630797646
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,230,0.4871075808107906
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,240,0.4871457422039612
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,250,0.4875968879599315
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,260,0.4874403704272728
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,270,0.4882260604162322
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,280,0.4878284234435468
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,290,0.4874586931548076
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,300,0.4876494973448629
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,310,0.4875563971461431
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,320,0.4877765048640911
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,330,0.4874221019606698
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,340,0.4875979501835852
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,350,0.487621538410989
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,400,0.4868813687113449
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,450,0.4873349416296182
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,500,0.4862217875691995
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,550,0.4856122438698946
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,600,0.4865730774718457
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,650,0.4871251053478033
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,700,0.4861809906666656
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,750,0.4857321092711303
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,800,0.4854330892097174
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,850,0.4852200658140073
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,900,0.4846916381959484
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,950,0.4850755826513325
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,1000,0.4845182312713929
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,1050,0.484683655491243
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,1100,0.4844613058107325
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,1150,0.4843918760672629
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,1200,0.4837340623530488
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,1250,0.4832868762135514
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,1300,0.4830482523944985
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,1350,0.4827413326795328
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,1400,0.4829386972233728
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,1450,0.4826150180147296
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.02(246)",STAGE 3/6 mcw,42,1500,0.4826817447823213
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,50,0.4331532418325784
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,100,0.4740656537690028
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,150,0.4841747919469342
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,200,0.4877568806176159
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,210,0.4880669532056264
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,220,0.4885204396237343
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,230,0.48842034415004
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,240,0.488502395242384
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,250,0.4892374630701167
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,260,0.4886996441510128
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,270,0.4890217960498073
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,280,0.489322767739742
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,290,0.4891314555818223
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,300,0.4888393459749657
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,310,0.4882009675341392
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,320,0.4880382504011944
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,330,0.488320653203924
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,340,0.4880802759022361
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,350,0.4887639248603445
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,400,0.4883547412704321
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,450,0.4875917252972976
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,500,0.4873192001500687
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,550,0.4881771219506784
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,600,0.4876947630419405
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,650,0.4866181867592641
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,700,0.486567290750747
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,750,0.4861041735098308
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,800,0.4865129790822654
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,850,0.4862131574316665
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,900,0.485980539285235
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,950,0.4858665858026716
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,1000,0.4852726686646023
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,1050,0.4848777863651485
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,1100,0.4846832175074572
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,1150,0.4842554379164548
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,1200,0.483765462885634
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,1250,0.4835815798554786
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,1300,0.4836786393826982
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,1350,0.4841653849953015
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,1400,0.4850683504935946
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,1450,0.4850561091294249
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232)",STAGE 3/6 mcw,42,1500,0.48504047559471
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,50,0.4342624977113697
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,100,0.470256868627685
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,150,0.4781890040730367
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,200,0.4801850158931601
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,250,0.4817768872738094
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,300,0.4820856900475421
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,350,0.4820238864132827
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,400,0.4819383251142135
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,450,0.4818478299593793
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,460,0.4822383064832595
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,470,0.4821746689926433
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,480,0.4820703454857614
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,490,0.4819758175756006
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,500,0.4823842034612519
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,510,0.4824166720321429
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,520,0.4825749480926716
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,530,0.4827499925809126
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,540,0.4830068402979143
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,550,0.4830255438680026
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,560,0.4829850182529985
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,570,0.4832533267355187
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,580,0.4831593622062521
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,590,0.4823745464564902
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,600,0.4821137696454095
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,650,0.4818401902930217
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,700,0.482310841879479
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,750,0.481866703732402
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,800,0.4809861687184327
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,850,0.4811672312798075
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,900,0.4811042044031298
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,950,0.4813113136161434
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,1000,0.4811876675517521
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,1050,0.4817832223014131
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,1100,0.4815305875754816
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,1150,0.4818331589169349
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,1200,0.4813454971380599
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,1250,0.4809278539874969
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,1300,0.479971796927866
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,1350,0.4804894824038208
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,1400,0.4808205043841266
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,1450,0.4804304418914069
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.3(3695)",STAGE 3/6 mcw,42,1500,0.4797587902391452
+DEFAULT (inherited),STAGE 4/6 subsample,42,50,0.4331532418325784
+DEFAULT (inherited),STAGE 4/6 subsample,42,100,0.4740656537690028
+DEFAULT (inherited),STAGE 4/6 subsample,42,150,0.4841747919469342
+DEFAULT (inherited),STAGE 4/6 subsample,42,200,0.4877568806176159
+DEFAULT (inherited),STAGE 4/6 subsample,42,210,0.4880669532056264
+DEFAULT (inherited),STAGE 4/6 subsample,42,220,0.4885204396237343
+DEFAULT (inherited),STAGE 4/6 subsample,42,230,0.48842034415004
+DEFAULT (inherited),STAGE 4/6 subsample,42,240,0.488502395242384
+DEFAULT (inherited),STAGE 4/6 subsample,42,250,0.4892374630701167
+DEFAULT (inherited),STAGE 4/6 subsample,42,260,0.4886996441510128
+DEFAULT (inherited),STAGE 4/6 subsample,42,270,0.4890217960498073
+DEFAULT (inherited),STAGE 4/6 subsample,42,280,0.489322767739742
+DEFAULT (inherited),STAGE 4/6 subsample,42,290,0.4891314555818223
+DEFAULT (inherited),STAGE 4/6 subsample,42,300,0.4888393459749657
+DEFAULT (inherited),STAGE 4/6 subsample,42,310,0.4882009675341392
+DEFAULT (inherited),STAGE 4/6 subsample,42,320,0.4880382504011944
+DEFAULT (inherited),STAGE 4/6 subsample,42,330,0.488320653203924
+DEFAULT (inherited),STAGE 4/6 subsample,42,340,0.4880802759022361
+DEFAULT (inherited),STAGE 4/6 subsample,42,350,0.4887639248603445
+DEFAULT (inherited),STAGE 4/6 subsample,42,400,0.4883547412704321
+DEFAULT (inherited),STAGE 4/6 subsample,42,450,0.4875917252972976
+DEFAULT (inherited),STAGE 4/6 subsample,42,500,0.4873192001500687
+DEFAULT (inherited),STAGE 4/6 subsample,42,550,0.4881771219506784
+DEFAULT (inherited),STAGE 4/6 subsample,42,600,0.4876947630419405
+DEFAULT (inherited),STAGE 4/6 subsample,42,650,0.4866181867592641
+DEFAULT (inherited),STAGE 4/6 subsample,42,700,0.486567290750747
+DEFAULT (inherited),STAGE 4/6 subsample,42,750,0.4861041735098308
+DEFAULT (inherited),STAGE 4/6 subsample,42,800,0.4865129790822654
+DEFAULT (inherited),STAGE 4/6 subsample,42,850,0.4862131574316665
+DEFAULT (inherited),STAGE 4/6 subsample,42,900,0.485980539285235
+DEFAULT (inherited),STAGE 4/6 subsample,42,950,0.4858665858026716
+DEFAULT (inherited),STAGE 4/6 subsample,42,1000,0.4852726686646023
+DEFAULT (inherited),STAGE 4/6 subsample,42,1050,0.4848777863651485
+DEFAULT (inherited),STAGE 4/6 subsample,42,1100,0.4846832175074572
+DEFAULT (inherited),STAGE 4/6 subsample,42,1150,0.4842554379164548
+DEFAULT (inherited),STAGE 4/6 subsample,42,1200,0.483765462885634
+DEFAULT (inherited),STAGE 4/6 subsample,42,1250,0.4835815798554786
+DEFAULT (inherited),STAGE 4/6 subsample,42,1300,0.4836786393826982
+DEFAULT (inherited),STAGE 4/6 subsample,42,1350,0.4841653849953015
+DEFAULT (inherited),STAGE 4/6 subsample,42,1400,0.4850683504935946
+DEFAULT (inherited),STAGE 4/6 subsample,42,1450,0.4850561091294249
+DEFAULT (inherited),STAGE 4/6 subsample,42,1500,0.48504047559471
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,50,0.4344584678123007
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,100,0.4675299583246211
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,150,0.47914538759879
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,160,0.4809579396349751
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,170,0.4822962336962578
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,180,0.4831327226031495
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,190,0.4834999931562332
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,200,0.4842011986611459
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,210,0.4840587280416845
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,220,0.4841101937572758
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,230,0.4841004985291698
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,240,0.4836561920617183
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,250,0.484107350460544
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,260,0.484039663558487
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,270,0.4835789365693397
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,280,0.4827649986880902
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,290,0.4830433270277271
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,300,0.4832127802936929
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,350,0.4832518909809021
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,400,0.4837338577431885
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,450,0.48269000316041
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,500,0.4819682234971375
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,550,0.4815387347309333
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,600,0.4809563550551445
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,650,0.4809428822314021
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,700,0.4800576007813725
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,750,0.4800296743778856
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,800,0.4801653859651253
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,850,0.4802660600142752
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,900,0.4798357667884635
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,950,0.4795836359515172
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,1000,0.4793002142821625
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,1050,0.479313503025576
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,1100,0.4786093078048973
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,1150,0.4788484063356568
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,1200,0.4782164964069773
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,1250,0.4779730619806223
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,1300,0.478667442289069
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,1350,0.4789724920983814
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,1400,0.478862503258703
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,1450,0.4784464711984303
+"depth=3, lr=0.05, lam=0.1(880), mcw=0.1(880), subsample=0.5",STAGE 4/6 subsample,42,1500,0.4783327992394952
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,50,0.4331532418325784
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,100,0.4740656537690028
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,150,0.4841747919469342
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,200,0.4877568806176159
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,210,0.4880669532056264
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,220,0.4885204396237343
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,230,0.48842034415004
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,240,0.488502395242384
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,250,0.4892374630701167
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,260,0.4886996441510128
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,270,0.4890217960498073
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,280,0.489322767739742
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,290,0.4891314555818223
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,300,0.4888393459749657
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,310,0.4882009675341392
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,320,0.4880382504011944
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,330,0.488320653203924
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,340,0.4880802759022361
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,350,0.4887639248603445
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,400,0.4883547412704321
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,450,0.4875917252972976
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,500,0.4873192001500687
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,550,0.4881771219506784
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,600,0.4876947630419405
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,650,0.4866181867592641
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,700,0.486567290750747
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,750,0.4861041735098308
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,800,0.4865129790822654
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,850,0.4862131574316665
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,900,0.485980539285235
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,950,0.4858665858026716
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,1000,0.4852726686646023
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,1050,0.4848777863651485
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,1100,0.4846832175074572
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,1150,0.4842554379164548
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,1200,0.483765462885634
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,1250,0.4835815798554786
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,1300,0.4836786393826982
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,1350,0.4841653849953015
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,1400,0.4850683504935946
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,1450,0.4850561091294249
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7",STAGE 4/6 subsample,42,1500,0.48504047559471
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,50,0.4323637047165856
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,100,0.4729307269146139
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,150,0.4835537634816935
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,160,0.4848154675019831
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,170,0.4856258605578869
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,180,0.486405933663766
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,190,0.4864081822242611
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,200,0.4863477163266689
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,210,0.4870997189969344
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,220,0.487082410442705
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,230,0.4866655487305255
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,240,0.4858677758379569
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,250,0.4856884884461855
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,260,0.4857035051554804
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,270,0.4857261891655959
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,280,0.4858138538368505
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,290,0.4855509714820607
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,300,0.4851208170436222
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,350,0.4842618281440127
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,400,0.4832287255662093
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,450,0.4831194808329957
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,500,0.4836879137737968
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,550,0.4826601638861513
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,600,0.4832566783829065
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,650,0.4827697352002784
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,700,0.4828143376064968
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,750,0.4825329938421625
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,800,0.4818270061304588
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,850,0.4817009229281771
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,900,0.4808836239061419
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,950,0.4801307064146688
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,1000,0.4796678634921724
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,1050,0.4798487067066275
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,1100,0.4795366033233792
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,1150,0.4799482619785135
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,1200,0.4797214194137038
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,1250,0.4803963535243617
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,1300,0.4802084498746741
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,1350,0.4803843839776478
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,1400,0.4799967940814716
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,1450,0.4801268340551858
+"depth=3, lr=0.05, lam=0.1(1584), mcw=0.1(1584), subsample=0.9",STAGE 4/6 subsample,42,1500,0.479657288217311
+DEFAULT (inherited),STAGE 5/6 colsample,42,50,0.4331532418325784
+DEFAULT (inherited),STAGE 5/6 colsample,42,100,0.4740656537690028
+DEFAULT (inherited),STAGE 5/6 colsample,42,150,0.4841747919469342
+DEFAULT (inherited),STAGE 5/6 colsample,42,200,0.4877568806176159
+DEFAULT (inherited),STAGE 5/6 colsample,42,210,0.4880669532056264
+DEFAULT (inherited),STAGE 5/6 colsample,42,220,0.4885204396237343
+DEFAULT (inherited),STAGE 5/6 colsample,42,230,0.48842034415004
+DEFAULT (inherited),STAGE 5/6 colsample,42,240,0.488502395242384
+DEFAULT (inherited),STAGE 5/6 colsample,42,250,0.4892374630701167
+DEFAULT (inherited),STAGE 5/6 colsample,42,260,0.4886996441510128
+DEFAULT (inherited),STAGE 5/6 colsample,42,270,0.4890217960498073
+DEFAULT (inherited),STAGE 5/6 colsample,42,280,0.489322767739742
+DEFAULT (inherited),STAGE 5/6 colsample,42,290,0.4891314555818223
+DEFAULT (inherited),STAGE 5/6 colsample,42,300,0.4888393459749657
+DEFAULT (inherited),STAGE 5/6 colsample,42,310,0.4882009675341392
+DEFAULT (inherited),STAGE 5/6 colsample,42,320,0.4880382504011944
+DEFAULT (inherited),STAGE 5/6 colsample,42,330,0.488320653203924
+DEFAULT (inherited),STAGE 5/6 colsample,42,340,0.4880802759022361
+DEFAULT (inherited),STAGE 5/6 colsample,42,350,0.4887639248603445
+DEFAULT (inherited),STAGE 5/6 colsample,42,400,0.4883547412704321
+DEFAULT (inherited),STAGE 5/6 colsample,42,450,0.4875917252972976
+DEFAULT (inherited),STAGE 5/6 colsample,42,500,0.4873192001500687
+DEFAULT (inherited),STAGE 5/6 colsample,42,550,0.4881771219506784
+DEFAULT (inherited),STAGE 5/6 colsample,42,600,0.4876947630419405
+DEFAULT (inherited),STAGE 5/6 colsample,42,650,0.4866181867592641
+DEFAULT (inherited),STAGE 5/6 colsample,42,700,0.486567290750747
+DEFAULT (inherited),STAGE 5/6 colsample,42,750,0.4861041735098308
+DEFAULT (inherited),STAGE 5/6 colsample,42,800,0.4865129790822654
+DEFAULT (inherited),STAGE 5/6 colsample,42,850,0.4862131574316665
+DEFAULT (inherited),STAGE 5/6 colsample,42,900,0.485980539285235
+DEFAULT (inherited),STAGE 5/6 colsample,42,950,0.4858665858026716
+DEFAULT (inherited),STAGE 5/6 colsample,42,1000,0.4852726686646023
+DEFAULT (inherited),STAGE 5/6 colsample,42,1050,0.4848777863651485
+DEFAULT (inherited),STAGE 5/6 colsample,42,1100,0.4846832175074572
+DEFAULT (inherited),STAGE 5/6 colsample,42,1150,0.4842554379164548
+DEFAULT (inherited),STAGE 5/6 colsample,42,1200,0.483765462885634
+DEFAULT (inherited),STAGE 5/6 colsample,42,1250,0.4835815798554786
+DEFAULT (inherited),STAGE 5/6 colsample,42,1300,0.4836786393826982
+DEFAULT (inherited),STAGE 5/6 colsample,42,1350,0.4841653849953015
+DEFAULT (inherited),STAGE 5/6 colsample,42,1400,0.4850683504935946
+DEFAULT (inherited),STAGE 5/6 colsample,42,1450,0.4850561091294249
+DEFAULT (inherited),STAGE 5/6 colsample,42,1500,0.48504047559471
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,50,0.4314421121643851
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,100,0.4747572989773773
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,150,0.4863394405982928
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,160,0.4870448485609659
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,170,0.4886399432485367
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,180,0.4897528522453824
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,190,0.4905342515428931
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,200,0.4912944475752534
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,210,0.4915477388153327
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,220,0.4917469228957459
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,230,0.4917512579443582
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,240,0.4919294115566048
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,250,0.4922505052914071
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,260,0.4920338833734624
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,270,0.4919741877136679
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,280,0.4918496546695619
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,290,0.491531600810482
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,300,0.4911817804116066
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,350,0.4904496740468138
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,400,0.4903857126831559
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,450,0.4900146951712973
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,500,0.4893125085609003
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,550,0.4886121002665982
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,600,0.4876618649073071
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,650,0.4886154643767842
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,700,0.4880914559756019
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,750,0.487920492209795
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,800,0.488750177599918
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,850,0.4885076949932774
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,900,0.4873740053276263
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,950,0.4874119876727434
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,1000,0.4869231470912079
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,1050,0.487101528015004
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,1100,0.4868139448018526
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,1150,0.4877944239820845
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,1200,0.4877089680336837
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,1250,0.4874871730420773
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,1300,0.4881114878439605
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,1350,0.4875409855161455
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,1400,0.4878088934495775
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,1450,0.4880654983271305
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.5",STAGE 5/6 colsample,42,1500,0.4880325348355924
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,50,0.4331532418325784
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,100,0.4740656537690028
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,150,0.4841747919469342
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,200,0.4877568806176159
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,210,0.4880669532056264
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,220,0.4885204396237343
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,230,0.48842034415004
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,240,0.488502395242384
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,250,0.4892374630701167
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,260,0.4886996441510128
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,270,0.4890217960498073
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,280,0.489322767739742
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,290,0.4891314555818223
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,300,0.4888393459749657
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,310,0.4882009675341392
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,320,0.4880382504011944
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,330,0.488320653203924
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,340,0.4880802759022361
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,350,0.4887639248603445
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,400,0.4883547412704321
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,450,0.4875917252972976
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,500,0.4873192001500687
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,550,0.4881771219506784
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,600,0.4876947630419405
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,650,0.4866181867592641
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,700,0.486567290750747
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,750,0.4861041735098308
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,800,0.4865129790822654
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,850,0.4862131574316665
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,900,0.485980539285235
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,950,0.4858665858026716
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,1000,0.4852726686646023
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,1050,0.4848777863651485
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,1100,0.4846832175074572
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,1150,0.4842554379164548
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,1200,0.483765462885634
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,1250,0.4835815798554786
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,1300,0.4836786393826982
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,1350,0.4841653849953015
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,1400,0.4850683504935946
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,1450,0.4850561091294249
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.7",STAGE 5/6 colsample,42,1500,0.48504047559471
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,50,0.4341545995075826
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,100,0.4729370193935884
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,150,0.4828909218231457
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,160,0.4828544806308601
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,170,0.483985870267013
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,180,0.4843758957641371
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,190,0.4851032366716988
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,200,0.4849979472119679
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,210,0.4853645536592438
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,220,0.4855182292833031
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,230,0.485517633668169
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,240,0.486153501157472
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,250,0.4850510831612182
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,260,0.483811858948324
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,270,0.4835481915128651
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,280,0.4829794398397019
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,290,0.4831298284557797
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,300,0.4828313431035848
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,350,0.4831855888482836
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,400,0.4823654802916688
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,450,0.4828621312709394
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,500,0.48343154893926
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,550,0.4837542059690208
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,600,0.4828351987021907
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,650,0.4827698438916825
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,700,0.4817179007558333
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,750,0.4804827794411225
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,800,0.4805592845948275
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,850,0.481109233490242
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,900,0.4803148610040043
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,950,0.4807237905359194
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,1000,0.4800435496859179
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,1050,0.4805012354253032
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,1100,0.4799669389526632
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,1150,0.4806971328189826
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,1200,0.4805718994688388
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,1250,0.4804294009701247
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,1300,0.4806639918878141
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,1350,0.4812218851862658
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,1400,0.4810671953145835
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,1450,0.4804529562670869
+"depth=3, lr=0.05, lam=0.1(1232), mcw=0.1(1232), subsample=0.7, colsample=0.9",STAGE 5/6 colsample,42,1500,0.4806126777842959
+DEFAULT (inherited),STAGE 6/6 confirmation,42,50,0.4314421121643851
+DEFAULT (inherited),STAGE 6/6 confirmation,42,100,0.4747572989773773
+DEFAULT (inherited),STAGE 6/6 confirmation,42,150,0.4863394405982928
+DEFAULT (inherited),STAGE 6/6 confirmation,42,160,0.48704484856096597
+DEFAULT (inherited),STAGE 6/6 confirmation,42,170,0.48863994324853677
+DEFAULT (inherited),STAGE 6/6 confirmation,42,180,0.48975285224538245
+DEFAULT (inherited),STAGE 6/6 confirmation,42,190,0.4905342515428931
+DEFAULT (inherited),STAGE 6/6 confirmation,42,200,0.4912944475752534
+DEFAULT (inherited),STAGE 6/6 confirmation,42,210,0.49154773881533276
+DEFAULT (inherited),STAGE 6/6 confirmation,42,220,0.49174692289574595
+DEFAULT (inherited),STAGE 6/6 confirmation,42,230,0.49175125794435826
+DEFAULT (inherited),STAGE 6/6 confirmation,42,240,0.49192941155660486
+DEFAULT (inherited),STAGE 6/6 confirmation,42,250,0.4922505052914071
+DEFAULT (inherited),STAGE 6/6 confirmation,42,260,0.49203388337346243
+DEFAULT (inherited),STAGE 6/6 confirmation,42,270,0.49197418771366797
+DEFAULT (inherited),STAGE 6/6 confirmation,42,280,0.4918496546695619
+DEFAULT (inherited),STAGE 6/6 confirmation,42,290,0.491531600810482
+DEFAULT (inherited),STAGE 6/6 confirmation,42,300,0.49118178041160665
+DEFAULT (inherited),STAGE 6/6 confirmation,42,350,0.49044967404681383
+DEFAULT (inherited),STAGE 6/6 confirmation,42,400,0.4903857126831559
+DEFAULT (inherited),STAGE 6/6 confirmation,42,450,0.49001469517129737
+DEFAULT (inherited),STAGE 6/6 confirmation,42,500,0.48931250856090036
+DEFAULT (inherited),STAGE 6/6 confirmation,42,550,0.4886121002665982
+DEFAULT (inherited),STAGE 6/6 confirmation,42,600,0.4876618649073071
+DEFAULT (inherited),STAGE 6/6 confirmation,42,650,0.48861546437678427
+DEFAULT (inherited),STAGE 6/6 confirmation,42,700,0.4880914559756019
+DEFAULT (inherited),STAGE 6/6 confirmation,42,750,0.48792049220979505
+DEFAULT (inherited),STAGE 6/6 confirmation,42,800,0.488750177599918
+DEFAULT (inherited),STAGE 6/6 confirmation,42,850,0.4885076949932774
+DEFAULT (inherited),STAGE 6/6 confirmation,42,900,0.4873740053276263
+DEFAULT (inherited),STAGE 6/6 confirmation,42,950,0.4874119876727434
+DEFAULT (inherited),STAGE 6/6 confirmation,42,1000,0.4869231470912079
+DEFAULT (inherited),STAGE 6/6 confirmation,42,1050,0.48710152801500406
+DEFAULT (inherited),STAGE 6/6 confirmation,42,1100,0.4868139448018526
+DEFAULT (inherited),STAGE 6/6 confirmation,42,1150,0.4877944239820845
+DEFAULT (inherited),STAGE 6/6 confirmation,42,1200,0.4877089680336837
+DEFAULT (inherited),STAGE 6/6 confirmation,42,1250,0.48748717304207734
+DEFAULT (inherited),STAGE 6/6 confirmation,42,1300,0.4881114878439605
+DEFAULT (inherited),STAGE 6/6 confirmation,42,1350,0.48754098551614555
+DEFAULT (inherited),STAGE 6/6 confirmation,42,1400,0.48780889344957756
+DEFAULT (inherited),STAGE 6/6 confirmation,42,1450,0.48806549832713053
+DEFAULT (inherited),STAGE 6/6 confirmation,42,1500,0.4880325348355924

@@ -1,4 +1,92 @@
+# [2026-08-01]
+
+> 🛑 **Work stops until 08-11.** Read [notes/aug-01.md](notes/aug-01.md) first — state-of-project, replaces 14 notes deleted today (all git-tracked, `git restore notes/` recovers them).
+
+## Ready to run
+
+`xgb_config.json` is written and sanity-checked → `cd experiments/xgb-neighbor-count && python run_exp.py --task both`. REG `depth 3, mcw 1231.811, lam 1231.811, 200 trees` (`lofo_r2` 0.4913); CLF `depth 4, mcw 21.98, lam 659.4, 250 trees` (`lofo_prauc` 0.7552). The tuner finished both searches then **died before writing the file** (stderr lost; likely broken pipe — all disk artifacts intact); configs reconstructed from the STAGE 6/6 rows of `tune_<task>.csv`, story in `_provenance`. Narrow-arm check passed both. Watch: REG's `mcw` and `lambda` are byte-identical at 1231.811.
+
+## 🔴 We optimize the wrong metric, and the one we report isn't comparable
+
+**Pandit's 0.34 is a median KGE, not NSE** — no spatial NSE is published, so comparing `macro_r2` to it is invalid. Under the MSE-optimal map (α=r, β=1): NSE = r², KGE = 1−√2(1−r), so **KGE 0.34 ≈ NSE 0.284**. Best `lofo_macro_r2` anywhere is 0.3067; **nothing beats 0.34 — 0 of 233 tuner configs, 0 of 255 manifest entries.** Everything that does clear it is pooled. The map assumes zero per-site bias, which is what fails at a held-out site, so 0.284 is the optimistic threshold.
+
+**New task T1.2b.** The objective, the prefix scan and the tuner all select on pooled row-wise quantities. MSE-optimal predictions are shrunk toward the conditional mean, so α = σ_p/σ_y < 1 systematically — and **KGE penalises α directly**, so reporting KGE while training on pooled MSE trains for the failure the metric punishes. Fix: row weights `1/n_rows(site)` first, then select on `macro_nse`. **Trap:** don't per-site standardise the target — the site mean is unknown at a pin, so it scores well under LOFO and is unusable.
+
+## 🔴 Two finished experiments nobody has read, in `logs/experiments.md`
+
+`discrete-sample-pre-check` and `in-situ-pre-check` import *specific-small-experiments*' `run_exp`, so they inherit its logger and write there; their own directories hold only `cache/` and read as "never ran". Both post-D8-fix.
+
+**`grab_agency` (E2) — dead for REG, fragile for CLF.** REG winner +0.0073 is inside the 0.0085 floor and the `grab_coverage` negative control carries 73% of it. `grab_level` — the arm with the actual measured level — is the *worst* arm, so the ρ=+0.53 basin aggregate is fully absorbed by crops/surplus/tile. CLF `grab_all` clears at +0.0079 (2.1× floor) but superadditively: components sum to +0.0041, every one individually sub-floor. Replicate across seeds first.
+
+**`insitu_q_r*` (T2.9) — complete, both tasks.** Δ vs base (REG 0.4253 / CLF 0.6892):
+
+| r km | REG cover | REG concur | REG lag | CLF concur | CLF lag |
+|---|---|---|---|---|---|
+| 0 | +0.0127 | −0.0204 | −0.0282 | −0.0182 | −0.0214 |
+| 5 | +0.0047 | −0.0149 | −0.0213 | −0.0243 | −0.0283 |
+| 10 | **+0.0180** | −0.0125 | −0.0033 | −0.0087 | −0.0134 |
+| 20 | +0.0140 | −0.0148 | −0.0188 | −0.0057 | −0.0138 |
+| 50 | +0.0021 | **+0.0136** | **+0.0153** | **+0.0118** | **+0.0086** |
+
+**The sign flips at r50, the wrong way for a leakage story.** Small radii *hurt* on both tasks despite 36 sites having a gauge within 200 m; only the negative control helps. At r50, donors forced onto distant mainstems, real discharge clears the floor and coverage collapses. **Hypothesis:** gauages close to one another are intended to measure some specific effect, for instance, a **nitrate removal fascility**. Why else would you install two sensors right next to each other? Our current model has no way of seeing these additional features.
+
+## Other
+
+- **WQP volunteer data is ordinal** — exactly 7 distinct values {0,1,2,5,10,20,50}, 99.8% on colorimetric strip levels vs 3,558 distinct agency values. Mechanically explains the −0.42 anti-correlation; a basin *mean* over it is meaningless. Rescue (untested): fraction-above-threshold is legal on an ordinal scale, and volunteer is 2,595 of 3,359 contained stations — the only route from 57% back to 79% coverage.
+- **613 agency results are non-detects carrying negative `n_mgl`, min −347.59**, uncensored. One such sample destroys a basin mean built over a median of 2 stations. Not in the E1 procedure.
+- Grab-sample coverage survived the D8 rebuild unchanged (79.3% / 56.9% agency-only) — no redo needed.
+- **GNN dismissal withdrawn**, [notes/modeling-proposals-report.md](notes/modeling-proposals-report.md) rewritten as a six-proposal portfolio. The transitive-closure argument was measured on the 116-node site graph, not the graph worth building (regional gauges + COMID reaches as routing intermediates) — Delaware models 456 segments with 183 observed. Sharpest new risk: Graph WaveNet's self-adaptive adjacency comes from per-node embeddings and **a virtual pin has none**, the same transductive objection that kills per-site random effects.
+
+---
+
 # [2026-07-31]
+
+> ⚠️ **every score computed before today is invalid, island and network alike.** A D8 pour-point snapping bug put 28 of 116 sites' outlets on the wrong river, corrupting `dist_to_sensor` (a base feature in *every* recipe) and `flow_dist_m` (donor selection, so exps 36/36c especially). Fixed; site grids and the containment graph are rebuilt. Re-run anything you intend to compare across it. → [notes/D8_bug_fix_explained.md](notes/D8_bug_fix_explained.md)
+
+## 🔴 11% of the cohort is not a stream gauge, and nothing records it
+
+Investigating why 8 pairs of nearby sensors are uncorrelated turned up that they are **paired inflow/outflow monitoring of engineered nitrate-removal features**. The metadata says so outright:
+
+```
+WQS0012  "monitors the INFLOW of water to the CREP wetland on Slough Creek"    median 9.0 mg/L
+WQS0008  "monitors the OUTFLOW of water from the weir of the CREP wetland"     median 4.8 mg/L
+```
+
+Five such pairs, and the outflow member is lower every time — 47%, 72%, 79%, 82%, 88% reduction (CREP wetland, Mud Creek wetland outlet, Perry Pond, Catfish Creek nutrient-trading study, Clear Creek drainage ditch). The low correlation *is the measurement working*.
+
+**Why this breaks the models.** We predict stream nitrate from watershed land use, crops, surplus, weather. A wetland outflow's nitrate is set by the wetland, not the watershed — the covariates say "high-nitrate ag catchment" and the sensor reads 2.3 because 79% was removed in between. No feature in any recipe can express that. Tile outlets are worse: `WQS0055`/`WQS0056` (ARS tile sites) read 17.9 and 15.7 mg/L, far above any stream, and their delineated "basin" is a field, so the whole covariate aggregation is meaningless.
+
+Scanning `iwqis_river` / `iwqis_description` / `iwqis_nickname` over the contract:
+
+| type | n |
+|---|---|
+| wetland / pond / oxbow / CREP | 5 |
+| tile / edge-of-field | 4 |
+| ditch | 4 |
+| **any non-stream type** | **13 / 116 (11%)** |
+| research / experimental marker | 27 / 116 (23%) |
+
+Those three metadata columns are already fetched and **read by nothing**.
+
+**The fix (Isaac's, and it's the right one): subtract the treated area.** For a sensor below a treatment feature, delineate its basin and then *remove the overlap it shares with the feature's contributing area*. For the CREP pair that is `basin(WQS0008) − basin(WQS0012)`, leaving only the untreated land draining directly to the sensor. The containment graph already knows which basins are nested, so the machinery exists. Caveat: subtracting the whole overlap assumes 100% removal when the measured reductions are 47–88%, so it over-corrects slightly — but it is far closer than counting the treated area at full weight, which is what happens today.
+
+Also: **`WQS0066` is the "Monona-Harrison Ditch"** — an engineered channel. It is the one site whose outlet snap survives the D8 fix (still 4.93× oversized), and routing a constructed ditch over a natural-terrain DEM should be expected to fail. Physical mismatch, not a remaining bug.
+
+Cheap test, no new fits: these 13 should be among the worst-predicted sites. `eval_<task>.csv` from the neighbour-count experiment carries per-site scores — just join on the classification.
+
+## 🔴 Three site pairs are the same gauge registered twice
+
+Sequential re-registrations, all under 52 m apart with **zero overlapping days**, and they are exactly the 3 cycles that make the containment graph not a DAG (each polygon contains the other's sensor, so containment runs both ways — water flowing uphill):
+
+| survivor (IWQIS preferred) | absorbed | gap between records | daily obs |
+|---|---|---|---|
+| `WQS0032` | `USGS-05483600` | 142 d | 2,540 / 1,490 |
+| `WQS0081` | `USGS-05481000` | 186 d | 1,484 / 1,254 |
+| `WQS0024` | `USGS-05451210` | 1,235 d | 2,612 / 367 |
+
+Merging is a **gain**, not just hygiene: `USGS-05451210` covers 2010–2011 and `WQS0024` covers 2015–2025, so keeping only one throws away half the record. Where a brief co-deployment lets it be checked (`USGS-05482500`/`WQS0082`, 22 shared days) the two agencies agree at **r = 0.898, median difference −0.02 mg/L**.
+
+**Do NOT deduplicate by distance.** Eight further pairs sit 200 m–1.9 km apart and are *concurrent*, sharing 389–2156 days at r = 0.006–0.589 — those are the treatment-feature pairs above, genuinely distinct sensors. The test for "one site" is near-coincidence **AND** non-overlapping records. Spec in [notes/audit-of-data-pipeline-0731.md](notes/audit-of-data-pipeline-0731.md) under B12; merging takes the cohort 116 → 113 and dissolves all 3 graph cycles.
 
 Results from some experiments that landed. Look at verdicts.
 
@@ -34,8 +122,29 @@ Then we have the following recipe protoypes:
 - `nbr_coverage` — the four static scalars only. This is the control that separates "the donor's reading helps" from "merely knowing a donor exists helps"
 - `nbr_all` — all nine
 - `nbr_all_no_lag0` — all but lag0, i.e. the largest set a shipped recipe could actually carry.
-##### `exp33: network features` –– testing basic network feature ablations
 
+**OVERALL VERDICT:**
+- Use `nbr_all_no_lag0` for both recipes, use distance similarity for REG, use area similarity for CLF. Here are the best recipe scores for each task across these experiments:
+
+**REG — `nbr_all_no_lag0` arm** (base 0.4489; floors: 0.0085 headline, 0.0258 between)
+
+| exp | encoding | rule | lofo_r2 | between_r2 | cols |
+|---|---|---|---|---|---|
+| 36 | both | dist, full graph | **0.5120** | **0.5233** | 14 |
+| 33 | both | area, immediate | 0.5097 | 0.5181 | 14 |
+| 35 | signed | area, immediate | 0.5047 | 0.4993 | 7 |
+| 34 | flag ← ships | area, immediate | 0.4986 | 0.4849 | 8 |
+
+**CLF — `nbr_all_no_lag0` arm** (base 0.6729; floor 0.0037)
+
+| exp | encoding | rule | lofo_prauc | between_rate_r2 | cols |
+|---|---|---|---|---|---|
+| 33c | both ← ships | area, immediate | **0.7555** | **0.5334** | 14 |
+| 36c | both | dist, full graph | 0.7524 | 0.5092 | 14 |
+| 34c | flag | area, immediate | 0.7320 | 0.4461 | 8 |
+| 35c | signed | area, immediate | 0.7263 | 0.4345 | 7 |
+
+##### `exp33: network features` –– testing basic network feature ablations
 Test "nitrate from most similar upstream/downstream neighbor", where similarity is ranked by basin area similarity.
 – `REG`: best is keeping all "no_lag0" features, get `lofo_r2` of 0.5097 with 95 features compared to base recipe of 0.4489. Best feature is `surplus_kgha_mean_b1` and then `pct_corn_mean_b2`.
 - `CLF`: best is also the `nbr_all_no_lag0` faeature, `lofo_auc` of 0.8957 and `lofo_prauc_lift` of 3.249. Get 130 features over base recipe of 116 features. Not as big of a win as REG. Best feature is a longrun feature, `surplus_kgha_sd_b2`, a standard deviation feature.

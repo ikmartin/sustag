@@ -411,3 +411,311 @@ _Top features (winner):_ nbr_level_lag1_down, pct_corn_mean_b2, surplus_kgha_mea
 | base | 116 | 30 | 175973 | 116 | 0.8909 | 0.6729 | 0.868 | 2.895 | 0.8784 | 0.5422 | 0.1185 | 0.2325 | 0.3939 | 0.8797 |
 
 _Top features (winner):_ nbr_level_lag1_down, surplus_kgha_sd_b2, surplus_kgha_mean_b2, rest_of_state_nitrate_lag3, nbr_n_down, pct_hay_pasture_mean_b2, rest_of_state_nitrate_lag1, roll_n_avg_except_this7d
+
+### 37 [reg]
+**Question.** Beyond the donor's day-to-day deviations, does a basin-local nitrate POOL and the donor's long-run LEVEL predict a site -- i.e. does the between-site channel move when the model is told how much nitrate its hydrological neighbourhood actually carries -- and how much of that survives being made causal?
+
+**Winner.** `nbr_all_no_lag0_new_pk` — lofo_r2 = 0.513, +0.0876 vs base
+<sub>2026-07-31T21:26Z · full · 116 sites · git faa17bb</sub>
+
+**Results.**
+
+| recipe | n_sites | n_families | n_rows | n_feat | loso_r2 | lofo_r2 | lofo_rmse | lofo_between_r2 | lofo_within_r2 | lofo_macro_r2 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| nbr_all_no_lag0_new_pk ⭐ | 116 | 30 | 175973 | 99 | 0.5272 | 0.513 | 3.791 | 0.5267 | 0.4527 | 0.3085 |
+| new_only_pk | 116 | 30 | 175973 | 91 | 0.5296 | 0.5011 | 3.837 | 0.4894 | 0.4474 | 0.2387 |
+| basin_lags_swap | 116 | 30 | 175973 | 83 | 0.5241 | 0.4942 | 3.864 | 0.5009 | 0.4381 | 0.2495 |
+| nbr_all_no_lag0_new | 116 | 30 | 175973 | 99 | 0.5193 | 0.4941 | 3.864 | 0.5068 | 0.4464 | 0.2737 |
+| nbr_all_no_lag0 | 116 | 30 | 175973 | 91 | 0.5184 | 0.4853 | 3.897 | 0.4445 | 0.4464 | 0.2597 |
+| basin_lags_add | 116 | 30 | 175973 | 85 | 0.5282 | 0.4831 | 3.906 | 0.4547 | 0.4382 | 0.229 |
+| nbr_coverage_new | 116 | 30 | 175973 | 95 | 0.5199 | 0.4802 | 3.917 | 0.4752 | 0.4366 | 0.2376 |
+| new_only | 116 | 30 | 175973 | 91 | 0.5211 | 0.48 | 3.917 | 0.4788 | 0.4314 | 0.1987 |
+| nbr_coverage | 116 | 30 | 175973 | 87 | 0.511 | 0.4298 | 4.102 | 0.3605 | 0.4049 | 0.1994 |
+| new_yearly_only | 116 | 30 | 175973 | 86 | 0.5078 | 0.4282 | 4.108 | 0.3675 | 0.4029 | 0.2134 |
+| base_stream | 116 | 30 | 175973 | 83 | 0.5052 | 0.4273 | 4.111 | 0.371 | 0.3964 | 0.1719 |
+| new_static_only | 116 | 30 | 175973 | 89 | 0.5029 | 0.4257 | 4.117 | 0.3946 | 0.4021 | 0.1975 |
+| base | 116 | 30 | 175973 | 81 | 0.5131 | 0.4253 | 4.118 | 0.3704 | 0.4034 | 0.1731 |
+| new_alltime_only | 116 | 30 | 175973 | 86 | 0.4913 | 0.4071 | 4.183 | 0.3313 | 0.4032 | 0.1429 |
+| new_static_no_livefeed | 116 | 30 | 175973 | 84 | 0.4597 | 0.3908 | 4.24 | 0.4027 | 0.3412 | 0.1567 |
+
+_Top features (winner):_ rest_of_basin_nitrate_lag1, surplus_kgha_mean_b1, rest_of_state_nitrate_lag1, surplus_kgha_mean_b2, pct_soybeans_mean_b2, pct_corn_mean_b0, tile_frac_basin, pct_hay_pasture_mean_b1
+
+### 37c [clf]
+**Question.** Beyond the donor's day-to-day deviations, does a basin-local nitrate POOL and the donor's long-run LEVEL predict a site -- i.e. does the between-site channel move when the model is told how much nitrate its hydrological neighbourhood actually carries -- and how much of that survives being made causal?
+
+**Winner.** `nbr_all_no_lag0_new_pk` — lofo_prauc = 0.7548, +0.0656 vs base
+<sub>2026-07-31T22:34Z · full · 116 sites · git faa17bb</sub>
+
+**Results.**
+
+| recipe | n_sites | n_families | n_rows | n_feat | loso_auc | lofo_prauc | lofo_auc | lofo_prauc_lift | lofo_recall_at_f2 | lofo_fdr_at_f2 | lofo_brier | base | lofo_between_rate_r2 | lofo_macro_auc |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| nbr_all_no_lag0_new_pk ⭐ | 116 | 30 | 175973 | 134 | 0.8961 | 0.7548 | 0.89 | 3.247 | 0.8618 | 0.497 | 0.1021 | 0.2325 | 0.5105 | 0.8896 |
+| nbr_all_no_lag0_new | 116 | 30 | 175973 | 134 | 0.895 | 0.7508 | 0.8885 | 3.23 | 0.8576 | 0.4876 | 0.1028 | 0.2325 | 0.5219 | 0.8875 |
+| nbr_all_no_lag0 | 116 | 30 | 175973 | 126 | 0.8939 | 0.7403 | 0.8853 | 3.184 | 0.8775 | 0.5197 | 0.1061 | 0.2325 | 0.4805 | 0.8908 |
+| basin_lags_add | 116 | 30 | 175973 | 120 | 0.8955 | 0.7394 | 0.8856 | 3.181 | 0.8687 | 0.5119 | 0.1052 | 0.2325 | 0.514 | 0.8874 |
+| basin_lags_swap | 116 | 30 | 175973 | 118 | 0.8942 | 0.7365 | 0.8862 | 3.168 | 0.8741 | 0.5178 | 0.105 | 0.2325 | 0.5052 | 0.8895 |
+| new_only_pk | 116 | 30 | 175973 | 126 | 0.896 | 0.7357 | 0.8842 | 3.165 | 0.8685 | 0.515 | 0.1056 | 0.2325 | 0.5043 | 0.8917 |
+| nbr_coverage_new | 116 | 30 | 175973 | 130 | 0.8937 | 0.7326 | 0.8824 | 3.151 | 0.8679 | 0.5147 | 0.107 | 0.2325 | 0.4891 | 0.8902 |
+| new_only | 116 | 30 | 175973 | 126 | 0.8931 | 0.7263 | 0.8817 | 3.124 | 0.8676 | 0.5123 | 0.1075 | 0.2325 | 0.4932 | 0.8874 |
+| new_yearly_only | 116 | 30 | 175973 | 121 | 0.89 | 0.6964 | 0.871 | 2.995 | 0.8648 | 0.5232 | 0.1151 | 0.2325 | 0.4365 | 0.8818 |
+| nbr_coverage | 116 | 30 | 175973 | 122 | 0.8891 | 0.695 | 0.8693 | 2.99 | 0.8784 | 0.5484 | 0.1162 | 0.2325 | 0.4261 | 0.8804 |
+| base | 116 | 30 | 175973 | 116 | 0.8911 | 0.6892 | 0.869 | 2.964 | 0.8749 | 0.5422 | 0.1166 | 0.2325 | 0.4263 | 0.8837 |
+| base_stream | 116 | 30 | 175973 | 118 | 0.8888 | 0.6885 | 0.87 | 2.962 | 0.8847 | 0.5472 | 0.1163 | 0.2325 | 0.4122 | 0.881 |
+| new_alltime_only | 116 | 30 | 175973 | 121 | 0.8869 | 0.6782 | 0.8627 | 2.917 | 0.8864 | 0.561 | 0.1185 | 0.2325 | 0.3806 | 0.8863 |
+| new_static_only | 116 | 30 | 175973 | 124 | 0.8879 | 0.6766 | 0.8609 | 2.91 | 0.8751 | 0.5538 | 0.1191 | 0.2325 | 0.3654 | 0.8851 |
+| new_static_no_livefeed | 116 | 30 | 175973 | 119 | 0.8823 | 0.6434 | 0.8491 | 2.767 | 0.8819 | 0.5715 | 0.1248 | 0.2325 | 0.3418 | 0.871 |
+
+_Top features (winner):_ rest_of_basin_nitrate_lag1, surplus_kgha_mean_b2, rest_of_basin_nitrate_lag3, rest_of_state_nitrate_lag1, pct_small_grains_mean_b2, surplus_kgha_sd_b2, surplus_kgha_mean_b1, pct_corn_mean_b2
+
+### insitu_q_r0 [reg]
+**Question.** At an exclusion radius of 0 km, does a donor gauge's discharge anomaly predict nitrate beyond the shipped recipe -- and does it survive being made causal?
+
+**Winner.** `q_coverage` — lofo_r2 = 0.438, +0.0127 vs base
+<sub>2026-07-31T23:38Z · full · 116 sites · git faa17bb</sub>
+
+**Results.**
+
+| recipe | n_sites | n_families | n_rows | n_feat | loso_r2 | lofo_r2 | lofo_rmse | lofo_between_r2 | lofo_within_r2 | lofo_macro_r2 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| q_coverage ⭐ | 116 | 30 | 175973 | 83 | 0.5058 | 0.438 | 4.073 | 0.4219 | 0.401 | 0.1716 |
+| base | 116 | 30 | 175973 | 81 | 0.5131 | 0.4253 | 4.118 | 0.3704 | 0.4034 | 0.1731 |
+| q_concurrent | 116 | 30 | 175973 | 82 | 0.5149 | 0.4049 | 4.191 | 0.296 | 0.4213 | 0.2129 |
+| q_lagged | 116 | 30 | 175973 | 83 | 0.5114 | 0.3971 | 4.218 | 0.2761 | 0.416 | 0.2262 |
+| q_all | 116 | 30 | 175973 | 86 | 0.5093 | 0.3965 | 4.22 | 0.2883 | 0.4176 | 0.184 |
+
+_Top features (winner):_ surplus_kgha_mean_b1, q_area_ratio, rest_of_state_nitrate_lag1, roll_n_avg_except_this7d, pct_corn_mean_b1, tile_frac_basin, surplus_kgha_mean_b2, pct_corn_mean_b0
+
+### grab_agency [reg]
+**Question.** Does a static basin-integrated aggregate of third-party DISCRETE nitrate samples improve the between-site channel over the shipped recipe, and is it the level or just sampling effort?
+
+**Winner.** `grab_exceed` — lofo_r2 = 0.4326, +0.0073 vs base
+<sub>2026-07-31T23:39Z · full · 116 sites · git faa17bb</sub>
+
+**Results.**
+
+| recipe | n_sites | n_families | n_rows | n_feat | loso_r2 | lofo_r2 | lofo_rmse | lofo_between_r2 | lofo_within_r2 | lofo_macro_r2 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| grab_exceed ⭐ | 116 | 30 | 175973 | 82 | 0.5077 | 0.4326 | 4.092 | 0.3841 | 0.4022 | 0.1739 |
+| grab_coverage | 116 | 30 | 175973 | 84 | 0.5091 | 0.4306 | 4.099 | 0.3608 | 0.409 | 0.1906 |
+| grab_all | 116 | 30 | 175973 | 87 | 0.5075 | 0.4277 | 4.11 | 0.3867 | 0.4083 | 0.174 |
+| base | 116 | 30 | 175973 | 81 | 0.5131 | 0.4253 | 4.118 | 0.3704 | 0.4034 | 0.1731 |
+| grab_level | 116 | 30 | 175973 | 83 | 0.5073 | 0.4245 | 4.121 | 0.3686 | 0.402 | 0.1984 |
+
+_Top features (winner):_ surplus_kgha_mean_b1, surplus_kgha_mean_b2, tile_frac_basin, pct_corn_mean_b0, pct_corn_mean_b1, rest_of_state_nitrate_lag1, tot_tiles92, roll_n_avg_except_this7d
+
+### insitu_q_r1 [reg]
+**Question.** At an exclusion radius of 1 km, does a donor gauge's discharge anomaly predict nitrate beyond the shipped recipe -- and does it survive being made causal?
+
+**Winner.** `q_coverage` — lofo_r2 = 0.4317, +0.0064 vs base
+<sub>2026-08-01T00:08Z · full · 116 sites · git faa17bb</sub>
+
+**Results.**
+
+| recipe | n_sites | n_families | n_rows | n_feat | loso_r2 | lofo_r2 | lofo_rmse | lofo_between_r2 | lofo_within_r2 | lofo_macro_r2 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| q_coverage ⭐ | 116 | 30 | 175973 | 83 | 0.5061 | 0.4317 | 4.095 | 0.3905 | 0.401 | 0.1542 |
+| base | 116 | 30 | 175973 | 81 | 0.5131 | 0.4253 | 4.118 | 0.3704 | 0.4034 | 0.1731 |
+| q_concurrent | 116 | 30 | 175973 | 82 | 0.5034 | 0.4025 | 4.199 | 0.2849 | 0.4075 | 0.1748 |
+| q_lagged | 116 | 30 | 175973 | 83 | 0.4935 | 0.398 | 4.215 | 0.2888 | 0.4021 | 0.1688 |
+| q_all | 116 | 30 | 175973 | 86 | 0.5001 | 0.3903 | 4.242 | 0.2671 | 0.4023 | 0.2203 |
+
+_Top features (winner):_ surplus_kgha_mean_b1, rest_of_state_nitrate_lag1, roll_n_avg_except_this7d, pct_corn_mean_b0, pct_corn_mean_b1, tile_frac_basin, pct_soybeans_mean_b2, surplus_kgha_mean_b2
+
+### grab_agency [clf]
+**Question.** Does a static basin-integrated aggregate of third-party DISCRETE nitrate samples improve the between-site channel over the shipped recipe, and is it the level or just sampling effort?
+
+**Winner.** `grab_all` — lofo_prauc = 0.6971, +0.0079 vs base
+<sub>2026-08-01T00:27Z · full · 116 sites · git faa17bb</sub>
+
+**Results.**
+
+| recipe | n_sites | n_families | n_rows | n_feat | loso_auc | lofo_prauc | lofo_auc | lofo_prauc_lift | lofo_recall_at_f2 | lofo_fdr_at_f2 | lofo_brier | base | lofo_between_rate_r2 | lofo_macro_auc |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| grab_all ⭐ | 116 | 30 | 175973 | 122 | 0.8888 | 0.6971 | 0.8711 | 2.998 | 0.8859 | 0.5466 | 0.1152 | 0.2325 | 0.4364 | 0.8808 |
+| grab_exceed | 116 | 30 | 175973 | 117 | 0.889 | 0.6913 | 0.8698 | 2.974 | 0.8862 | 0.5499 | 0.1162 | 0.2325 | 0.42 | 0.881 |
+| grab_coverage | 116 | 30 | 175973 | 119 | 0.8903 | 0.6907 | 0.8693 | 2.971 | 0.8778 | 0.5437 | 0.1161 | 0.2325 | 0.4298 | 0.8834 |
+| grab_level | 116 | 30 | 175973 | 118 | 0.8898 | 0.6897 | 0.8691 | 2.966 | 0.8794 | 0.5459 | 0.1164 | 0.2325 | 0.4342 | 0.8823 |
+| base | 116 | 30 | 175973 | 116 | 0.8911 | 0.6892 | 0.869 | 2.964 | 0.8749 | 0.5422 | 0.1166 | 0.2325 | 0.4263 | 0.8837 |
+
+_Top features (winner):_ roll_n_avg_except_this7d, surplus_kgha_mean_b2, rest_of_state_nitrate_lag1, rest_of_state_nitrate_lag3, surplus_kgha_sd_b2, surplus_kgha_mean_b1, pct_small_grains_mean_b2, pct_corn_mean_b2
+
+### insitu_q_r5 [reg]
+**Question.** At an exclusion radius of 5 km, does a donor gauge's discharge anomaly predict nitrate beyond the shipped recipe -- and does it survive being made causal?
+
+**Winner.** `q_coverage` — lofo_r2 = 0.4301, +0.0047 vs base
+<sub>2026-08-01T00:28Z · full · 116 sites · git faa17bb</sub>
+
+**Results.**
+
+| recipe | n_sites | n_families | n_rows | n_feat | loso_r2 | lofo_r2 | lofo_rmse | lofo_between_r2 | lofo_within_r2 | lofo_macro_r2 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| q_coverage ⭐ | 116 | 30 | 175973 | 83 | 0.5023 | 0.4301 | 4.101 | 0.3845 | 0.4014 | 0.1629 |
+| base | 116 | 30 | 175973 | 81 | 0.5131 | 0.4253 | 4.118 | 0.3704 | 0.4034 | 0.1731 |
+| q_concurrent | 116 | 30 | 175973 | 82 | 0.4901 | 0.4105 | 4.171 | 0.2993 | 0.4121 | 0.2148 |
+| q_lagged | 116 | 30 | 175973 | 83 | 0.4934 | 0.4041 | 4.194 | 0.3009 | 0.4018 | 0.2247 |
+| q_all | 116 | 30 | 175973 | 86 | 0.4826 | 0.3873 | 4.252 | 0.2364 | 0.4032 | 0.181 |
+
+_Top features (winner):_ surplus_kgha_mean_b1, rest_of_state_nitrate_lag1, roll_n_avg_except_this7d, surplus_kgha_mean_b2, pct_corn_mean_b0, pct_corn_mean_b1, tile_frac_basin, pct_soybeans_mean_b2
+
+### insitu_q_r10 [reg]
+**Question.** At an exclusion radius of 10 km, does a donor gauge's discharge anomaly predict nitrate beyond the shipped recipe -- and does it survive being made causal?
+
+**Winner.** `q_coverage` — lofo_r2 = 0.4434, +0.0180 vs base
+<sub>2026-08-01T00:40Z · full · 116 sites · git faa17bb</sub>
+
+**Results.**
+
+| recipe | n_sites | n_families | n_rows | n_feat | loso_r2 | lofo_r2 | lofo_rmse | lofo_between_r2 | lofo_within_r2 | lofo_macro_r2 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| q_coverage ⭐ | 116 | 30 | 175973 | 83 | 0.5081 | 0.4434 | 4.053 | 0.4119 | 0.4038 | 0.1877 |
+| base | 116 | 30 | 175973 | 81 | 0.5131 | 0.4253 | 4.118 | 0.3704 | 0.4034 | 0.1731 |
+| q_lagged | 116 | 30 | 175973 | 83 | 0.5014 | 0.4221 | 4.13 | 0.348 | 0.409 | 0.2204 |
+| q_concurrent | 116 | 30 | 175973 | 82 | 0.5069 | 0.4129 | 4.163 | 0.3044 | 0.4093 | 0.1948 |
+| q_all | 116 | 30 | 175973 | 86 | 0.5022 | 0.4121 | 4.166 | 0.315 | 0.4062 | 0.1937 |
+
+_Top features (winner):_ surplus_kgha_mean_b1, rest_of_state_nitrate_lag1, roll_n_avg_except_this7d, q_area_ratio, surplus_kgha_mean_b2, pct_corn_mean_b1, tile_frac_basin, pct_corn_mean_b0
+
+### insitu_q_r20 [reg]
+**Question.** At an exclusion radius of 20 km, does a donor gauge's discharge anomaly predict nitrate beyond the shipped recipe -- and does it survive being made causal?
+
+**Winner.** `q_coverage` — lofo_r2 = 0.4394, +0.0140 vs base
+<sub>2026-08-01T00:52Z · full · 116 sites · git faa17bb</sub>
+
+**Results.**
+
+| recipe | n_sites | n_families | n_rows | n_feat | loso_r2 | lofo_r2 | lofo_rmse | lofo_between_r2 | lofo_within_r2 | lofo_macro_r2 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| q_coverage ⭐ | 116 | 30 | 175973 | 83 | 0.4992 | 0.4394 | 4.068 | 0.4085 | 0.3999 | 0.1863 |
+| base | 116 | 30 | 175973 | 81 | 0.5131 | 0.4253 | 4.118 | 0.3704 | 0.4034 | 0.1731 |
+| q_concurrent | 116 | 30 | 175973 | 82 | 0.4983 | 0.4106 | 4.171 | 0.2813 | 0.4101 | 0.1682 |
+| q_lagged | 116 | 30 | 175973 | 83 | 0.4904 | 0.4066 | 4.185 | 0.3025 | 0.4036 | 0.1948 |
+| q_all | 116 | 30 | 175973 | 86 | 0.4817 | 0.4017 | 4.202 | 0.2818 | 0.4068 | 0.2134 |
+
+_Top features (winner):_ surplus_kgha_mean_b1, rest_of_state_nitrate_lag1, roll_n_avg_except_this7d, pct_corn_mean_b0, surplus_kgha_mean_b2, pct_corn_mean_b1, tile_frac_basin, pct_soybeans_mean_b2
+
+### insitu_q_r50 [reg]
+**Question.** At an exclusion radius of 50 km, does a donor gauge's discharge anomaly predict nitrate beyond the shipped recipe -- and does it survive being made causal?
+
+**Winner.** `q_lagged` — lofo_r2 = 0.4406, +0.0153 vs base
+<sub>2026-08-01T01:04Z · full · 116 sites · git faa17bb</sub>
+
+**Results.**
+
+| recipe | n_sites | n_families | n_rows | n_feat | loso_r2 | lofo_r2 | lofo_rmse | lofo_between_r2 | lofo_within_r2 | lofo_macro_r2 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| q_lagged ⭐ | 116 | 30 | 175973 | 83 | 0.508 | 0.4406 | 4.063 | 0.41 | 0.402 | 0.1693 |
+| q_concurrent | 116 | 30 | 175973 | 82 | 0.5073 | 0.439 | 4.069 | 0.4016 | 0.4073 | 0.2104 |
+| q_coverage | 116 | 30 | 175973 | 83 | 0.5011 | 0.4274 | 4.111 | 0.3815 | 0.4015 | 0.1846 |
+| base | 116 | 30 | 175973 | 81 | 0.5131 | 0.4253 | 4.118 | 0.3704 | 0.4034 | 0.1731 |
+| q_all | 116 | 30 | 175973 | 86 | 0.5032 | 0.4192 | 4.14 | 0.3612 | 0.3962 | 0.2179 |
+
+_Top features (winner):_ surplus_kgha_mean_b1, rest_of_state_nitrate_lag1, roll_n_avg_except_this7d, pct_corn_mean_b0, tile_frac_basin, pct_corn_mean_b1, pct_hay_pasture_mean_b1, pct_soybeans_mean_b2
+
+### insitu_q_r0 [clf]
+**Question.** At an exclusion radius of 0 km, does a donor gauge's discharge anomaly predict nitrate beyond the shipped recipe -- and does it survive being made causal?
+
+**Winner.** `base` — lofo_prauc = 0.6892
+<sub>2026-08-01T01:28Z · full · 116 sites · git faa17bb</sub>
+
+**Results.**
+
+| recipe | n_sites | n_families | n_rows | n_feat | loso_auc | lofo_prauc | lofo_auc | lofo_prauc_lift | lofo_recall_at_f2 | lofo_fdr_at_f2 | lofo_brier | base | lofo_between_rate_r2 | lofo_macro_auc |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| base ⭐ | 116 | 30 | 175973 | 116 | 0.8911 | 0.6892 | 0.869 | 2.964 | 0.8749 | 0.5422 | 0.1166 | 0.2325 | 0.4263 | 0.8837 |
+| q_coverage | 116 | 30 | 175973 | 118 | 0.8927 | 0.6872 | 0.87 | 2.956 | 0.8798 | 0.5427 | 0.1171 | 0.2325 | 0.4633 | 0.8824 |
+| q_concurrent | 116 | 30 | 175973 | 117 | 0.8908 | 0.671 | 0.8621 | 2.886 | 0.8798 | 0.5461 | 0.1201 | 0.2325 | 0.3842 | 0.8885 |
+| q_lagged | 116 | 30 | 175973 | 118 | 0.8907 | 0.6678 | 0.8585 | 2.872 | 0.8852 | 0.5625 | 0.1212 | 0.2325 | 0.3625 | 0.8865 |
+| q_all | 116 | 30 | 175973 | 121 | 0.8926 | 0.6623 | 0.8575 | 2.849 | 0.8813 | 0.5556 | 0.1225 | 0.2325 | 0.3659 | 0.8928 |
+
+_Top features (winner):_ surplus_kgha_sd_b2, rest_of_state_nitrate_lag1, surplus_kgha_mean_b2, rest_of_state_nitrate_lag3, surplus_kgha_mean_b1, roll_n_avg_except_this7d, tile_frac_basin, pct_corn_mean_b1
+
+### insitu_q_r1 [clf]
+**Question.** At an exclusion radius of 1 km, does a donor gauge's discharge anomaly predict nitrate beyond the shipped recipe -- and does it survive being made causal?
+
+**Winner.** `base` — lofo_prauc = 0.6892
+<sub>2026-08-01T01:44Z · full · 116 sites · git faa17bb</sub>
+
+**Results.**
+
+| recipe | n_sites | n_families | n_rows | n_feat | loso_auc | lofo_prauc | lofo_auc | lofo_prauc_lift | lofo_recall_at_f2 | lofo_fdr_at_f2 | lofo_brier | base | lofo_between_rate_r2 | lofo_macro_auc |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| base ⭐ | 116 | 30 | 175973 | 116 | 0.8911 | 0.6892 | 0.869 | 2.964 | 0.8749 | 0.5422 | 0.1166 | 0.2325 | 0.4263 | 0.8837 |
+| q_coverage | 116 | 30 | 175973 | 118 | 0.8906 | 0.6879 | 0.8685 | 2.959 | 0.8737 | 0.5408 | 0.117 | 0.2325 | 0.4135 | 0.8808 |
+| q_concurrent | 116 | 30 | 175973 | 117 | 0.8887 | 0.6653 | 0.8612 | 2.862 | 0.8811 | 0.5577 | 0.1205 | 0.2325 | 0.3791 | 0.8859 |
+| q_lagged | 116 | 30 | 175973 | 118 | 0.8886 | 0.6606 | 0.8608 | 2.842 | 0.8748 | 0.5485 | 0.121 | 0.2325 | 0.3534 | 0.8862 |
+| q_all | 116 | 30 | 175973 | 121 | 0.888 | 0.6554 | 0.8587 | 2.819 | 0.8796 | 0.5578 | 0.1224 | 0.2325 | 0.3448 | 0.8866 |
+
+_Top features (winner):_ surplus_kgha_sd_b2, rest_of_state_nitrate_lag1, surplus_kgha_mean_b2, rest_of_state_nitrate_lag3, surplus_kgha_mean_b1, roll_n_avg_except_this7d, tile_frac_basin, pct_corn_mean_b1
+
+### insitu_q_r5 [clf]
+**Question.** At an exclusion radius of 5 km, does a donor gauge's discharge anomaly predict nitrate beyond the shipped recipe -- and does it survive being made causal?
+
+**Winner.** `base` — lofo_prauc = 0.6892
+<sub>2026-08-01T01:55Z · full · 116 sites · git faa17bb</sub>
+
+**Results.**
+
+| recipe | n_sites | n_families | n_rows | n_feat | loso_auc | lofo_prauc | lofo_auc | lofo_prauc_lift | lofo_recall_at_f2 | lofo_fdr_at_f2 | lofo_brier | base | lofo_between_rate_r2 | lofo_macro_auc |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| base ⭐ | 116 | 30 | 175973 | 116 | 0.8911 | 0.6892 | 0.869 | 2.964 | 0.8749 | 0.5422 | 0.1166 | 0.2325 | 0.4263 | 0.8837 |
+| q_coverage | 116 | 30 | 175973 | 118 | 0.8908 | 0.6872 | 0.8684 | 2.956 | 0.8876 | 0.5541 | 0.117 | 0.2325 | 0.4135 | 0.881 |
+| q_concurrent | 116 | 30 | 175973 | 117 | 0.8866 | 0.6649 | 0.8617 | 2.86 | 0.8709 | 0.5438 | 0.1201 | 0.2325 | 0.3683 | 0.8878 |
+| q_lagged | 116 | 30 | 175973 | 118 | 0.8858 | 0.6608 | 0.8595 | 2.843 | 0.8824 | 0.5627 | 0.1214 | 0.2325 | 0.3438 | 0.8907 |
+| q_all | 116 | 30 | 175973 | 121 | 0.8839 | 0.6576 | 0.8583 | 2.829 | 0.8874 | 0.5656 | 0.1223 | 0.2325 | 0.3103 | 0.8898 |
+
+_Top features (winner):_ surplus_kgha_sd_b2, rest_of_state_nitrate_lag1, surplus_kgha_mean_b2, rest_of_state_nitrate_lag3, surplus_kgha_mean_b1, roll_n_avg_except_this7d, tile_frac_basin, pct_corn_mean_b1
+
+### insitu_q_r10 [clf]
+**Question.** At an exclusion radius of 10 km, does a donor gauge's discharge anomaly predict nitrate beyond the shipped recipe -- and does it survive being made causal?
+
+**Winner.** `q_coverage` — lofo_prauc = 0.6917, +0.0026 vs base
+<sub>2026-08-01T02:07Z · full · 116 sites · git faa17bb</sub>
+
+**Results.**
+
+| recipe | n_sites | n_families | n_rows | n_feat | loso_auc | lofo_prauc | lofo_auc | lofo_prauc_lift | lofo_recall_at_f2 | lofo_fdr_at_f2 | lofo_brier | base | lofo_between_rate_r2 | lofo_macro_auc |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| q_coverage ⭐ | 116 | 30 | 175973 | 118 | 0.8907 | 0.6917 | 0.8696 | 2.975 | 0.8754 | 0.5422 | 0.1163 | 0.2325 | 0.4292 | 0.8783 |
+| base | 116 | 30 | 175973 | 116 | 0.8911 | 0.6892 | 0.869 | 2.964 | 0.8749 | 0.5422 | 0.1166 | 0.2325 | 0.4263 | 0.8837 |
+| q_concurrent | 116 | 30 | 175973 | 117 | 0.8892 | 0.6804 | 0.865 | 2.927 | 0.8847 | 0.5568 | 0.1181 | 0.2325 | 0.3954 | 0.8854 |
+| q_lagged | 116 | 30 | 175973 | 118 | 0.8905 | 0.6758 | 0.863 | 2.907 | 0.8787 | 0.5545 | 0.1196 | 0.2325 | 0.3796 | 0.8867 |
+| q_all | 116 | 30 | 175973 | 121 | 0.8901 | 0.6757 | 0.8641 | 2.907 | 0.8857 | 0.5547 | 0.1197 | 0.2325 | 0.3715 | 0.8874 |
+
+_Top features (winner):_ surplus_kgha_sd_b2, surplus_kgha_mean_b2, rest_of_state_nitrate_lag3, rest_of_state_nitrate_lag1, pct_hay_pasture_sd_b1, roll_n_avg_except_this7d, surplus_kgha_mean_b1, pct_corn_mean_b2
+
+### insitu_q_r20 [clf]
+**Question.** At an exclusion radius of 20 km, does a donor gauge's discharge anomaly predict nitrate beyond the shipped recipe -- and does it survive being made causal?
+
+**Winner.** `q_coverage` — lofo_prauc = 0.6947, +0.0055 vs base
+<sub>2026-08-01T02:22Z · full · 116 sites · git faa17bb</sub>
+
+**Results.**
+
+| recipe | n_sites | n_families | n_rows | n_feat | loso_auc | lofo_prauc | lofo_auc | lofo_prauc_lift | lofo_recall_at_f2 | lofo_fdr_at_f2 | lofo_brier | base | lofo_between_rate_r2 | lofo_macro_auc |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| q_coverage ⭐ | 116 | 30 | 175973 | 118 | 0.8909 | 0.6947 | 0.8711 | 2.988 | 0.8673 | 0.5324 | 0.1154 | 0.2325 | 0.4467 | 0.8819 |
+| base | 116 | 30 | 175973 | 116 | 0.8911 | 0.6892 | 0.869 | 2.964 | 0.8749 | 0.5422 | 0.1166 | 0.2325 | 0.4263 | 0.8837 |
+| q_concurrent | 116 | 30 | 175973 | 117 | 0.8882 | 0.6835 | 0.8671 | 2.94 | 0.8785 | 0.5482 | 0.1175 | 0.2325 | 0.4065 | 0.8824 |
+| q_all | 116 | 30 | 175973 | 121 | 0.8893 | 0.6782 | 0.8648 | 2.917 | 0.8824 | 0.5559 | 0.1187 | 0.2325 | 0.4015 | 0.8815 |
+| q_lagged | 116 | 30 | 175973 | 118 | 0.8881 | 0.6754 | 0.8631 | 2.905 | 0.8657 | 0.542 | 0.1191 | 0.2325 | 0.3873 | 0.881 |
+
+_Top features (winner):_ surplus_kgha_sd_b2, rest_of_state_nitrate_lag3, rest_of_state_nitrate_lag1, surplus_kgha_mean_b2, pct_hay_pasture_sd_b1, surplus_kgha_mean_b1, roll_n_avg_except_this7d, roll_n_avg_except_this14d
+
+### insitu_q_r50 [clf]
+**Question.** At an exclusion radius of 50 km, does a donor gauge's discharge anomaly predict nitrate beyond the shipped recipe -- and does it survive being made causal?
+
+**Winner.** `q_concurrent` — lofo_prauc = 0.701, +0.0118 vs base
+<sub>2026-08-01T02:40Z · full · 116 sites · git faa17bb</sub>
+
+**Results.**
+
+| recipe | n_sites | n_families | n_rows | n_feat | loso_auc | lofo_prauc | lofo_auc | lofo_prauc_lift | lofo_recall_at_f2 | lofo_fdr_at_f2 | lofo_brier | base | lofo_between_rate_r2 | lofo_macro_auc |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| q_concurrent ⭐ | 116 | 30 | 175973 | 117 | 0.8915 | 0.701 | 0.8729 | 3.015 | 0.8743 | 0.532 | 0.1145 | 0.2325 | 0.4676 | 0.8804 |
+| q_lagged | 116 | 30 | 175973 | 118 | 0.8907 | 0.6978 | 0.8716 | 3.002 | 0.8847 | 0.5425 | 0.1153 | 0.2325 | 0.4552 | 0.8827 |
+| q_all | 116 | 30 | 175973 | 121 | 0.8904 | 0.6971 | 0.8713 | 2.999 | 0.8729 | 0.5292 | 0.1155 | 0.2325 | 0.4433 | 0.8812 |
+| base | 116 | 30 | 175973 | 116 | 0.8911 | 0.6892 | 0.869 | 2.964 | 0.8749 | 0.5422 | 0.1166 | 0.2325 | 0.4263 | 0.8837 |
+| q_coverage | 116 | 30 | 175973 | 118 | 0.8909 | 0.6875 | 0.8684 | 2.957 | 0.8851 | 0.5523 | 0.1169 | 0.2325 | 0.4251 | 0.8788 |
+
+_Top features (winner):_ rest_of_state_nitrate_lag3, surplus_kgha_mean_b2, rest_of_state_nitrate_lag1, surplus_kgha_sd_b2, roll_n_avg_except_this7d, surplus_kgha_mean_b1, pct_hay_pasture_sd_b1, pct_corn_mean_b1

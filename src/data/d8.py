@@ -67,8 +67,11 @@ NODATA: set = set()
 
 _GEOD = Geod(ellps="WGS84")
 _OUTLET_SNAP_RADIUS = 10   # cells (~5 km) searched for the main-stem outlet
-_OUTLET_ACC_FRAC = 0.5     # min fraction of window-max accumulation to count as main stem
+_OUTLET_ACC_FRAC = 0.5     # min fraction of window-max accumulation to count as main stem (only when no basin area is known)
 NODE_SNAP_RADIUS = 4       # cells (~2 km) to recover a node straddling the basin divide
+# Accept an outlet whose accumulation-implied drainage is within this factor of the site's KNOWN basin area. Measured on the 116-site cohort: the 88 sites that snap correctly span 0.96x-2.51x with a median of 1.01x, while every mis-snap is >4x, so the band separates the two populations with a clear gap. _OUTLET_WIDEN is one deliberate relaxation before giving up.
+_OUTLET_AREA_BAND = (0.33, 3.0)
+_OUTLET_WIDEN = 3.0
 
 _ACCUM: np.ndarray | None = None
 _FLOW_FIELD_CACHE: dict[tuple, np.ndarray] = {}
@@ -182,14 +185,53 @@ def _flow_accumulation(direction: np.ndarray) -> np.ndarray:
     return acc
 
 
-def _snap_outlet(direction: np.ndarray, col: int, row: int) -> tuple[int, int]:
-    """Snap a sensor pixel to the nearest main-stem cell (pour-point snapping)."""
+def cell_area_m2() -> np.ndarray:
+    """Ground area (m^2) of one raster cell, per row: an (H,) vector.
+
+    Same basis as _hop_lengths, whose table this reads rather than re-solving: the N and W hops out of a cell centre ARE that cell's height and width, so their product is its area. Latitude-dependent by ~15% across this raster's 12-degree span, which is why it is a vector and not a constant.
+    """
+    hop = _hop_lengths()
+    ns = next(k for k, (dx, dy, _) in enumerate(NEIGHBOR_CHECKS) if (dx, dy) == (0, -1))
+    ew = next(k for k, (dx, dy, _) in enumerate(NEIGHBOR_CHECKS) if (dx, dy) == (-1, 0))
+    return hop[:, ns] * hop[:, ew]
+
+
+def _snap_outlet(direction: np.ndarray, col: int, row: int, expected_area_m2: float | None = None) -> tuple[int, int]:
+    """Snap a sensor pixel to the nearest main-stem cell (pour-point snapping).
+
+    WITHOUT `expected_area_m2` the rule is relative to the search window: accept any cell carrying at least _OUTLET_ACC_FRAC of the window's own maximum accumulation, nearest wins. That is unbiased only when the window holds one stream. Where a small basin's sensor sits within ~5 km of a much larger river, the big river sets the maximum, every cell of the true stream falls under the threshold, and the outlet lands on the wrong river -- silently, since a wrong outlet still yields a full flow field. Measured on the 116-site cohort it mis-snapped 28 sites (24%), worst by 6,439x drainage area, and the victims are systematically the SMALL basins.
+
+    WITH it, a candidate is accepted only when its accumulation-implied drainage (`acc x cell area`) lands inside _OUTLET_AREA_BAND of the site's known basin area, which is an absolute test the window's contents cannot skew. Falls back to one widened band, then raises rather than returning a wrong outlet -- both callers turn that into a NaN distance, which is the honest answer.
+
+    `expected_area_m2=None` reproduces the pre-fix rule exactly, on purpose: the deploy path may have no area, and experiments/raster-investigation asserts byte parity against it.
+    """
     acc = _flow_accumulation(direction)
     R = _OUTLET_SNAP_RADIUS
     c0, c1 = max(0, col - R), min(W, col + R + 1)
     r0, r1 = max(0, row - R), min(H, row + R + 1)
     sub = acc[r0:r1, c0:c1]
-    rs, cs = np.where(sub >= _OUTLET_ACC_FRAC * sub.max())
+
+    if expected_area_m2 is None or not np.isfinite(expected_area_m2) or expected_area_m2 <= 0:
+        rs, cs = np.where(sub >= _OUTLET_ACC_FRAC * sub.max())
+    else:
+        implied = sub * cell_area_m2()[r0:r1, None]  # area varies by row, not column
+        lo, hi = _OUTLET_AREA_BAND
+        rs, cs = np.where((implied >= lo * expected_area_m2) & (implied <= hi * expected_area_m2))
+        if rs.size == 0:  # one deliberate relaxation before giving up
+            rs, cs = np.where(
+                (implied >= lo / _OUTLET_WIDEN * expected_area_m2) & (implied <= hi * _OUTLET_WIDEN * expected_area_m2)
+            )
+            if rs.size:
+                print(f"  [warn] outlet at pixel ({col},{row}) only matched the widened area band; nearest implied "
+                      f"{implied[rs, cs].min() / expected_area_m2:.2f}x-{implied[rs, cs].max() / expected_area_m2:.2f}x expected.")
+        if rs.size == 0:
+            best = implied.max() / expected_area_m2
+            raise ValueError(
+                f"no outlet within {R} cells of pixel ({col},{row}) has a drainage compatible with the known basin "
+                f"area {expected_area_m2 / 1e6:.1f} km2 (best candidate {best:.1f}x). The D8 network and the basin "
+                f"polygon disagree here; refusing to snap to the wrong stream."
+            )
+
     cc, rr = cs + c0, rs + r0
     j = int(np.argmin((cc - col) ** 2 + (rr - row) ** 2))
     return int(cc[j]), int(rr[j])
@@ -256,16 +298,19 @@ def _build_flow_field(direction: np.ndarray, col: int, row: int) -> np.ndarray:
     return dist
 
 
-def flow_distance_field_ll(lat: float, lon: float) -> np.ndarray:
-    """Per-cell flow distance (m) to the outlet of the sensor at (lat, lon). Cached per rounded (lat, lon). Raises ValueError if the sensor is outside the raster extent."""
-    key = (round(lat, 6), round(lon, 6))
+def flow_distance_field_ll(lat: float, lon: float, expected_area_m2: float | None = None) -> np.ndarray:
+    """Per-cell flow distance (m) to the outlet of the sensor at (lat, lon). Raises ValueError if the sensor is outside the raster extent, or if `expected_area_m2` is given and no nearby outlet has a compatible drainage.
+
+    `expected_area_m2` is the site's KNOWN basin area, which constrains pour-point snapping -- see _snap_outlet for what it fixes. It is part of the cache key because it changes the outlet and therefore the whole field: a caller that has an area and one that does not must not share an entry, and within one build both happen (make_aux materialises every parent's basin area before its flow loop, and computing that area can itself build a grid through this function).
+    """
+    key = (round(lat, 6), round(lon, 6), None if expected_area_m2 is None else round(float(expected_area_m2), 3))
     if key in _FLOW_FIELD_CACHE:
         return _FLOW_FIELD_CACHE[key]
     direction = load_direction_array()
     col, row = ll_to_image_pixel(lat, lon)
     if not (0 <= col < W and 0 <= row < H):
         raise ValueError(f"sensor ({lat}, {lon}) is outside the D8 raster extent.")
-    ocol, orow = _snap_outlet(direction, col, row)
+    ocol, orow = _snap_outlet(direction, col, row, expected_area_m2)
     field = _build_flow_field(direction, ocol, orow)
     _FLOW_FIELD_CACHE[key] = field
     return field

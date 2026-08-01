@@ -11,8 +11,10 @@ A build may instead return a MaskedSweep (kind='masked'): ONE wide recipe plus t
     python run_exp.py --summary           # Question / Winner / Results for the latest of each
 """
 
+from functools import lru_cache
 from typing import cast
 
+import networkx as nx
 import numpy as np
 import pandas as pd
 
@@ -46,7 +48,10 @@ from src.features.recipes import (  # shipped geometry + the shipped recipe
 _HIST_VEL = 2.1
 from src.data.access import (  # in lockstep with the accessors
     _COMID_ATTR_COLS,
+    _PROC_MAP,
     _WEATHER_COLS,
+    _basin_comid,
+    get_basin,
     get_basin_area,
     get_basin_graph,
     get_crops,
@@ -914,3 +919,247 @@ def _nbr_both_dist(task):
 
 experiment(id="36", question=_Q_NEIGHBOR_DIST, task="reg", kind="masked")(_nbr_both_dist)
 experiment(id="36c", question=_Q_NEIGHBOR_DIST, task="clf", kind="masked")(_nbr_both_dist)
+
+
+# ── exp 37 / 37c: a basin-local nitrate pool, the donor's long-run LEVEL, and stream position ─────
+# See notes/plan_exp37_basin_pool.md for the full case, the measured graph facts and the read order.
+#
+# WHAT 33-36c LEFT OUT. Every column those experiments added is either a deviation from the statewide daily mean -- mean-zero per site by construction, so it can only move the TIMING channel -- or a coverage scalar. `nbr_level_lag1` was the single column aimed at the between-site channel. exp 37 adds the other half: the donor's and the basin's long-run nitrate LEVEL, plus a basin-local replacement for the statewide pooled scalar. Judge it on lofo_between_r2 / lofo_between_rate_r2 FIRST; the manifest's REG between-channel add floor is 0.0258, which is large.
+#
+# THE POOL. `rest_of_basin` is the unweighted daily mean over every OTHER cohort site in the modelled site's connected component of the containment graph, always excluding the modelled site. Coverage is 102/116 (88%) with a median of 14 pool-mates -- identical to donor coverage, because a site has a pool-mate exactly when it has a donor, so the pool buys DEPTH and not reach. 8 sites sit in 2-site components where the pool IS the donor: there `nbr_avg_nitrate == rest_of_basin_nitrate_avg` and the anomaly is identically 0. Accepted, not worked around -- excluding the donor from its own baseline would trade a constant for a NaN on exactly those sites, and _except_this_mean already declines to exclude the donor for the same reason.
+#
+# CAUSALITY. The four quantities the request called "static" all read the future as literally specified: an all-time mean covers the evaluation window and a same-calendar-year mean peeks up to twelve months forward. Each ships in a causal form (expanding over years STRICTLY BEFORE this row's year; or the PREVIOUS calendar year) mirrored by a peeking `_pk` twin that exists only as a ceiling arm -- the same framing nbr_all / nbr_all_no_lag0 uses for lag0. Note what that costs: the causal "static" is not static, it is a stepwise series with one step per calendar year, and the true one-value-per-site version survives only as `_pk`.
+#
+# LEAKAGE EXPOSURE. LOFO groups are conflict components -- containment AND temporal overlap -- so they refine containment components, and 77 of 557 within-component site pairs (14%) land in different folds. Those pairs do not overlap in time, so no daily column can leak across them; only the long-run statics can, and only weakly. Not fixable inside this design; it belongs in the write-up.
+#
+# STREAM POSITION rides along in every arm but `base` and has nothing to do with the network -- see _NEW_COLS["stream"].
+_Q_BASIN_POOL = (
+    "Beyond the donor's day-to-day deviations, does a basin-local nitrate POOL and the donor's "
+    "long-run LEVEL predict a site -- i.e. does the between-site channel move when the model is told "
+    "how much nitrate its hydrological neighbourhood actually carries -- and how much of that survives "
+    "being made causal?"
+)
+
+_BASIN_LAGS = (1, 3)  # matches _CROSS_SITE_LAGS_*, so the local pool is the statewide scalar's like-for-like
+
+# The new block by drop unit, one source of truth: _basin_pool_block fills exactly these and `masks` classifies by exact membership, so a name cannot drift between the emitter and the arm it belongs to. Same contract as _NBR_COLS.
+#
+# `stream` is the odd one out -- it is island-legal (no donor, no pool, 116/116 coverage) and is here only because it is a static the recipe does not carry yet. It sits in every arm except `base`, which is exactly why `base_stream` exists: ride-along columns that no arm isolates are unmeasurable, and every network arm below is read against `base_stream` so the block cancels out of the comparisons that are about the network.
+#
+# WHICH stream column. NHDPlus carries two and they run opposite ways: StreamOrde is Strahler (1 = tiny headwater, rising downstream), StreamLeve is stream level (1 = mainstem, +1 per tributary step). They are only rho = -0.51 with each other. Both go in because Spearman(StreamOrde, log_basin_area) = 0.940 over this cohort -- Strahler order is very nearly a monotone recoding of a column the base already holds, exactly the collinearity notes/future-work-report.md R10 predicted and left unverified, while StreamLeve is only -0.53 and encodes network POSITION rather than size. Read the two permutation importances separately.
+_NEW_COLS = {
+    "stream": ["stream_order", "stream_level"],
+    "basin_dyn": [f"rest_of_basin_nitrate_lag{k}" for k in _BASIN_LAGS],
+    "basin_stat": ["rest_of_basin_nitrate_avg", "rest_of_basin_nitrate_avg_yearly"],
+    "nbr_stat": ["nbr_avg_nitrate", "nbr_avg_nitrate_yearly"],
+    "nbr_anom_stat": ["nbr_avg_nitrate_anom", "nbr_avg_nitrate_anom_yearly"],
+    # the peeking twins of the six above -- ceiling arms only, never a shipping candidate
+    "peek": [
+        "rest_of_basin_nitrate_avg_pk",
+        "rest_of_basin_nitrate_avg_yearly_pk",
+        "nbr_avg_nitrate_pk",
+        "nbr_avg_nitrate_yearly_pk",
+        "nbr_avg_nitrate_anom_pk",
+        "nbr_avg_nitrate_anom_yearly_pk",
+    ],
+}
+
+# The one-hop donor exp 37 reads: ONE neighbour, either direction, ranked on closeness in drainage scale -- i.e. exp 34's encoding, so 37's `base` arm is the same columns, rows and folds as 34/34c's and the two must score identically.
+_BASIN_POOL_VARIANT = "flag"
+
+
+@lru_cache(maxsize=1)
+def _flowline_vaa():
+    """COMID -> (StreamOrde, StreamLeve) for the whole flowlines layer.
+
+    Column-pruned: pyarrow reads three columns out of the 130-column, 276 MB GeoParquet, so the geometry and the ~120 unused VAA fields never materialize. access.get_flowlines() would read all of it. Deduplicated on COMID (the layer carries 2 duplicate rows out of 309,682).
+    """
+    vaa = pd.read_parquet(_PROC_MAP / "iowa_flowlines.parquet", columns=["COMID", "StreamOrde", "StreamLeve"])
+    return vaa.drop_duplicates("COMID").set_index("COMID")
+
+
+@lru_cache(maxsize=None)
+def _stream_position(site_uid):
+    """{stream_order, stream_level} for the reach the sensor sits on; NaN pair for anything unresolvable.
+
+    COMID via the preferred basin, the same route get_comid_attributes takes for tot_bfi / tot_contact, so a pin gets it from its snapped basin with no extra work. Never raises -- a COMID outside the layer degrades to NaN features, matching get_comid_attributes.
+    """
+    nan = {"stream_order": np.nan, "stream_level": np.nan}
+    try:
+        comid = _basin_comid(get_basin(site_uid))
+    except (FileNotFoundError, KeyError):
+        return nan
+    vaa = _flowline_vaa()
+    if comid is None or comid not in vaa.index:
+        return nan
+    row = vaa.loc[comid]
+    return {"stream_order": float(row["StreamOrde"]), "stream_level": float(row["StreamLeve"])}
+
+
+@lru_cache(maxsize=None)
+def _components(immediate=True):
+    """(comp_of, sums, counts) for the containment components -- the basin pool's O(1)-per-site setup.
+
+    comp_of maps a site to its component id; sums/counts are that component's row sum and non-null count over _state_daily_wide, so a member's pool is (sums - own) / (counts - own.notna()), the same subtract-your-own-column trick _anom_baseline uses statewide. Memoized on `immediate` alone because the components are cohort-level; the returned objects are SHARED, treat as read-only.
+
+    A singleton component needs no special case: subtracting the one member leaves count 0 everywhere, which is NaN, which is the honest answer.
+    """
+    graph = get_basin_graph(immediate_only=immediate)
+    wide = _state_daily_wide()
+    comp_of, sums, counts = {}, {}, {}
+    for cid, comp in enumerate(nx.connected_components(graph.to_undirected())):
+        members = [c for c in comp if c in wide.columns]
+        if not members:
+            continue
+        block = wide[members]
+        sums[cid], counts[cid] = block.sum(axis=1), block.notna().sum(axis=1)
+        for m in members:
+            comp_of[m] = cid
+    return comp_of, sums, counts
+
+
+def _basin_pool(site_uid, wide, comp_of, sums, counts):
+    """Daily mean over the OTHER cohort sites in this site's containment component; all-NaN where it has none."""
+    cid = comp_of.get(site_uid)
+    if cid is None:
+        return pd.Series(np.nan, index=wide.index)
+    tot, n = sums[cid], counts[cid]
+    if site_uid in wide.columns:
+        own = wide[site_uid]
+        tot, n = tot - own.fillna(0.0), n - own.notna()
+    return tot / n.where(n > 0)
+
+
+def _year_stats(s, years, stem):
+    """(year-keyed frame of the three per-year columns, {f'{stem}_pk': all-time mean}) for one daily series.
+
+    DAY-weighted throughout, never a mean of yearly means: `stem` is the mean over every observed day in the years strictly before this row's year, `{stem}_yearly` the mean over the previous calendar year, `{stem}_yearly_pk` the mean over THIS year (peeking), and `{stem}_pk` the all-time scalar (peeking). An all-NaN input gives all-NaN out, which is how a site with no pool or no donor gets its columns.
+
+    `years` must be CONTIGUOUS: the two causal columns are a one-position shift, so a gap year missing from the index would shift by more than a year and silently mis-date every value after it.
+    """
+    v = s.dropna()
+    g = v.groupby(v.index.year)
+    tot = g.sum().reindex(years, fill_value=0.0)
+    n = g.size().reindex(years, fill_value=0)
+    per_year = tot / n.where(n > 0)
+    cum_tot, cum_n = tot.cumsum().shift(1), n.cumsum().shift(1)
+    frame = pd.DataFrame(
+        {
+            stem: cum_tot / cum_n.where(cum_n > 0),
+            f"{stem}_yearly": per_year.shift(1),
+            f"{stem}_yearly_pk": per_year,
+        },
+        index=pd.Index(years, name="year"),
+    ).reset_index()
+    return frame, {f"{stem}_pk": float(v.mean()) if len(v) else np.nan}
+
+
+def _basin_pool_block(site_uid, best, wide, comp_of, sums, counts, years):
+    """(date-keyed frame, year-keyed frame, static scalar dict) carrying the exp-37 block for one site.
+
+    `best` is the single donor _best_either resolved, or None. Every column in _NEW_COLS is emitted on every path, NaN-filled where the site has no pool or no donor -- same reason as _neighbor_block: omitting them leaves the pool ragged, and on a slice where nobody has a neighbour they vanish entirely and every arm silently collapses to `base`.
+
+    The anomaly is the donor MINUS the basin pool, reduced over time -- a LOCAL baseline, unlike nbr_anom_lag*, which deviates from the statewide mean. On a 2-site component the pool is the donor and this is identically 0.
+    """
+    pool = _basin_pool(site_uid, wide, comp_of, sums, counts)
+    donor = wide[best] if best is not None and best in wide.columns else pd.Series(np.nan, index=wide.index)
+
+    daily = pd.concat(
+        {f"rest_of_basin_nitrate_lag{k}": pool.asfreq("D").shift(k) for k in _BASIN_LAGS}, axis=1
+    ).rename_axis("date").reset_index()
+
+    frames, stats = [], {}
+    for series, stem in ((pool, "rest_of_basin_nitrate_avg"), (donor, "nbr_avg_nitrate"), (donor - pool, "nbr_avg_nitrate_anom")):
+        frame, stat = _year_stats(series, years, stem)
+        frames.append(frame)
+        stats.update(stat)
+    yearly = frames[0]
+    for f in frames[1:]:
+        yearly = yearly.merge(f, on="year", how="outer")
+    return daily, yearly, stats
+
+
+def _basin_pool_ablation(task):
+    """The shipped recipe plus exp 34's donor block, the basin-pool / long-run-level block, and stream position -- ablated one unit at a time.
+
+    Row-identical to _neighbor_ablation(task, 'flag'): the same shipped recipe on the same spine, with columns added and none removed, so 37's `base` arm must score exactly what 34/34c's does. Run them in one invocation and check it -- it is a free correctness test on the merge.
+
+    Masks are a callable of the pool for the same reason as exps 32 and 33: the baseline is whatever the shipped recipe currently emits, so deriving base as (pool columns - managed columns) cannot drift when recipes.py changes.
+    """
+    rule = _VARIANT_RULE[_BASIN_POOL_VARIANT]
+    select = rule["select"]
+    shipped = recipe_maker(task, window=1)
+    graph = get_basin_graph(immediate_only=rule["immediate"])
+    areas = {s: get_basin_area(s) for s in graph.nodes}
+    wide = _state_daily_wide()
+    sums, counts = _anom_baseline(wide)
+    spine = pd.date_range(wide.index.min(), wide.index.max(), freq="D")
+    years = range(int(spine.year.min()), int(spine.year.max()) + 1)  # contiguous -- see _year_stats
+    comp_of, comp_sums, comp_counts = _components(rule["immediate"])
+
+    def wide_recipe(site_uid):
+        df = shipped(site_uid)
+        nbr_frame, nbr_stats = _neighbor_block(
+            site_uid, graph, areas, wide, sums, counts, spine, _BASIN_POOL_VARIANT, select
+        )
+        # The same donor _neighbor_block picked internally, resolved again rather than returned: exps 33-36c depend on that function byte-for-byte, and re-running two cheap graph lookups is a better trade than changing its signature.
+        best_up, best_down, _, _ = _best_neighbors(site_uid, graph, areas, select)
+        best, _is_up = _best_either(site_uid, best_up, best_down, areas)
+        daily, yearly, pool_stats = _basin_pool_block(site_uid, best, wide, comp_of, comp_sums, comp_counts, years)
+        df = merge_on_date([df, nbr_frame, daily, yearly], spine=pd.DatetimeIndex(df["date"]))
+        for k, v in {**nbr_stats, **pool_stats, **_stream_position(site_uid)}.items():
+            df[k] = v  # static per site -> broadcast
+        return df
+
+    def masks(pool):
+        spec = _NBR_COLS[_BASIN_POOL_VARIANT]
+        missing = [c for block in (*spec.values(), *_NEW_COLS.values()) for c in block if c not in pool.columns]
+        if missing:  # every arm would silently collapse to `base` -- see _neighbor_block
+            raise RuntimeError(f"exp basin_pool[{task}]: {len(missing)} column(s) absent from the pool: {missing}")
+        drop = set(_STRUCTURAL) | {"nitrate_con", "violation"}
+        cols = [c for c in pool.columns if c not in drop]
+        old = {k: [c for c in cols if c in set(v)] for k, v in spec.items()}
+        new = {k: [c for c in cols if c in set(v)] for k, v in _NEW_COLS.items()}
+        managed = {c for v in (*old.values(), *new.values()) for c in v}
+        base = [c for c in cols if c not in managed]
+
+        stream = new["stream"]
+        cover = old["cover"]
+        nolag0 = sorted({c for v in old.values() for c in v} - set(old["concurrent"]))
+        bd = new["basin_dyn"]
+        stat = new["basin_stat"] + new["nbr_stat"] + new["nbr_anom_stat"]
+        peek = new["peek"]
+        # COVERAGE-CONFOUNDED PAIR. Measured over the cohort, the expanding columns carry a value on 68% of pooled rows (86 sites) against the yearly ones' 49% (71 sites): donor records often do not overlap the target's rows in calendar time at all -- USGS-05420400 is gauged 2021-2026 behind a donor that ran 2014-2018 -- so the yearly column is NaN where the expanding one still reaches back. 16 sites are in exactly that state. The gap between these two arms is therefore part resolution and part coverage; check the 71 sites where both are populated before reading it as either.
+        alltime = [c for c in stat if not c.endswith("_yearly")]
+        yearly = [c for c in stat if c.endswith("_yearly")]
+        # Prefix-matched, unlike the neighbour blocks: these two names are unambiguous stems with no suffixed relatives to swallow, so matching them beats restating recipes._CROSS_SITE_LAGS_* / _CROSS_SITE_ROLL_* and letting the copy drift.
+        statewide = [c for c in base if c.startswith("rest_of_state_nitrate_lag")]
+        rolling = [c for c in base if c.startswith("roll_n_avg_except_this")]
+        without = lambda gone: [c for c in base if c not in set(gone)]
+
+        # STREAM is in every arm but `base`, so it cancels out of every comparison between two arms below and only `base_stream` vs `base` prices it. Read the network arms against base_stream.
+        return {
+            "base": base,
+            "base_stream": base + stream,
+            "nbr_coverage": base + stream + cover,
+            "nbr_all_no_lag0": base + stream + nolag0,
+            "nbr_coverage_new": base + stream + cover + bd + stat,
+            "nbr_all_no_lag0_new": base + stream + nolag0 + bd + stat,
+            "new_only": base + stream + bd + stat,
+            # No column keyed to a donor's DAILY reading -- but the base still carries the statewide lags and rollings, which do need live telemetry, so this is 'no donor feed', NOT 'no live feed'.
+            "new_static_only": base + stream + stat,
+            # The strict version, and the only arm that REMOVES base columns: read its delta against `base`, not against its neighbours in this table.
+            "new_static_no_livefeed": without(statewide + rolling) + stream + stat,
+            "basin_lags_add": base + stream + bd,
+            "basin_lags_swap": without(statewide) + stream + bd,
+            "new_alltime_only": base + stream + alltime,
+            "new_yearly_only": base + stream + yearly,
+            "new_only_pk": base + stream + bd + peek,
+            "nbr_all_no_lag0_new_pk": base + stream + nolag0 + bd + peek,
+        }
+
+    return MaskedSweep(wide=wide_recipe, masks=masks, base_cols=lambda pool: masks(pool)["base"])
+
+
+experiment(id="37", question=_Q_BASIN_POOL, task="reg", kind="masked")(_basin_pool_ablation)
+experiment(id="37c", question=_Q_BASIN_POOL, task="clf", kind="masked")(_basin_pool_ablation)
