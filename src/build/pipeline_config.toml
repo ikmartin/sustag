@@ -12,9 +12,22 @@
 # covariate_bbox is DERIVED (the box enclosing every delineated basin + bbox_wgs84) and written
 # here by _make_region AFTER basins are built; covariate builders read it via get_covariate_bbox().
 # It is absent until the first basin build; get_covariate_bbox() falls back to bbox_wgs84.
+#
+# The three AOE boxes below are for the NEW pipeline (src/build2) and are read by nothing today. They define the area of interest as the union of three regions, computed from the reach network within 250 km of FLOW distance -- upstream and downstream -- of an in-situ nitrate sensor, which is the deployment reach: how far along the network from a real sensor we would place a virtual one. Derived once by experiments/research/aoe-boxes on 2026-08-12 against all 235 CONUS sensors (pcodes 99133 + 99137 + 00630); they are a stored constant, not recomputed per build.
+#
+#   cornbelt      120 sensors, 318,813 reaches, 1.939M km2
+#   ne             53 sensors,  89,428 reaches, 0.665M km2   Chesapeake + Delaware, HUC 0204-0208
+#   mississippi    11 sensors,  32,573 reaches, 0.200M km2   lower Mississippi / Yazoo
+#
+# Deliberately EXCLUDED, 48 sensors: Florida (karst spring runs and EAA canals -- median nitrate 0.25 mg/L, and none of the 20 sites has ever reached the 10 mg/L MCL), the Sacramento-San Joaquin Delta (tidal, so flow direction reverses and the directed reach graph is undefined), Texas, and everything west of Colorado.
+#
+# cornbelt and mississippi OVERLAP in roughly lon -92.16..-89.14, lat 34.92..35.88. Consumers must union the boxes (or dedupe on grid cell / COMID) rather than summing per-box downloads.
 [region]
 bbox_wgs84 = [-97.6, 39.8, -89.5, 44.5]
 covariate_bbox = [-100.158, 39.75, -85.839, 47.885]
+cornbelt_bbox = [-100.272, 34.916, -81.192, 45.744]
+ne_bbox = [-80.672, 36.684, -70.41, 43.565]
+mississippi_bbox = [-92.158, 29.481, -89.144, 35.876]
 
 # ── crops pipeline ───────────────────────────────────────────────────────────
 [crops]

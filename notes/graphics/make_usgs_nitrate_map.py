@@ -1,8 +1,11 @@
 """Map every USGS continuous (in-situ) nitrate sensor in the continental US.
 
-    python notes/graphics/make_usgs_nitrate_map.py
+    python notes/graphics/make_usgs_nitrate_map.py             # uses the cached site list
+    python notes/graphics/make_usgs_nitrate_map.py --refresh   # re-fetch from NWIS
 
-Enumerates USGS instantaneous-value stream sites carrying pcode 99133 across the 48 states + DC, clips to CONUS, and renders to usgs_nitrate_sensors_conus.png. Re-run to refresh; the site list is live and drifts as sensors are commissioned and retired.
+Enumerates USGS instantaneous-value stream sites carrying any of the THREE continuous-nitrate pcodes across the 48 states + DC, clips to CONUS, and renders to usgs_nitrate_sensors_conus.png. The site list is live and drifts as sensors are commissioned and retired.
+
+USGS codes continuous nitrate under 99133, 99137 and 00630, and which one a site files under is a per-network convention rather than a property of the data. Querying 99133 alone does not thin a network, it DELETES it: a 99133-only query returns zero Nebraska sites, while 00630 returns five. Any single-pcode nitrate query is wrong.
 
 DESIGN NOTES, so a later edit does not undo them:
   * ONE SERIES, so no legend -- the title names what the dots are. A legend box for a single category is noise.
@@ -13,6 +16,7 @@ DESIGN NOTES, so a later edit does not undo them:
 
 from __future__ import annotations
 
+import argparse
 import io
 import time
 import urllib.request
@@ -34,24 +38,31 @@ ALBERS = "EPSG:5070"  # NAD83 / Conus Albers -- equal-area, so cluster density i
 
 CONUS = ("al az ar ca co ct de fl ga id il in ia ks ky la me md ma mi mn ms mo mt ne nv nh nj nm ny "
          "nc nd oh ok or pa ri sc sd tn tx ut vt va wa wv wi wy dc").split()
+PCODES = ["99133", "99137", "00630"]  # all three continuous-nitrate codes -- see module docstring
 _URL = ("https://waterservices.usgs.gov/nwis/site/?format=rdb&stateCd={st}&siteType=ST"
-        "&hasDataTypeCd=iv&parameterCd=99133&siteStatus=all")
+        "&hasDataTypeCd=iv&parameterCd={pc}&siteStatus=all")
 
 
 def fetch_sites() -> pd.DataFrame:
+    """One query per (state, pcode); union on site_no. `pcodes` records which codes a site files under."""
     rows = []
     for st in CONUS:
-        try:
-            raw = urllib.request.urlopen(_URL.format(st=st), timeout=90).read().decode(errors="replace")
-        except Exception:
-            continue
-        lines = [l for l in raw.splitlines() if l and not l.startswith("#")]
-        if len(lines) < 3:
-            continue
-        d = pd.read_csv(io.StringIO("\n".join([lines[0]] + lines[2:])), sep="\t", dtype=str)
-        rows.append(d.dropna(subset=["dec_lat_va", "dec_long_va"]).assign(state=st))
-        time.sleep(0.25)
-    d = pd.concat(rows, ignore_index=True).drop_duplicates("site_no")
+        for pc in PCODES:
+            try:
+                raw = urllib.request.urlopen(_URL.format(st=st, pc=pc), timeout=90).read().decode(errors="replace")
+            except Exception:
+                continue
+            lines = [l for l in raw.splitlines() if l and not l.startswith("#")]
+            if len(lines) < 3:
+                continue
+            d = pd.read_csv(io.StringIO("\n".join([lines[0]] + lines[2:])), sep="\t", dtype=str)
+            rows.append(d.dropna(subset=["dec_lat_va", "dec_long_va"]).assign(state=st, pcode=pc))
+            time.sleep(0.25)
+    d = pd.concat(rows, ignore_index=True)
+    pc_by_site = d.groupby("site_no")["pcode"].apply(lambda s: "+".join(sorted(set(s))))
+    d = d.drop_duplicates("site_no").set_index("site_no")
+    d["pcodes"] = pc_by_site
+    d = d.reset_index()
     d["lat"] = pd.to_numeric(d.dec_lat_va, errors="coerce")
     d["lon"] = pd.to_numeric(d.dec_long_va, errors="coerce")
     d = d.dropna(subset=["lat", "lon"])
@@ -59,9 +70,15 @@ def fetch_sites() -> pd.DataFrame:
 
 
 def main():
-    d = pd.read_parquet(SITES) if SITES.exists() else fetch_sites()
-    if not SITES.exists():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--refresh", action="store_true", help="re-fetch the site list from NWIS")
+    args = ap.parse_args()
+
+    if args.refresh or not SITES.exists():
+        d = fetch_sites()
         d.to_parquet(SITES, index=False)
+    else:
+        d = pd.read_parquet(SITES)
     states = gpd.read_file(STATES)
     states = states[~states.name.isin(["Alaska", "Hawaii", "Puerto Rico"])].to_crs(ALBERS)
     pts = gpd.GeoDataFrame(d, geometry=gpd.points_from_xy(d.lon, d.lat), crs="EPSG:4326").to_crs(ALBERS)
@@ -83,12 +100,13 @@ def main():
     fig.text(0.045, 0.955, "USGS continuous nitrate sensors, continental United States",
              fontsize=15, color=INK, weight="bold", va="top")
     fig.text(0.045, 0.900,
-             f"{len(d)} in-situ stream sensors reporting nitrate (parameter 99133) across {d.state.nunique()} states.  "
+             f"{len(d)} in-situ stream sensors reporting nitrate (parameters 99133, 99137, 00630) "
+             f"across {d.state.nunique()} states.  "
              f"Densest: {', '.join(f'{s} {n}' for s, n in top.head(4).items())}.",
              fontsize=9.5, color=INK_2, va="top")
     fig.text(0.045, 0.045,
-             "Source: USGS NWIS site service, hasDataTypeCd=iv, siteType=ST.  Retrieved 2026-07-30.  "
-             "Equal-area projection (EPSG:5070).",
+             "Source: USGS NWIS site service, hasDataTypeCd=iv, siteType=ST, all three continuous-nitrate "
+             "parameter codes.  Equal-area projection (EPSG:5070).",
              fontsize=7.5, color=MUTED, va="bottom")
 
     fig.subplots_adjust(left=0.02, right=0.98, top=0.86, bottom=0.08)

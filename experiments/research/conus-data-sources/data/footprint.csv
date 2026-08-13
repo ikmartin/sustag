@@ -1,0 +1,12 @@
+source,scales,gb,note
+CDL national,no,0.0,deleted after clipping (regenerable)
+gTREND surplus national,no,4.7,already national on disk
+gTREND fertiliser national,no,0.431,already national on disk
+AgTile national,no,0.12,already national on disk
+gridMET raw (NetCDF cache),yes,0.0,deleted after clipping (regenerable)
+CDL clipped,yes,4.014652916026493,3.4 GB at the current 1.03M km2
+interim per-cell tables,yes,6.494291481807561,5.5 GB at the current 1.03M km2
+NWM daily aggregate (sites),yes,0.0315576,0.4k COMIDs x 6574 days x 3 stats x 4B
+Wieczorek attrs (~6.5k after excl.),yes,10.914700169464862,CAT+ACC+TOT minus Climate Water Balance
+StreamCat (~500 values/COMID),yes,0.8395923207280662,168 metrics x AOI x vintages
+NHDPlus VAA + flowlines,yes,0.16791846414561326,~100 columns

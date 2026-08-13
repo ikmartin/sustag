@@ -1,0 +1,11 @@
+source,route
+NHDPlus VAA,"pynhd.nhdplus_vaa()  -- library call, not a URL. HydroShare content path 301->405"
+Wieczorek attributes,"pynhd.nhdplus_attrs_s3()  -- 14,139 attrs from S3. ScienceBase route times out / 502"
+NADP TDep,"https://gaftp.epa.gov/castnet/tdep/CURRENT_grids/  -- bc_dw-YYYY.zip, GeoTIFF 2000-2022"
+Heidelberg NCWQR HTLP,"https://ncwqr-data.org/  (portal, 200) + Zenodo doi:10.5281/zenodo.6606949 (API 403 to bots)"
+CAMELS-Chem,HydroShare 841f5e85085c423f889ac809c1bed4ac -- the id previously tried was wrong
+MPCA nitrate network,"https://www.pca.state.mn.us/air-water-land-climate/continuous-nitrate-sensor-network; series hosted on MN DNR CSG, https://www.dnr.state.mn.us/waters/csg/site.html?id=<id>"
+Water Quality Portal,works -- needs >30 s timeout. IA nitrate stations = 1.4 MB in 27.6 s
+SMAP,https://cmr.earthdata.nasa.gov/search/collections.json?short_name=SPL4SMGP  (NSIDC host refused)
+gNATSGO,largely SUPERSEDED -- the Soils theme below is COMID-keyed already
+CropScape GetCDLFile,"UNRESOLVED -- 40 s timeout; the repo's own client works, so treat as slow not broken"
