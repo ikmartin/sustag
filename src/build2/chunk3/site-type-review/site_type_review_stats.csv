@@ -1,0 +1,25 @@
+site_uid,station_name,site_type,site_type_source,site_type_conflict,ambiguity,FTYPE,WBAreaType,Tidal,snap_dist_m
+USGS:3004510895507,"I-10 Drainge Canal near Little Woods, LA",lake,nhd_waterbody,,promote,,,,
+USGS:03318000,"ROUGH RIVER NEAR FALLS OF ROUGH, KY",stream,usgs_site_type,nhd_waterbody,conflict_waterbody,,,,
+USGS:04182830,"MAUMEE RIVER AT COLUMBIA ST AT FORT WAYNE, IN",stream,usgs_site_type,nhd_waterbody,conflict_waterbody,,,,
+USGS:04182900,"MAUMEE RIVER AT FORT WAYNE, IN",stream,usgs_site_type,nhd_waterbody,conflict_waterbody,,,,
+USGS:05560000,"ILLINOIS RIVER AT PEORIA, IL",stream,usgs_site_type,nhd_waterbody,conflict_waterbody,,,,
+USGS:073802305,"(COE) Lake Pontchartrain at Frenier, LA",stream,usgs_site_type,nhd_waterbody,conflict_waterbody,,,,
+USGS:300830089515000,"Little Irish Bayou at Hwy 11 near Slidell, LA",stream,usgs_site_type,nhd_waterbody,conflict_waterbody,,,,
+IWQIS:WQS0052,McLoud Run at Cedar Rapids (52MRCR),stream,human_review,,reviewed,StreamRiver, ,0.0,1993.44
+IWQIS:WQS0116,Iowa Great Lakes 1 at Spirit Lake (116IGL1),lake,human_review,,reviewed,ArtificialPath,LakePond,0.0,60.88
+USGS:01408500,Toms River near Toms River NJ,stream,human_review,,reviewed,StreamRiver, ,1.0,23.73
+USGS:01463500,Delaware River at Trenton NJ,stream,human_review,,reviewed,ArtificialPath,StreamRiver,1.0,167.46
+USGS:01467200,"Delaware River at Penn's Landing, Philadelphia, PA",stream,human_review,,reviewed,ArtificialPath,StreamRiver,1.0,277.54
+USGS:01474500,"Schuylkill River at Philadelphia, PA",stream,human_review,,reviewed,ArtificialPath,StreamRiver,1.0,91.49
+USGS:01477050,DELAWARE RIVER AT CHESTER PA,stream,human_review,,reviewed,ArtificialPath,StreamRiver,1.0,652.79
+USGS:01491000,"CHOPTANK RIVER NEAR GREENSBORO, MD",stream,human_review,,reviewed,StreamRiver, ,1.0,37.23
+USGS:01576003,"Susquehanna River at Columbia, PA",stream,human_review,,reviewed,ArtificialPath,LakePond,0.0,92.52
+USGS:01579550,"SUSQUEHANNA RIVER NEAR DARLINGTON, MD",stream,human_review,,reviewed,ArtificialPath,StreamRiver,1.0,475.51
+USGS:01594441,Patuxent R at Gov Bridge Natural Area nr Bowie MD,stream,human_review,,reviewed,StreamRiver, ,1.0,4.2
+USGS:04182867,"MAUMEE RIVER AT TECUMSEH STREET AT FORT WAYNE, IN",stream,human_review,,reviewed,ArtificialPath,LakePond,0.0,8.8
+USGS:07374000,"Mississippi River at Baton Rouge, LA",stream,human_review,,reviewed,ArtificialPath,StreamRiver,1.0,431.46
+USGS:07381600,"Lower Atchafalaya River at Morgan City, LA",stream,human_review,,reviewed,ArtificialPath,StreamRiver,1.0,50.76
+USGS:300138090064700,"New Canal Lighthouse at New Orleans, LA",estuary,human_review,,reviewed,ArtificialPath, ,1.0,1562.88
+USGS:384637075153201,Ng45-02,well,human_review,,reviewed,StreamRiver, ,1.0,84.3
+USGS:411955088280601,"HANSON GRAVEL PIT AT CULVERT NEAR MORRIS, IL",stream,human_review,,reviewed,StreamRiver, ,0.0,193.93

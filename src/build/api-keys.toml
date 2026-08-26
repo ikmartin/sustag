@@ -1,5 +1,13 @@
 # USGS api key
 usgs = "6LDLPN4q8kLDtCqdknbr7OTh0zt0eo1FyaONfoJm"
+usgs2 = "jLFeqO0R1ibOSIniafKGJYyauGffsCCH8136Ygcf"
+usgs3 = "Rv2SmVEEVO2eeIZQVaibquMAwdW4FhIUewalUAwG"
+usgs4 = "m812C8w4hSEuhT3NoJmj2iQQtDFaowp5vGjCCH3B"
+usgs5 = "WlfTCErFChx83Tg4v9tjodm5xT8JgvAPDDWLG0zC"
+usgs6 = "oKq1JoJbPhFA41Nlrklg5hMSNJfqEKnwaP0vdzMw"
+usgs7 = "gkUcch2bCJRXqMUNdnWgBWmb9ScxGKaohrMcZHKi"
+usgs8 = "NbgD3JK5uKeTJz4KAedwHHaNXSaVjYPHF5HJ047L"
+usgs9 = "5rLkhXHBrxZTwQmW1zSCmWYDPEWTVAsQkx8xzkkX"
 
 # NASS Quickstats
 nass_quickstats = "D010FDD0-1F8C-3CCA-8BFA-7345E97BD987"

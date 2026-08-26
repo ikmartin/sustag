@@ -1,0 +1,5 @@
+Row,source,snapshot_pair,diff_id,decision,decided_by,note,criterion_version,class
+1,network,snap-20260825-adopt..snap-20260825,acquired/network/waterbodies.parquet.stamps.json,accept,isaac,,,removed
+2,water,snap-20260825-adopt..snap-20260825,acquired/water/fetch_status.parquet,accept,isaac,,,removed
+3,network,snap-20260825-adopt..snap-20260825,acquired/network/waterbodies.parquet,accept,isaac,,,schema_changed
+4,weather,snap-20260825-adopt..snap-20260825,acquired/weather/gridmet_2026Q3.parquet,accept,isaac,,,revised_out_of_window

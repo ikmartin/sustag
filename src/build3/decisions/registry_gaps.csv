@@ -1,0 +1,3 @@
+Row,source,uid,decision,decided_by,note,kind,detail
+1,IWQIS,WQS0127,acknowledged,,,export_not_registry,observations exist; no location -- cannot be registered
+,IWQIS,WQP0016,acknowledged,isaac,waiting repair from IWQIS,export_not_registry,observations exist; no location -- cannot be registered

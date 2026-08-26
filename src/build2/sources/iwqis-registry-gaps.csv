@@ -1,0 +1,2 @@
+uid,first_seen,rows,nitrate,reason
+WQP0016,2026-08-19,14552,13644,"Deployed 2026-04-15; absent from the 2026-06-19 site_clean.csv export. No coordinates, so no registration is possible until IIHR refreshes the registry."

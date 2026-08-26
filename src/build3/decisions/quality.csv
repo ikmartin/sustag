@@ -1,0 +1,11 @@
+1,MPCA:32073001,nitrate,keep,2026-01-01..2026-03-12,40,isaac,,S10595950-03977,quality review,30.96,2026-01-01..2026-03-12
+2,IWQIS:WQS0024,nitrate,keep,2019-03-24..2019-04-16; 2019-09-08..2019-09-17,,isaac,,S6572160-00229,quality review,26.37,2019-03-24..2019-04-16; 2019-09-08..2019-09-17
+3,IWQIS:WQS0032,nitrate,keep,2016-06-17..2016-06-28; 2022-07-06..2022-07-21,25,isaac,,S6621656-01163,quality review,17.82,2016-06-17..2016-06-28; 2022-07-06..2022-07-21
+4,MPCA:51026001,nitrate,keep,,40,isaac,,S6581018-01614,quality review,14.9,
+5,IWQIS:WQS0081,nitrate,keep,2022-11-12..2022-11-21,,isaac,,S6603910-01440,quality review,9.11,2022-11-12..2022-11-21
+6,IWQIS:WQS0039,nitrate,keep,,,isaac,,S6603048-04401,quality review,7.43,
+7,MPCA:40016001,nitrate,keep,,40,isaac,,S2119516-00979,quality review,5.23,
+8,IWQIS:WQS0064,nitrate,keep,,24,isaac,,S13336508-09577,quality review,5.11,
+9,MPCA:41043001,nitrate,keep,2024-11-07..2025-01-01; 2025-12-02..2026-03-10,,isaac,must be cleaned,S2442556-00068,quality review,0.36,
+10,MPCA:32079001,nitrate,keep,,40,isaac,,S10595878-01914,quality review,,
+Row,members,channel,decision,exclude_spans,max_threshold,decided_by,note,site_id,reason,score,proposed_spans

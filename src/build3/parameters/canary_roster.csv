@@ -1,0 +1,5 @@
+site_uid,probe_class,reason
+USGS:423127084321901,groundwater_level_well,"Groundwater-level well: the class the non_surface_no_nitrate skip excludes; proves off-network site handling. ACTIVE 1945..2026, 81-yr record (pcode 72019, cornbelt box) -- replaced the placeholder the API did not know, 2026-08-24; confirm or swap."
+USGS:415457088150600,precipitation_atmosphere,"Atmosphere/precip station probe: proves the atmosphere type path with a record. ACTIVE 1986..2026, 40-yr record (pcode 00045, cornbelt box) -- replaced the placeholder the API did not know, 2026-08-24; confirm or swap."
+MPCA:48020005,grab_intermittent_regime,Placeholder for a grab/intermittent-regime probe until a true grab-sample sensor is registered; MPCA CSG cadence is the nearest exercised path.
+USGS:05553700,canary_channel_fpc,One sensor per canary-tier channel when a channel is set to depth=canary; fpc/fdom probes exercise the channel-extension path. Placeholder pending the first canary-tier channel.

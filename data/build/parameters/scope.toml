@@ -1,0 +1,29 @@
+# The initial bounding boxes -- the seed discovery cover, and the ONLY geographic input the pipeline takes.
+# The boxes are a stored constant derived by experiments/research/aoe-boxes (reach network within 250 km of
+# FLOW distance of every known in-situ nitrate sensor: 234 USGS + 131 IWQIS + 32 MPCA), not recomputed per build.
+#
+#   cornbelt      282 sensors, 366,879 reaches, 2.130M km2
+#   ne             53 sensors,  89,428 reaches, 0.665M km2   Chesapeake + Delaware, HUC 0204-0208
+#   mississippi    11 sensors,  32,573 reaches, 0.200M km2   lower Mississippi / Yazoo
+#
+# cornbelt and mississippi OVERLAP in roughly lon -92.16..-89.14, lat 34.92..35.88: anything iterating the
+# cover must union and dedupe rather than concatenate. Deliberately excluded (48 sensors): Florida karst and
+# EAA canals, the tidal Sacramento-San Joaquin Delta, Texas, everything west of Colorado.
+#
+# WGS84 lon/lat [min_lon, min_lat, max_lon, max_lat].
+
+[seed_boxes]
+cornbelt = [-100.272, 34.916, -81.192, 46.921]
+ne = [-80.672, 36.684, -70.41, 43.565]
+mississippi = [-92.158, 29.481, -89.144, 35.876]
+
+[window]
+# The collection window has ONE configured bound: a start DATE. A sensor is fetch-skipped only when every
+# declared series ENDS before it. There is deliberately no upper bound -- an upper test against the current
+# year silently starts excluding real stations as the calendar advances, and a future-dated declaration is
+# a data-entry error or a station registered ahead of deployment, not a reason never to fetch.
+collection_start = "2008-01-01"
+# gTREND surplus/fertilizer years actually consumed. The rasters run 1930-2017; pre-2000 is deliberately
+# unused -- the 88-year record is only worth carrying if legacy nitrogen is in scope, which it is not.
+surplus_year_start = 2000
+surplus_year_end = 2017

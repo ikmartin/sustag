@@ -1,0 +1,5 @@
+site_uid,probe_class,reason
+USGS:423127084321901,groundwater_level_well,"Groundwater-level well probe: proves the groundwater class registers, fetches (gw_level, canary depth), and publishes correctly. ACTIVE 1945..2026, 81-yr record (pcode 72019, cornbelt box)."
+USGS:415457088150600,precipitation_atmosphere,"Atmosphere/precip station probe: proves the atmosphere type path end-to-end with a record (precip, canary depth). ACTIVE 1986..2026, 40-yr record (pcode 00045, cornbelt box)."
+MPCA:48020005,grab_intermittent_regime,Placeholder for a grab/intermittent-regime probe until a true grab-sample sensor is registered; MPCA CSG cadence is the nearest exercised path.
+USGS:05553700,canary_channel,Exercises the channel-extension path for any future canary-depth channel beyond gw_level/precip. Placeholder.

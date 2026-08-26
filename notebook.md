@@ -1,3 +1,38 @@
+# [2026-08-13]
+
+## Catchments per basin
+
+A **local catchment** is the land that drains directly into one NHDPlus reach before reaching any other reach, so unlike a basin's cumulative upstream area the local catchments partition the surface and every COMID owns exactly one. Counted across the 116 preferred basins built before Aug 3, to size up replacing the distance-bucket grid with a reach-based one. Summed catchment area over each basin comes to 1.001x the basin's own area at the median, which confirms the partition holds in practice.
+
+| statistic | catchments |
+|---|---|
+| min | 1 |
+| median | 301.5 |
+| mean | 1,890.4 |
+| max | 74,122 |
+| std | 7,157.8 |
+| p25 / p75 / p90 | 46 / 1,381 / 3,561 |
+| total, unique | 152,889 |
+
+Basins nest, so the per-basin counts sum to 219,283 but cover only 152,889 distinct catchments — the Mississippi basin contains most of the Iowa sites' basins wholesale and recounts every one of their catchments.
+
+The spread is the finding: std is 3.8x the mean, and `USGS-05420400` (Mississippi at Clinton, 219,502 km2) holds 74,122 catchments by itself, just under half of every distinct catchment in the cohort, while `WQS0055` (Walnut Creek drainage tile, 18.6 km2) is a single catchment.
+
+## Sensor catchment area
+
+The catchment holding each sensor, over the 116 sites, in km2:
+
+| statistic | km2 |
+|---|---|
+| min | 0.0000 |
+| median | 2.1722 |
+| mean | 5.3036 |
+| max | 35.8983 |
+| std | 7.3176 |
+| p25 / p75 | 1.1502 / 6.5947 |
+
+Sensor catchments run larger than catchments at large — median 2.17 against 1.60, mean 5.30 against 3.00 — because sensors go on named higher-order reaches rather than the order-1 headwater fragments that dominate by count, but the tail is absent entirely, max 35.9 against 444.0, since nobody instruments an unresolved flat area. **Four sensor catchments have zero area** — `WQS0041` and `WQS0065` on the Little Sioux, `WQS0061` on the Soldier, `WQS0066` on Monona-Harrison Ditch — all order 5-6 mainstem reaches whose flowline carries no catchment polygon, so the node exists and routes but divides by zero in any per-area feature. The 116 sites occupy only 112 distinct COMIDs, which is the merge candidates corroborated on reach identity rather than metres, and a sensor's own catchment is a median 0.33% of its basin, so essentially all signal arrives by upstream accumulation.
+
 # [2026-08-01]
 
 > 🛑 **Work stops until 08-11.** Read [notes/aug-01.md](notes/aug-01.md) first — state-of-project, replaces 14 notes deleted today (all git-tracked, `git restore notes/` recovers them).

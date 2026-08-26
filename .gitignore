@@ -12,6 +12,11 @@ src/data/processed/*
 src/data/cache/*
 !src/data/**/.gitkeep
 
+# src/build2 writes a parallel v2 subtree so the old read layer keeps working until chunk 4
+# repoints it. Same rule as above: regenerable, never committed.
+src/data/interim2/*
+src/data/processed2/*
+
 # These files used to be gitignored, but they are compressed on creation and git can't diff them, so they're uploaded every time. Add them as exceptions once they are stable (final bbox and site list locked in)
 src/data/interim/grid_global.parquet
 src/data/interim/crops_global.parquet
@@ -76,3 +81,17 @@ __pycache__/
 *.pyc
 
 cache/
+
+# The review panels are regenerated human artifacts, not inputs -- nothing downstream
+# reads one, and they are multi-megabyte binaries that change on every render. The
+# stats CSVs beside them ARE tracked: they are the evidence the decisions were made on.
+src/build2/chunk2/*-review/*.png
+src/build2/chunk3/*-review/*.png
+src/build2/chunk5/*-review/*.png
+# The build4-era archive and derived stores under src/data -- adopted in place, tens of GB, never committed. Snapshot manifests (data/stores/snapshots, also ignored below) are the record of their state; the decision CSVs under data/build/decisions ARE tracked.
+src/data/acquired/
+src/data/derived/
+src/data/superseded/
+src/data/published/
+
+data/stores/
