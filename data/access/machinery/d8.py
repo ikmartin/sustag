@@ -2,20 +2,11 @@
 
 A hydrologically-conditioned D8 flow-direction raster + its geo-referencing. Both the basin builder (basin3 BFS delineation) and the runtime read path (site_view's dist_to_sensor flow field) need these, so by the sorting rule they live on the DATA side -- src/build may import this, but nothing here imports src/build.
 
-Two sources are supported, preferred in this order:
+ONE SOURCE, AND NO FALLBACK: HydroSHEDS v1 15 arc-second Drainage Direction (DIR), clipped to the covariate_bbox, as a GeoTIFF at flowdir_15s.tif. ESRI D8 encoding (E=1, SE=2, S=4, SW=8, W=16, NW=32, N=64, NE=128; 0=ocean outlet, 255=inland sink). Obtain it by downloading the North America 15s DIR from https://www.hydrosheds.org/ and clipping to the region (e.g. `gdalwarp -te <minlon> <minlat> <maxlon> <maxlat>`).
 
-  1. HydroSHEDS v1 15 arc-second Drainage Direction (DIR), clipped to the covariate_bbox, as a
-     GeoTIFF at flowdir_15s.tif. 15 arc-sec = 463.83 m -- the SAME resolution as the legacy Iowa
-     raster, so no resampling. ESRI D8 encoding (E=1, SE=2, S=4, SW=8, W=16, NW=32, N=64, NE=128;
-     0=ocean outlet, 255=inland sink). This is the wide-coverage source for out-of-Iowa basins.
-     Obtain it by downloading the North America 15s DIR from https://www.hydrosheds.org/ and
-     clipping to the region (e.g. `gdalwarp -te <minlon> <minlat> <maxlon> <maxlat>`).
+A missing raster RAISES. There used to be a fallback to an Iowa-only 500 m PNG, auto-downloaded from IWQIS, on a different (numeric-keypad) D8 encoding -- so an absent GeoTIFF silently swapped the continent for one state and one flow algorithm for another, and every downstream basin still computed, plausibly and wrongly. A loud failure is the only honest behaviour when the raster this module is about is not there.
 
-  2. The legacy IWQIS 500 m Iowa raster (direction500m.png), auto-downloaded. Numeric-keypad D8
-     encoding (7 8 9 / 4 5 6 / 1 2 3; 0=nodata). Iowa-only -- used as a fallback until the
-     HydroSHEDS raster is provided, so the existing Iowa pipeline keeps working.
-
-The public surface (load_direction_array, H, W, TRANSFORM, NEIGHBOR_CHECKS, ll_to_image_pixel, flow_distance_field_ll, sample_field) is the same regardless of source; the encoding tables and geo-referencing are selected at load time.
+The public surface is load_direction_array, H, W, TRANSFORM, NEIGHBOR_CHECKS, ll_to_image_pixel, flow_distance_field_ll, sample_field.
 """
 
 import sys
@@ -31,9 +22,7 @@ from .. import config as _access_config
 
 _ARCHIVE_DIR = _access_config.RAW / "basins" / "hydrosheds"          # the HydroSHEDS raster archive -- an immutable raw/ delivery, NOT a cache (the regenerable flow-accumulation cache is _DERIVED_CACHE below)
 _DERIVED_CACHE = _access_config.CACHE / "d8"  # gitignored, regenerable derived artifacts (flow accumulation)
-_RASTER_HS = _ARCHIVE_DIR / "flowdir_15s.tif"  # HydroSHEDS 15s DIR clipped to covariate_bbox (preferred)
-_RASTER_LEGACY = _ARCHIVE_DIR / "direction500m.png"  # legacy Iowa 500 m raster (fallback)
-_RASTER_LEGACY_URL = "https://iwqis.iowawis.org/app/inc/watershed/direction500m.png"
+_RASTER_HS = _ARCHIVE_DIR / "flowdir_15s.tif"  # HydroSHEDS 15s DIR clipped to covariate_bbox
 
 # ── D8 encodings ───────────────────────────────────────────────────────────────
 # Each maps: code -> downstream (dcol, drow); and neighbour offset (dc, dr) -> the code an UPSTREAM
@@ -44,17 +33,6 @@ _ESRI_CHECKS = [
     (-1,  0, 1),             (1,  0, 16),
     (-1,  1, 128), (0, 1, 64), (1, 1, 32),
 ]
-_IWQIS_STEP = {7: (-1, -1), 8: (0, -1), 9: (1, -1), 4: (-1, 0), 6: (1, 0), 1: (-1, 1), 2: (0, 1), 3: (1, 1)}
-_IWQIS_CHECKS = [
-    (-1, -1, 3), (0, -1, 2), (+1, -1, 1),
-    (-1,  0, 6),             (+1,  0, 4),
-    (-1, +1, 9), (0, +1, 8), (+1, +1, 7),
-]
-
-# legacy IWQIS 500 m geo-referencing (verbatim from make_basins), used only for that raster
-_LEG_W, _LEG_H, _LEG_RES = 1741, 1057, 0.004167
-_LEG_LON_UL = _LEG_RES * (0 - 0.5) - 97.154167 - _LEG_RES / 2
-_LEG_LAT_UL = 44.53785 + (0 - 0.5) * (-_LEG_RES) + _LEG_RES / 2
 
 # ── module state, set at load time ─────────────────────────────────────────────
 _DIRECTION: np.ndarray | None = None
@@ -84,43 +62,28 @@ def load_direction_array() -> np.ndarray:
     if _DIRECTION is not None:
         return _DIRECTION
 
-    if _RASTER_HS.exists():
-        import rasterio
+    if not _RASTER_HS.exists():
+        raise FileNotFoundError(
+            f"no D8 flow-direction raster at {_RASTER_HS}. Download the HydroSHEDS North America "
+            f"15 arc-second DIR from https://www.hydrosheds.org/ and clip it to the region "
+            f"(gdalwarp -te <minlon> <minlat> <maxlon> <maxlat>). There is deliberately no fallback.")
+    import rasterio
 
-        with rasterio.open(_RASTER_HS) as ds:
-            arr = ds.read(1)
-            TRANSFORM = ds.transform
-        _DIRECTION = arr.astype(np.uint8, copy=False)
-        _SOURCE = "hydrosheds"
-        _D8_STEP, NEIGHBOR_CHECKS, NODATA = _ESRI_STEP, _ESRI_CHECKS, {0, 255}
-    else:
-        if not _RASTER_LEGACY.exists():
-            import requests
-
-            print("  Downloading direction500m.png (legacy Iowa D8 raster)...")
-            _ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
-            resp = requests.get(_RASTER_LEGACY_URL, timeout=120)
-            resp.raise_for_status()
-            _RASTER_LEGACY.write_bytes(resp.content)
-        from PIL import Image
-
-        _DIRECTION = np.array(Image.open(_RASTER_LEGACY).convert("RGB"))[:, :, 0].astype(np.uint8)
-        TRANSFORM = Affine(_LEG_RES, 0, _LEG_LON_UL, 0, -_LEG_RES, _LEG_LAT_UL)
-        _SOURCE = "legacy"
-        _D8_STEP, NEIGHBOR_CHECKS, NODATA = _IWQIS_STEP, _IWQIS_CHECKS, {0}
+    with rasterio.open(_RASTER_HS) as ds:
+        arr = ds.read(1)
+        TRANSFORM = ds.transform
+    _DIRECTION = arr.astype(np.uint8, copy=False)
+    _SOURCE = "hydrosheds"          # kept in the cache key; see _accum_cache_file
+    _D8_STEP, NEIGHBOR_CHECKS, NODATA = _ESRI_STEP, _ESRI_CHECKS, {0, 255}
 
     H, W = _DIRECTION.shape
     return _DIRECTION
 
 
 def ll_to_image_pixel(lat: float, lon: float) -> tuple[int, int]:
-    """(lat, lon) -> (col, row) pixel index. Legacy uses its original centre-rounding formula; HydroSHEDS uses the raster affine (floor of the inverse transform)."""
+    """(lat, lon) -> (col, row) pixel index, via the raster affine (floor of the inverse transform)."""
     if TRANSFORM is None:
         load_direction_array()
-    if _SOURCE == "legacy":
-        col = int((lon + 97.154167) / _LEG_RES + 0.5)
-        row = int((44.53785 - lat) / _LEG_RES + 0.5)
-        return col, row
     fcol, frow = ~TRANSFORM * (lon, lat)
     return int(np.floor(fcol)), int(np.floor(frow))
 
@@ -132,9 +95,13 @@ def ll_to_image_pixel(lat: float, lon: float) -> tuple[int, int]:
 
 
 def _accum_cache_file() -> Path:
-    """On-disk path for the cached flow accumulation, keyed on the identity of the raster it derives from. A new or edited raster yields a new filename, so a stale array can never be read back."""
-    src = _RASTER_HS if _SOURCE == "hydrosheds" else _RASTER_LEGACY
-    st = src.stat()
+    """On-disk path for the cached flow accumulation, keyed on the identity of the raster it derives from. A new or edited raster yields a new filename, so a stale array can never be read back.
+
+    Loads the raster first if it is not loaded: the key embeds `_SOURCE`/`H`/`W`, which are None until then, and a key computed cold would name a file no run will ever write.
+    """
+    if _SOURCE is None:
+        load_direction_array()
+    st = _RASTER_HS.stat()
     return _DERIVED_CACHE / f"d8_accum_{_SOURCE}_{H}x{W}_{st.st_size}_{st.st_mtime_ns}.npy"
 
 
