@@ -26,7 +26,20 @@ import pandas as pd
 from .. import config
 
 # gridMET short names. Kept explicit so a silent upstream rename is a KeyError rather than a missing column.
-VARIABLES = ("pr", "tmmn", "tmmx", "rmin", "rmax", "sph", "vs", "srad", "vpd", "pet", "etr")
+# Every DAILY gridMET aggregate the endpoint serves. The first eleven are the standard meteorology; the
+# last five are the fire-weather block, restored 2026-08-26 after the rebuild had silently dropped them --
+# `fuel_moisture_1000h` was the ONLY weather variable that survived feature curation in either shipped
+# model ("the rest are perm-dead in every run"), and it was missing because the variable tuple was built
+# from the standard long-name set rather than from the catalogue. Collect all of them; which ones a model
+# uses is a modelling decision, made downstream.
+#
+# NOT HERE, deliberately: the 25 drought aggregates (spi/spei/eddi at eight windows each, pdsi, z) are
+# PENTAD -- 3,404 timesteps since 1979, one per five days -- and this store is one row per (cell, DAY).
+# Landing them here would either leave four of every five days NULL or forward-fill, and a forward-fill
+# is a modelling preference the build has no business baking in. They need their own store.
+# `snow` is absent from the aggregated catalogue: the name resolves and returns zero bytes.
+VARIABLES = ("pr", "tmmn", "tmmx", "rmin", "rmax", "sph", "vs", "srad", "vpd", "pet", "etr",
+             "fm1000", "fm100", "bi", "erc", "th")
 
 # NCSS variable names, and the aggregate file each lives in. Taken from `pygridmet.core.GridMET.long_names` so the mapping stays the library's rather than ours.
 LONG_NAMES = {
@@ -37,11 +50,20 @@ LONG_NAMES = {
     "vpd": "daily_mean_vapor_pressure_deficit",
     "pet": "daily_mean_reference_evapotranspiration_grass",
     "etr": "daily_mean_reference_evapotranspiration_alfalfa",
+    "fm1000": "dead_fuel_moisture_1000hr", "fm100": "dead_fuel_moisture_100hr",
+    "bi": "daily_mean_burning_index_g", "erc": "daily_mean_energy_release_component-g",
+    "th": "daily_mean_wind_direction",
 }
 NCSS = "http://thredds.northwestknowledge.net:8080/thredds/ncss"
 _HTTP_TIMEOUT = 600
 
 GRID_PATH_NAME = "grid.parquet"
+
+# STORE LAYOUT: `weather/grid.parquet` is the shared cell registry; `weather/daily/` holds the daily
+# quarters this module writes; `weather/pentad/` is reserved for the pentad drought aggregates (spi/
+# spei/eddi/pdsi), which ride the SAME 585x1386 lattice (verified against the endpoint: identical
+# corner coordinates) but a 5-day time axis that must never share files with daily rows.
+DAILY_DIR_NAME = "daily"
 
 
 # gridMET's own grid: 1/24 degree. A cell's id is its (row, col) ON THAT GRID, so it is a function of position and nothing else -- widening the AOE appends cells and renumbers none. That is the `global_node_id` lesson: a bare row counter is renumbered by any extent change, and four tables keyed on it silently disagreed.
@@ -76,7 +98,7 @@ _ROW_GROUP = 750_000
 
 def _pending_path(year: int, month: int):
     """Where a freshly fetched month lands before it is folded into its quarter."""
-    return config.ACQ_WEATHER / "_pending" / f"gridmet_{year}-{month:02d}.parquet"
+    return config.ACQ_WEATHER / DAILY_DIR_NAME / "_pending" / f"gridmet_{year}-{month:02d}.parquet"
 
 
 def _quarter_of(month: int) -> int:
@@ -88,7 +110,7 @@ def _quarter_months(year: int, q: int) -> list[tuple[int, int]]:
 
 
 def _quarter_path(year: int, q: int):
-    return config.ACQ_WEATHER / f"gridmet_{year}Q{q}.parquet"
+    return config.ACQ_WEATHER / DAILY_DIR_NAME / f"gridmet_{year}Q{q}.parquet"
 
 
 def zkey(cell_id):
@@ -279,7 +301,7 @@ def read_cells(cells, start=None, end=None):
     keys = np.unique(zkey(want))
     lo, hi = int(keys.min()), int(keys.max())
     out = []
-    for p in sorted(config.ACQ_WEATHER.glob("gridmet_*Q*.parquet")):
+    for p in sorted((config.ACQ_WEATHER / DAILY_DIR_NAME).glob("gridmet_*Q*.parquet")):
         f = pq.ParquetFile(p)
         md = f.metadata
         names = [md.schema.column(i).name for i in range(md.num_columns)]

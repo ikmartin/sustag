@@ -58,7 +58,9 @@ def partition(sensors: pd.DataFrame, published_codes: set) -> pd.Series:
         is_excluded = pd.notna(r.excluded_reason)
         is_recordless = not has_record(r.site_uid)
         is_published = pd.notna(r.publishes_under) and r.publishes_under in published_codes
-        is_held = r.bundle_decided_by == "pending"
+        # `pd.notna` first: a registration that never entered an identity bundle carries NA here, and
+        # NA == "pending" is NA, whose truth value raises. NA means "no bundle", which is not held.
+        is_held = pd.notna(r.bundle_decided_by) and r.bundle_decided_by == "pending"
         hits = [k for k, v in (("excluded", is_excluded),
                                ("held", is_held and not is_excluded),
                                ("published", is_published and not is_excluded and not is_held),
@@ -305,24 +307,33 @@ def _check_no_sentinels_or_range_leaks():
     files = sorted(config.PUB_WATER.glob("*.parquet"))
     if not files:
         return None, "no published water yet"
-    scaled_sentinels: set[float] = set()
-    for ch, c in registry.CHANNELS.items():
-        for src_name, sm in c.sources.items():
-            for v in registry.SENTINELS.get(src_name, ()):
-                scaled_sentinels.add(round(float(v) * sm.scale, 6))
+    # PER-SOURCE, LIKE THE SCRUB. A sentinel is a fact about one source's fill convention, and the scan
+    # must match values against the declaring source's sentinels only, routed through the day's `_src`
+    # provenance -- the union-of-all-sources version of this check flagged four REAL Fargo stage readings
+    # (the Red River gage reports absolute elevation, and a falling river crosses 999.99 ft) and one real
+    # IWQIS turbidity, because 999.99 is MPCA's fill, not theirs.
     n_sent = n_range = 0
     for p in files:
         d = bio.read_parquet(p)
         for ch, c in registry.CHANNELS.items():
             stats = [x for x in d.columns if x.startswith(f"{ch}_")
                      and not x.endswith("_src") and not x.endswith("_n_obs")]
+            if not stats:
+                continue
+            src_col = f"{ch}_src"
+            src_prefix = d[src_col].astype(str).str.split(":", n=1).str[0] if src_col in d.columns else None
             for col in stats:
                 v = pd.to_numeric(d[col], errors="coerce")
                 if c.lo is not None:
                     n_range += int((v < c.lo).sum())
                 if c.hi is not None:
                     n_range += int((v > c.hi).sum())
-                n_sent += int(v.round(6).isin(scaled_sentinels).sum())
+                if src_prefix is None:
+                    continue
+                for src_name, sm in c.sources.items():
+                    sens = {round(float(x) * sm.scale, 6) for x in registry.SENTINELS.get(src_name, ())}
+                    if sens:
+                        n_sent += int((v.round(6).isin(sens) & (src_prefix == src_name)).sum())
     ok = n_sent == 0 and n_range == 0
     return ok, f"{len(files)} file(s): {n_sent} sentinel value(s), {n_range} out-of-range value(s)"
 

@@ -29,10 +29,10 @@ from rasterio.transform import Affine
 
 from .. import config as _access_config
 
-_CACHE_DIR = _access_config.RAW / "basins" / "cache"                 # the HydroSHEDS raster archive
+_ARCHIVE_DIR = _access_config.RAW / "basins" / "hydrosheds"          # the HydroSHEDS raster archive -- an immutable raw/ delivery, NOT a cache (the regenerable flow-accumulation cache is _DERIVED_CACHE below)
 _DERIVED_CACHE = _access_config.CACHE / "d8"  # gitignored, regenerable derived artifacts (flow accumulation)
-_RASTER_HS = _CACHE_DIR / "flowdir_15s.tif"  # HydroSHEDS 15s DIR clipped to covariate_bbox (preferred)
-_RASTER_LEGACY = _CACHE_DIR / "direction500m.png"  # legacy Iowa 500 m raster (fallback)
+_RASTER_HS = _ARCHIVE_DIR / "flowdir_15s.tif"  # HydroSHEDS 15s DIR clipped to covariate_bbox (preferred)
+_RASTER_LEGACY = _ARCHIVE_DIR / "direction500m.png"  # legacy Iowa 500 m raster (fallback)
 _RASTER_LEGACY_URL = "https://iwqis.iowawis.org/app/inc/watershed/direction500m.png"
 
 # ── D8 encodings ───────────────────────────────────────────────────────────────
@@ -98,7 +98,7 @@ def load_direction_array() -> np.ndarray:
             import requests
 
             print("  Downloading direction500m.png (legacy Iowa D8 raster)...")
-            _CACHE_DIR.mkdir(parents=True, exist_ok=True)
+            _ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
             resp = requests.get(_RASTER_LEGACY_URL, timeout=120)
             resp.raise_for_status()
             _RASTER_LEGACY.write_bytes(resp.content)

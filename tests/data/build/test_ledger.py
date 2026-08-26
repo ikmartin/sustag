@@ -155,3 +155,27 @@ def test_add_row_opens_and_decides(decisions_sandbox):
     assert led.decisions()[("IWQIS:WQS9999",)] == "exclude"
     with pytest.raises(ValueError):
         led.add_row(("IWQIS:WQS9999",))
+
+
+def test_decide_all_sets_and_clears_every_row(decisions_sandbox):
+    """The bulk path writes every row in one pass, stamps the criterion, and clears back to not-reviewed."""
+    import pandas as pd
+
+    from data.build import ledger
+
+    led = ledger.QUALITY
+    led.sync(pd.DataFrame({"members": ["A", "B", "C"], "channel": ["nitrate"] * 3,
+                           "reason": ["noisy"] * 3}))
+    led.decide(("A", "nitrate"), "keep", exclude_spans="2023-01-01..2023-01-05", max_threshold="42")
+
+    assert led.decide_all("keep", decided_by="bulk") == 3
+    d = led.read_all()
+    assert set(d.decision) == {"keep"} and set(d.decided_by) == {"bulk"}
+    assert set(d[ledger.CRITERION_COL]) == {led.criterion}
+    row_a = d[d.members == "A"].iloc[0]
+    assert row_a.exclude_spans == "2023-01-01..2023-01-05"   # a bulk VERDICT keeps hand-entered extras
+
+    assert led.decide_all("") == 3                    # the undo
+    d = led.read_all()
+    assert set(d.decision) == {""} and set(d[ledger.CRITERION_COL]) == {""}
+    assert set(d.exclude_spans) == {""} and set(d.max_threshold) == {""}   # the reset wipes them

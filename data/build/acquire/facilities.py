@@ -30,7 +30,8 @@ CWNS_PATH = config.ACQ_FACILITIES / "cwns_potw.parquet"
 
 # The loading tool publishes DMR-computed loads from 2007 on; the collection window starts 2008.
 def _load_years() -> list[int]:
-    return list(range(max(2008, config.collection_start().year), dt.date.today().year))
+    """Fiscal years to pull, INCLUDING the current one -- EPA publishes the partial year as it accrues, and excluding it left the most recent months permanently unfetched."""
+    return list(range(max(2008, config.collection_start().year), dt.date.today().year + 1))
 
 
 def _download(url: str, dest_name: str, force: bool = False):
@@ -87,6 +88,10 @@ def fetch_outfalls(force: bool = False) -> pd.DataFrame | None:
 
     keep = pd.DataFrame({
         "npdes_id": d[cols.get("EXTERNAL_PERMIT_NMBR", "EXTERNAL_PERMIT_NMBR")].astype(str).str.strip(),
+        # THE OUTFALL-LEVEL JOIN KEY. DMR measurements are reported at permit x PERM_FEATURE_NMBR, and
+        # 55,745 permits carry more than one outfall -- without this column a loading series can only be
+        # placed at permit grain, which is not a location on the network.
+        "perm_feature_nmbr": d.get(cols.get("PERM_FEATURE_NMBR", ""), pd.Series(dtype=str)),
         "facility_name": d.get(cols.get("FACILITY_NAME", ""), pd.Series(dtype=str)),
         "facility_type": d.get(cols.get("FACILITY_TYPE_CODE", ""), pd.Series(dtype=str)),
         "sic": d.get(cols.get("SIC_CODES", ""), pd.Series(dtype=str)),
@@ -117,6 +122,11 @@ def fetch_outfalls(force: bool = False) -> pd.DataFrame | None:
 
 # The nitrogen parameter family, matched on the DMR parameter description.
 _N_WORDS = ("nitrogen", "nitrate", "nitrite", "kjeldahl", "ammonia")
+# FLOW IS HALF OF A LOAD. A concentration row (mg/L) becomes a mass only against the period's flow, and
+# measured on FY2023 half the effluent monitoring cells carry a concentration with no quantity beside it.
+# Parameter 50050 is "Flow, in conduit or thru treatment plant"; the word filter alone excluded every one.
+_FLOW_WORDS = ("flow",)
+_FLOW_PCODES = ("50050", "00056", "82220")
 
 # Raw ICIS-NPDES DMR archives, one per fiscal year. 300-640 MB zipped apiece, so they follow the
 # EPHEMERAL archive discipline (the CDL pattern): download, filter to the nitrogen family, write the
@@ -161,7 +171,9 @@ def fetch_loads(force: bool = False) -> None:
                         keep_frames = []
                         break
                     p = chunk[pc].fillna("").str.lower()
-                    hit = chunk[p.str.contains("|".join(_N_WORDS))]
+                    pc = chunk.get("PARAMETER_CODE", pd.Series("", index=chunk.index)).astype(str)
+                    hit = chunk[p.str.contains("|".join(_N_WORDS + _FLOW_WORDS))
+                                | pc.isin(_FLOW_PCODES)]
                     if len(hit):
                         keep_frames.append(hit)
         if keep_frames:

@@ -73,6 +73,28 @@ def check(stage: str, name: str, deep: bool = False):
     return deco
 
 
+def _print_table(rows: list[dict], failed: int) -> None:
+    """One block per check, wrapped to the terminal: `stage status name`, then the detail under a bullet.
+
+    The detail strings carry measurements and file lists and run to hundreds of characters, so a single
+    padded line per check was a column of ragged wraps. Wrapping explicitly costs the same screen space
+    and keeps the status column scannable.
+    """
+    import shutil
+    import textwrap
+
+    width = max(60, shutil.get_terminal_size((100, 24)).columns - 1)
+    for r in rows:
+        tag = f"  {r['stage']:<4} {r['status']:<4} "
+        pad = " " * len(tag)
+        print(textwrap.fill(r["check"], width=width, initial_indent=tag, subsequent_indent=pad))
+        if r["detail"]:
+            print(textwrap.fill(str(r["detail"]), width=width,
+                                initial_indent=pad + "· ", subsequent_indent=pad + "  "))
+    print(f"\n  {len(rows)} check(s): {sum(r['status'] == 'ok' for r in rows)} ok, "
+          f"{failed} failed, {sum(r['status'] == 'SKIP' for r in rows)} skipped")
+
+
 def run(stage: str | None = None, deep: bool = False, as_json: bool = False) -> int:
     """Run the registered checks. Returns the exit code (0 = nothing failed)."""
     todo = [c for c in _CHECKS
@@ -92,11 +114,7 @@ def run(stage: str | None = None, deep: bool = False, as_json: bool = False) -> 
     if as_json:
         print(json.dumps(rows, indent=1))
     else:
-        w = max((len(r["check"]) for r in rows), default=10)
-        for r in rows:
-            print(f"  {r['stage']:8s} {r['check']:{w}s}  {r['status']:4s}  {r['detail']}")
-        print(f"\n  {len(rows)} check(s): {sum(r['status'] == 'ok' for r in rows)} ok, "
-              f"{failed} failed, {sum(r['status'] == 'SKIP' for r in rows)} skipped")
+        _print_table(rows, failed)
     return 1 if failed else 0
 
 
@@ -112,8 +130,10 @@ def _load_all() -> None:
                 "data.build.publish.publish"):   # grows as stages land
         try:
             importlib.import_module(mod)
-        except ImportError:
-            pass
+        except ImportError as e:
+            # LOUD, because a module that fails to import contributes NO checks and an empty table
+            # looks exactly like a clean one. A stage not yet written is the only benign case.
+            print(f"  verify: {mod} did not import, its checks are ABSENT ({e})", file=sys.stderr)
 
 
 def main(argv=None) -> int:
@@ -122,8 +142,15 @@ def main(argv=None) -> int:
     ap.add_argument("--deep", action="store_true", help="include expensive sweeps")
     ap.add_argument("--json", action="store_true", dest="as_json")
     a = ap.parse_args(argv)
-    _load_all()
-    return run(a.stage, deep=a.deep, as_json=a.as_json)
+    # RUN THROUGH THE CANONICAL MODULE, NEVER THIS ONE'S GLOBALS. Under `python -m data.build.verify`
+    # this file is imported as `__main__`, while every stage module registers into `data.build.verify`
+    # -- a SEPARATE module object with a separate `_CHECKS`. Reading the local registry there yields an
+    # empty table, which is indistinguishable from a clean run and was reported as exactly that.
+    import importlib
+
+    v = importlib.import_module("data.build.verify")
+    v._load_all()
+    return v.run(a.stage, deep=a.deep, as_json=a.as_json)
 
 
 if __name__ == "__main__":

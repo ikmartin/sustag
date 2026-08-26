@@ -10,8 +10,8 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent.parent
 
 # The adopted archives -- interim location, flipped to data/stores at the final migration (see data/build/config.py).
-RAW = REPO / "src" / "data" / "raw"
-ACQUIRED = REPO / "src" / "data" / "acquired"
+RAW = REPO / "data" / "stores" / "raw"
+ACQUIRED = REPO / "data" / "stores" / "acquired"
 ACQ_NETWORK = ACQUIRED / "network"
 ACQ_WATER_NATIVE = ACQUIRED / "water" / "native"
 ACQ_WEATHER = ACQUIRED / "weather"

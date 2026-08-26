@@ -19,8 +19,8 @@ PARAMETERS = _HERE / "parameters"
 DECISIONS = _HERE / "decisions"
 
 # The two adopted archives -- interim location, flipped to data/stores at the final migration.
-RAW = REPO / "src" / "data" / "raw"
-ACQUIRED = REPO / "src" / "data" / "acquired"
+RAW = REPO / "data" / "stores" / "raw"
+ACQUIRED = REPO / "data" / "stores" / "acquired"
 
 # Fresh stores, at their final home from day one.
 STORES = REPO / "data" / "stores"
@@ -32,34 +32,34 @@ PUBLISHED = STORES / "published"
 ACQ_WATER_NATIVE = ACQUIRED / "water" / "native"
 ACQ_WATER_IWQIS = ACQUIRED / "water" / "iwqis"
 ACQ_METADATA = ACQUIRED / "metadata"
-ACQ_USGS_GEOJSON = ACQUIRED / "metadata" / "usgs_geojson"   # raw monitoring-locations responses -- the coord_dp source
+ACQ_USGS_GEOJSON = ACQUIRED / "metadata" / "usgs_geojson"  # raw monitoring-locations responses -- the coord_dp source
 ACQ_NETWORK = ACQUIRED / "network"
 ACQ_WEATHER = ACQUIRED / "weather"
 ACQ_ATTRIBUTES = ACQUIRED / "attributes"
 ACQ_NWM = ACQUIRED / "nwm"
 ACQ_SEED_BASINS = ACQUIRED / "seed_basins"
-ACQ_FACILITIES = ACQUIRED / "facilities"                    # ICIS-NPDES outfalls + DMR loads + CWNS attributes
+ACQ_FACILITIES = ACQUIRED / "facilities"  # ICIS-NPDES outfalls + DMR loads + CWNS attributes
 
 # Layer D artifacts
 AOE_PATH = DERIVED / "aoe.parquet"
-SENSORS_PATH = DERIVED / "sensors.parquet"                  # widened per stage, never loses a row
+SENSORS_PATH = DERIVED / "sensors.parquet"  # widened per stage, never loses a row
 WATER_CANONICAL = DERIVED / "water" / "canonical"
-WATER_MERGED = DERIVED / "water" / "merged"                 # winner-per-span assembled records, SNR-keyed
-SCRUB_TALLIES_PATH = DERIVED / "scrub_tallies.parquet"      # per-(sensor, channel) sentinel/null/clamp counts
-PROXIMITY_PATH = DERIVED / "proximity.parquet"              # every located pair within PROXIMITY_RADIUS_M
+WATER_MERGED = DERIVED / "water" / "merged"  # winner-per-span assembled records, SNR-keyed
+SCRUB_TALLIES_PATH = DERIVED / "scrub_tallies.parquet"  # per-(sensor, channel) sentinel/null/clamp counts
+PROXIMITY_PATH = DERIVED / "proximity.parquet"  # every located pair within PROXIMITY_RADIUS_M
 COVARIATES_DIR = DERIVED / "covariates"
-REVIEW_DIR = DERIVED / "review"                             # generated evidence: candidates, stats, auto records
+REVIEW_DIR = DERIVED / "review"  # generated evidence: candidates, stats, auto records
 
 # Layer P artifacts
 PUB_SENSORS = PUBLISHED / "sensors.parquet"
-PUB_WATER = PUBLISHED / "water"                             # one file per merged record, keyed by SNR id
+PUB_WATER = PUBLISHED / "water"  # one file per merged record, keyed by SNR id
 PUB_PROXIMITY = PUBLISHED / "proximity.parquet"
 PUB_NETWORK = PUBLISHED / "network"
 PUB_COMID_FEATURES = PUBLISHED / "comid_features"
 
-EQUAL_AREA = "EPSG:5070"                # degrees-squared is not an area
+EQUAL_AREA = "EPSG:5070"  # degrees-squared is not an area
 
-PROXIMITY_RADIUS_M = 2_000.0            # the published pair table's generous radius; the merge gate is far tighter
+PROXIMITY_RADIUS_M = 2_000.0  # the published pair table's generous radius; the merge gate is far tighter
 
 
 @functools.lru_cache(maxsize=1)
@@ -111,8 +111,10 @@ def aoe_geometry():
         import geopandas as gpd
 
         return gpd.read_parquet(AOE_PATH).geometry.iloc[0]
-    print("  WARNING: no AOE on disk -- falling back to the SEED BOXES. Only the bootstrap may run here; "
-          "anything clipped against this extent truncates the largest basins.")
+    print(
+        "  WARNING: no AOE on disk -- falling back to the SEED BOXES. Only the bootstrap may run here; "
+        "anything clipped against this extent truncates the largest basins."
+    )
     return seed_geometry()
 
 
@@ -147,14 +149,29 @@ def usgs_pats() -> list[str]:
     """
     with open(API_KEYS, "rb") as f:
         keys = tomllib.load(f)
-    names = ["usgs"] + sorted((k for k in keys if k.startswith("usgs") and k != "usgs"),
-                              key=lambda k: (len(k), k))
+    names = ["usgs"] + sorted((k for k in keys if k.startswith("usgs") and k != "usgs"), key=lambda k: (len(k), k))
     return [str(keys[n]) for n in names if keys.get(n)]
 
 
 def ensure_dirs() -> None:
-    for p in (ACQ_WATER_NATIVE, ACQ_WATER_IWQIS, ACQ_METADATA, ACQ_USGS_GEOJSON, ACQ_NETWORK,
-              ACQ_WEATHER, ACQ_ATTRIBUTES, ACQ_NWM, ACQ_SEED_BASINS, ACQ_FACILITIES,
-              SNAPSHOTS, WATER_CANONICAL, WATER_MERGED, COVARIATES_DIR, REVIEW_DIR,
-              PUB_WATER, PUB_NETWORK, PUB_COMID_FEATURES):
+    for p in (
+        ACQ_WATER_NATIVE,
+        ACQ_WATER_IWQIS,
+        ACQ_METADATA,
+        ACQ_USGS_GEOJSON,
+        ACQ_NETWORK,
+        ACQ_WEATHER,
+        ACQ_ATTRIBUTES,
+        ACQ_NWM,
+        ACQ_SEED_BASINS,
+        ACQ_FACILITIES,
+        SNAPSHOTS,
+        WATER_CANONICAL,
+        WATER_MERGED,
+        COVARIATES_DIR,
+        REVIEW_DIR,
+        PUB_WATER,
+        PUB_NETWORK,
+        PUB_COMID_FEATURES,
+    ):
         p.mkdir(parents=True, exist_ok=True)

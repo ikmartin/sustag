@@ -420,3 +420,7 @@ The three classes carry three different recovery stories, and the inventory is w
 **Vendored files** (the IWQIS export, MPCA zips, CWNS national zip, the nutrient rasters, HydroWASTE CSV) are the irreplaceable class: each was obtained by a human act — a portal session, an emailed export, a browser download a script cannot repeat — and the copy in the tree is the authority. Losing one means asking a person or an agency again, possibly for data they no longer serve in the same form. These are the files backups exist for.
 
 One residue note completes the accounting: `raw/comid_attrs/` holds attribute zips (BFI, contact time, 1992 tile drains) from the previous build, superseded by the StreamCat API and consumed by nothing — they await deletion, not documentation. Source READMEs collected from providers live under `reference/data-source-readmes/`, one per dataset that ships one.
+
+## Not incorporated but noted
+
+- **gTREND-Phosphorus:** [(link)](https://plus.figshare.com/articles/dataset/TREND-Phosphorus_and_gTREND-Phosphorus_-_Long-term_phosphorus_mass_balance_data_for_the_contiguous_United_States_1930-2017_/30158131) is the same thing as the gTREND-Nitrogen Surplus tifs but for phosphorus. There is no one summary tif, it's split across different tifs like Crop_P_Uptake and Farm_P_Fertilizer. Phosphorus is not a focus right now so this is omitted.

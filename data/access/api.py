@@ -93,7 +93,7 @@ def get_weather(wset_or_comids, window, variables=("pr", "tmmx", "tmmn", "pet", 
     frames = []
     for year in range(lo.year, hi.year + 1):
         for q in (1, 2, 3, 4):
-            p = config.ACQ_WEATHER / f"gridmet_{year}Q{q}.parquet"
+            p = config.ACQ_WEATHER / "daily" / f"gridmet_{year}Q{q}.parquet"
             if not p.exists():
                 continue
             d = pd.read_parquet(p, columns=["cell_id", "date", *variables],

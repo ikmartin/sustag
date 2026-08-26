@@ -266,7 +266,10 @@ def merge_counterfactual(members: list[str]) -> pd.DataFrame:
 
 
 def mask_preview(code: str, channel: str, exclude_spans: str, max_threshold) -> pd.DataFrame | None:
-    """The record as the UNCOMMITTED form values would publish it -- masked beside raw, before any write."""
+    """The record as the UNCOMMITTED form values would publish it -- masked beside raw, before any write.
+
+    Runs `publish.apply_quality_masks` itself, so the preview cannot disagree with publication: it is the same function on the same record, and what it returns is what submitting would store.
+    """
     from ..publish import publish
 
     p = config.WATER_MERGED / f"{code}.parquet"
@@ -277,6 +280,52 @@ def mask_preview(code: str, channel: str, exclude_spans: str, max_threshold) -> 
                            exclude_spans=str(exclude_spans or ""),
                            max_threshold=quality.parse_threshold(max_threshold))])
     return publish.apply_quality_masks({code: rec}, V)[code]
+
+
+def mask_explain(code: str, channel: str, exclude_spans: str, max_threshold) -> dict:
+    """Why each withheld day was withheld, in counts -- the ceiling's whole-day rule is invisible on a plot of daily MEANS.
+
+    A ceiling withholds the WHOLE DAY when ANY of the channel's statistics exceeds it (see `publish._over_threshold`: the day's mean was computed from the offending samples too). On a mean-valued plot that reads as "a value below the threshold was removed", which is the single most confusing thing the panel does. This returns the counts that explain it, including how many withheld days have a mean UNDER the ceiling and which statistic tripped them.
+    """
+    from ..publish import publish
+
+    p = config.WATER_MERGED / f"{code}.parquet"
+    if not p.exists():
+        return {}
+    rec = pd.read_parquet(p)
+    out = {"days_total": len(rec)}
+    spans_text = str(exclude_spans or "").strip()
+    if spans_text:
+        hit = pd.Series(quality.in_spans(rec.date, quality.parse_spans(spans_text)), index=rec.index)
+        out["days_in_spans"] = int(hit.sum())
+    thr = quality.parse_threshold(max_threshold)
+    if pd.notna(thr) and thr is not None:
+        over = publish._over_threshold(rec, channel, float(thr))
+        out["threshold"] = float(thr)
+        out["days_over"] = int(over.sum())
+        mean_col = f"{channel}_mean"
+        if mean_col in rec.columns:
+            m = pd.to_numeric(rec[mean_col], errors="coerce")
+            out["days_over_whose_mean_is_under"] = int((over & (m <= float(thr))).sum())
+        trips = {}
+        for c in rec.columns:
+            if not c.startswith(f"{channel}_") or c.endswith(("_src", "_n_obs")):
+                continue
+            x = pd.to_numeric(rec[c], errors="coerce")
+            n = int((x > float(thr)).fillna(False).sum())
+            if n:
+                trips[c] = n
+        out["tripped_by"] = trips
+    return out
+
+
+def bulk_decide(name: str, decision: str, decided_by: str = "") -> str:
+    """Set (or clear) every row's verdict on one sheet. The panel guards this behind a DANGER section; the validation is the ledger's."""
+    led = ledgers()[name]
+    n = led.decide_all(decision, decided_by=decided_by,
+                       note="bulk decision" if decision else "")
+    what = f"set to '{decision}'" if decision else "cleared to not-reviewed"
+    return f"{name}: {n} row(s) {what}"
 
 
 def open_exclusion(uid: str) -> str:

@@ -426,20 +426,74 @@ def site_type(row: dict) -> list:
     return _safe(build)
 
 
+def _spans_text(spans: str) -> str:
+    """The proposed spans one per line, in the ledger's own `A..B` syntax, ready to paste.
+
+    The sheet stores them `;`-joined on one line, which is what `parse_spans` reads back, and which is unreadable at thirty spans. One per line is legal input too -- the parser splits on `;` and strips whitespace -- so a reviewer can delete the lines they disagree with and paste the rest.
+    """
+    parts = [p.strip() for p in str(spans or "").split(";") if p.strip()]
+    return ";\n".join(parts)
+
+
+def _spans_note(spans: str) -> str:
+    """How many spans and how many days they cover -- the size of what is being proposed."""
+    import datetime as _dt
+
+    parts = [p.strip() for p in str(spans or "").split(";") if p.strip()]
+    days = 0
+    for p in parts:
+        try:
+            a, b = p.split("..")
+            days += (_dt.date.fromisoformat(b.strip()) - _dt.date.fromisoformat(a.strip())).days + 1
+        except Exception:                                      # noqa: BLE001 -- a malformed span is the form's problem
+            continue
+    return f"{len(parts)} span(s), {days} day(s) proposed for exclusion" if parts else "no spans proposed"
+
+
 def quality(row: dict) -> list:
     def build():
         members = str(row["members"]).split("+")
         ch = str(row["channel"])
         series = backend.native_series(members, ch)
         signals = [s.strip() for s in str(row.get("reason", "")).split(",") if s.strip() in backend.SIGNAL_HELP]
-        helps = [html.Details([html.Summary(f"? {s}"), html.Div(backend.SIGNAL_HELP[s])],
-                              style={"fontSize": 12}) for s in signals]
+        # WHY THE ROW IS FLAGGED IS THE POINT OF THE TAB, so it is shown, not hidden behind a
+        # disclosure. These used to be collapsed `<details>` whose only visible text was "?", which
+        # is unreadable: a reviewer cannot tell a clickable help toggle from a broken control.
+        helps = [html.Div([
+            html.Div(f"{sig}", style={"fontWeight": "bold", "fontFamily": "monospace",
+                                      "fontSize": 12, "color": "#b45309"}),
+            html.Div(backend.SIGNAL_HELP[sig], style={"fontSize": 12, "color": "#333"}),
+        ], style={"margin": "0 0 6px"}) for sig in signals]
+        helps = [html.Div(helps, style={"border": "1px solid #e5e7eb", "borderRadius": "6px",
+                                        "padding": "8px 10px", "background": "#fffbeb",
+                                        "maxWidth": "900px", "margin": "6px 0"})] if helps else []
+        spans = str(row.get("proposed_spans", "") or "")
+        rows = backend.sensor_rows(members)
         return [
             html.Div(f"signals: {row.get('reason')}   score {row.get('score')}",
                      style={"fontFamily": "monospace"}),
             *helps,
-            dcc.Graph(figure=plots.record_figure(series, row.get("proposed_spans", ""),
+            # THE PLOT LEADS. The spans and the map are what a reviewer consults AFTER seeing the
+            # shape of the record, so they sit below it rather than pushing it off the screen.
+            dcc.Graph(figure=plots.record_figure(series, spans,
                                                  title=f"{row.get('code')} {ch}")),
+            html.Div([
+                html.Div([
+                    html.Div("proposed spans -- select and copy into exclude_spans",
+                             style={"fontWeight": "bold", "fontSize": 12, "margin": "6px 0 3px"}),
+                    # a TEXTAREA, not a div: the reviewer's job here is to copy some or all of these
+                    # into the decision cell, and text in a div fights the selection
+                    dcc.Textarea(value=_spans_text(spans), readOnly=True, id="quality-spans-text",
+                                 style={"width": "100%", "height": "300px", "fontFamily": "monospace",
+                                        "fontSize": 12, "boxSizing": "border-box"}),
+                    html.Div(_spans_note(spans), style={"fontSize": 11, "color": "#555",
+                                                        "marginTop": "3px"}),
+                ], style={"flex": "0 0 50%", "minWidth": 0, "boxSizing": "border-box",
+                          "paddingRight": "8px"}),
+                html.Div(panel_map.pair_map(rows, backend.proximity_neighbors(members)),
+                         style={"flex": "0 0 50%", "minWidth": 0, "boxSizing": "border-box",
+                                "paddingLeft": "8px"}),
+            ], style={"display": "flex", "alignItems": "flex-start"}),
             html.Button("preview masks (uncommitted form values)", id="preview-masks", n_clicks=0),
             html.Div(id="quality-mask-preview"),
         ]

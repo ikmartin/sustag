@@ -35,7 +35,7 @@ def main() -> None:
     import geopandas as gpd
     from scipy.spatial import cKDTree
 
-    hw = pd.read_csv(hw_path, low_memory=False)
+    hw = pd.read_csv(hw_path, low_memory=False, encoding="latin-1")   # accented plant names; not UTF-8
     hw = hw[(hw.COUNTRY == "United States") if "COUNTRY" in hw.columns else slice(None)]
     lat_c = next(c for c in hw.columns if c.upper() in ("LAT_OUT", "LAT_WWTP", "LATITUDE"))
     lon_c = next(c for c in hw.columns if c.upper() in ("LON_OUT", "LON_WWTP", "LONGITUDE"))

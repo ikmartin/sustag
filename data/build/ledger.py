@@ -168,6 +168,37 @@ class Ledger:
         d.to_csv(tmp, index=False)
         os.replace(tmp, self.path)
 
+    def decide_all(self, decision: str, decided_by: str = "", note: str = "") -> int:
+        """Set EVERY row's verdict in one atomic write; `decision=""` clears the sheet back to not-reviewed, INCLUDING the extra editable cells (exclude_spans, max_threshold, ...).
+
+        A bulk counterpart to `decide`, and deliberately a separate method: `decide` is the reviewed path and refuses anything but a single located row, while this one is the blunt instrument a panel offers behind a guard. One rewrite rather than N -- decide() rewrites the whole CSV per row, so 136 rows would be 136 full rewrites and 136 mtime races with each other. A bulk VERDICT leaves the extra cells alone (a keep-all should not silently discard hand-entered spans); only the reset wipes them, because a not-reviewed row with a leftover ceiling is a half-decision nobody made.
+        """
+        decision = str(decision).strip()
+        if decision and decision not in self.vocabulary:
+            raise ValueError(f"{decision!r} not in {sorted(self.vocabulary)}")
+        if not self.path.exists():
+            return 0
+        before = self.path.stat().st_mtime_ns
+        d = pd.read_csv(self.path, dtype=str).fillna("")
+        if not len(d):
+            return 0
+        for col in (CRITERION_COL, *self._editable()):
+            if col not in d.columns:
+                d[col] = ""
+        d["decision"] = decision
+        d["decided_by"] = str(decided_by)
+        d["note"] = str(note)
+        if not decision:
+            for col in self.extra_editable:
+                d[col] = ""
+        d[CRITERION_COL] = self.criterion if decision else ""
+        if self.path.stat().st_mtime_ns != before:
+            raise ConcurrentEditError(f"{self.path.name} changed on disk during decide_all(); re-read and retry")
+        tmp = self.path.with_name(self.path.name + ".tmp")
+        d.to_csv(tmp, index=False)
+        os.replace(tmp, self.path)
+        return len(d)
+
     # ---- syncing ---------------------------------------------------------------------------------
 
     def sync(self, ordered: pd.DataFrame) -> tuple[int, int, int]:

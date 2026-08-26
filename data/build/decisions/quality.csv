@@ -1,0 +1,137 @@
+Row,members,channel,decision,exclude_spans,max_threshold,decided_by,note,criterion_version,code,reason,score,proposed_spans
+1,USGS:401934089541701+USGS:401934089541704,nitrate,keep,,,,bulk decision,qual-v1,SNR-07H6,quality review,85.25,2023-03-05..2023-03-13; 2023-03-20..2023-03-31; 2023-10-20..2023-11-01; 2023-11-01..2023-11-11; 2023-12-20..2023-12-30; 2024-09-27..2024-10-29; 2024-10-29..2024-12-09; 2024-12-09..2024-12-17; 2024-12-17..2025-02-07; 2025-02-09..2025-02-17; 2025-02-22..2025-03-09; 2025-03-09..2025-03-25; 2025-04-08..2025-04-15; 2025-04-16..2025-04-30; 2025-04-30..2025-06-08; 2025-06-09..2025-06-24; 2025-06-24..2025-09-07; 2025-09-08..2025-09-24; 2025-09-24..2025-12-10; 2025-12-10..2025-12-23; 2025-12-31..2026-01-12; 2026-01-14..2026-02-06; 2026-02-06..2026-02-25; 2026-02-25..2026-08-13
+2,IWQIS:WQS0063+USGS:05389000,nitrate,keep,,,,bulk decision,qual-v1,SNR-0C6J,quality review,40.4,2022-06-17..2022-07-21
+3,USGS:413846070480601,nitrate,keep,,,,bulk decision,qual-v1,SNR-09SD,quality review,38.99,2025-06-05..2025-06-16; 2025-07-07..2025-07-29; 2025-08-11..2025-08-24; 2026-06-04..2026-06-23; 2026-06-28..2026-07-08
+4,MPCA:39101001,nitrate,keep,,,,bulk decision,qual-v1,SNR-0DAF,quality review,34.63,
+5,MPCA:28063001,nitrate,keep,,,,bulk decision,qual-v1,SNR-0DAM,quality review,34.61,2026-01-01..2026-03-19
+6,IWQIS:WQS0044+USGS:06809900,nitrate,keep,,,,bulk decision,qual-v1,SNR-081V,quality review,33.94,2017-06-21..2017-07-14
+7,IWQIS:WQS0008,nitrate,keep,,,,bulk decision,qual-v1,SNR-0CCC,quality review,33.58,2023-08-26..2023-09-06; 2023-09-07..2023-10-02; 2023-10-04..2023-10-13
+8,USGS:01576003,nitrate,keep,,,,bulk decision,qual-v1,SNR-070N,quality review,32.13,2023-10-26..2023-11-04; 2023-11-07..2023-11-23; 2024-04-24..2024-05-02; 2024-05-03..2024-05-12
+9,MPCA:32073001,nitrate,keep,,,,bulk decision,qual-v1,SNR-0D2I,quality review,31.77,2026-01-01..2026-03-12
+10,USGS:06796500,nitrate,keep,,,,bulk decision,qual-v1,SNR-0951,quality review,30.29,2016-06-03..2016-06-14; 2016-06-21..2016-07-03; 2016-07-07..2016-07-20; 2016-07-20..2016-07-31; 2016-08-10..2016-08-20; 2016-08-20..2016-08-31; 2016-09-06..2016-09-16; 2016-09-21..2016-10-03; 2017-05-31..2017-06-15; 2017-07-06..2017-07-24; 2017-07-28..2017-08-16; 2017-08-24..2017-09-06; 2017-09-06..2017-09-14; 2017-09-14..2017-09-22; 2018-05-08..2018-05-17; 2018-05-26..2018-06-06; 2018-08-04..2018-08-13; 2018-09-10..2018-09-25; 2020-04-28..2020-05-13; 2020-06-27..2020-07-10; 2020-08-27..2020-09-08; 2021-05-05..2021-06-09; 2021-06-16..2021-06-25; 2021-06-30..2021-07-10; 2021-07-12..2021-08-09; 2021-08-10..2021-08-27; 2021-09-11..2021-09-20; 2022-05-18..2022-05-30; 2022-06-20..2022-07-05; 2022-07-12..2022-08-24; 2022-09-06..2022-10-12; 2023-04-15..2023-05-05; 2023-05-05..2023-05-15; 2023-05-20..2023-06-21; 2023-06-21..2023-07-04; 2023-07-10..2023-07-18; 2023-07-18..2023-07-26; 2023-07-26..2023-08-03; 2023-08-07..2023-09-27; 2023-09-28..2023-10-14; 2024-04-18..2024-04-27; 2024-07-12..2024-08-23; 2024-08-23..2024-09-17; 2024-09-19..2024-09-29; 2024-09-29..2024-10-13; 2025-04-16..2025-05-20; 2025-06-10..2025-06-19; 2025-09-28..2025-10-14; 2026-04-15..2026-05-02; 2026-05-02..2026-05-20; 2026-05-25..2026-06-02; 2026-06-14..2026-06-22; 2026-07-16..2026-07-27; 2026-08-03..2026-08-13
+11,USGS:03340900,nitrate,keep,,,,bulk decision,qual-v1,SNR-06GE,quality review,28.88,2017-09-18..2017-11-08; 2017-12-27..2018-01-08; 2018-01-08..2018-01-20
+12,IWQIS:WQS0024+USGS:05451210,nitrate,keep,,,,bulk decision,qual-v1,SNR-0AYD,quality review,28.83,2019-03-24..2019-04-16; 2019-09-08..2019-09-17
+13,USGS:01304562,nitrate,keep,,,,bulk decision,qual-v1,SNR-08F6,quality review,27.55,
+14,USGS:06801000,nitrate,keep,,,,bulk decision,qual-v1,SNR-08OK,quality review,26.19,2020-08-05..2020-08-18; 2020-08-20..2020-09-10; 2020-09-14..2020-09-28; 2021-08-13..2021-08-20; 2022-06-23..2022-07-01; 2022-07-14..2022-09-15
+15,USGS:403859074555201,nitrate,keep,,,,bulk decision,qual-v1,SNR-07YQ,quality review,24.27,2023-10-24..2023-11-12; 2023-11-13..2023-11-23; 2024-07-18..2024-07-26; 2024-07-26..2024-08-19; 2024-08-20..2024-08-30; 2024-09-03..2024-09-15; 2024-10-14..2024-10-22; 2024-11-05..2024-11-15; 2025-07-11..2025-08-20; 2025-08-28..2025-09-04; 2025-09-11..2025-09-28; 2025-10-11..2025-10-19; 2025-10-23..2025-11-06; 2026-06-17..2026-07-09
+16,USGS:01304200,nitrate,keep,,,,bulk decision,qual-v1,SNR-08TA,quality review,24.02,
+17,USGS:06800500,nitrate,keep,,,,bulk decision,qual-v1,SNR-092Z,quality review,22.38,2020-09-01..2020-09-09; 2021-08-11..2021-08-21; 2021-08-21..2021-08-31; 2021-09-15..2021-09-24; 2022-07-18..2022-09-03; 2022-09-06..2022-10-10; 2023-05-06..2023-05-13; 2023-05-25..2023-06-03; 2023-06-03..2023-06-14; 2023-06-14..2023-07-06; 2023-07-19..2023-07-26; 2023-08-08..2023-09-29; 2025-05-04..2025-05-17
+18,USGS:07288500,nitrate,keep,,,,bulk decision,qual-v1,SNR-0128,quality review,20.94,
+19,USGS:03336890,nitrate,keep,,,,bulk decision,qual-v1,SNR-0792,quality review,19.98,2019-10-13..2019-10-20; 2025-08-20..2025-08-27; 2025-08-30..2025-09-25; 2025-09-25..2025-10-20; 2025-10-21..2025-12-01; 2025-12-03..2025-12-10
+20,IWQIS:WQS0111+USGS:05389400,nitrate,keep,,,,bulk decision,qual-v1,SNR-0C0E,quality review,19.97,2026-03-18..2026-04-01
+21,IWQIS:WQS0032+USGS:05483600,nitrate,keep,,,,bulk decision,qual-v1,SNR-09VR,quality review,19.84,2016-06-17..2016-06-28; 2022-07-06..2022-07-21
+22,USGS:414224070452001,nitrate,keep,,,,bulk decision,qual-v1,SNR-09X8,quality review,19.76,2025-07-02..2025-07-19; 2025-10-02..2025-10-10
+23,USGS:06481000,nitrate,keep,,,,bulk decision,qual-v1,SNR-0CWO,quality review,19.48,2021-08-02..2021-08-29; 2021-09-05..2021-09-16; 2021-09-20..2021-10-01
+24,USGS:06476000,nitrate,keep,,,,bulk decision,qual-v1,SNR-0DDT,quality review,19.44,2022-05-19..2022-05-29; 2022-06-15..2022-06-29; 2022-07-17..2022-07-31; 2022-07-31..2022-08-10; 2022-08-12..2022-08-25; 2022-10-13..2022-10-25; 2023-05-11..2023-05-29; 2023-07-25..2023-08-07; 2025-04-05..2025-04-12; 2025-04-12..2025-04-24; 2025-05-02..2025-05-14; 2025-05-15..2025-05-28; 2025-05-28..2025-06-07; 2025-08-25..2025-09-02; 2025-10-19..2025-11-07; 2025-11-07..2025-11-20; 2026-04-24..2026-05-04; 2026-05-09..2026-05-18
+25,USGS:03230427,nitrate,keep,,,,bulk decision,qual-v1,SNR-06UW,quality review,18.34,2023-09-13..2023-10-07; 2023-10-31..2023-11-14; 2024-07-08..2024-07-18; 2024-08-17..2024-08-28; 2024-09-07..2024-09-28; 2024-10-09..2024-10-31; 2024-11-17..2024-11-27; 2025-08-30..2025-09-16; 2025-11-01..2025-11-09
+26,USGS:06805500,nitrate,keep,,,,bulk decision,qual-v1,SNR-08L2,quality review,18.05,2017-08-07..2017-08-16; 2020-08-02..2020-08-19; 2020-09-10..2020-09-22; 2020-09-22..2020-10-01; 2021-08-12..2021-08-21; 2021-09-09..2021-09-25; 2022-06-22..2022-07-04; 2022-07-14..2022-08-08; 2022-09-20..2022-10-02; 2022-10-02..2022-10-10; 2023-04-21..2023-05-04; 2023-05-04..2023-05-15; 2023-06-13..2023-06-26; 2023-07-09..2023-07-17; 2023-07-17..2023-07-26; 2023-08-14..2023-08-27; 2023-08-28..2023-10-01; 2023-10-05..2023-10-13; 2024-08-24..2024-09-06; 2024-09-23..2024-10-05; 2025-04-18..2025-04-25; 2026-04-15..2026-05-03; 2026-05-04..2026-05-14; 2026-07-20..2026-07-29
+27,USGS:06478513,nitrate,keep,,,,bulk decision,qual-v1,SNR-0BXH,quality review,17.32,2021-09-18..2021-09-27; 2021-10-09..2021-10-20; 2022-06-25..2022-07-05; 2022-09-08..2022-09-22; 2023-05-18..2023-05-31; 2024-10-07..2024-10-16; 2026-04-09..2026-04-28; 2026-05-10..2026-05-18; 2026-05-26..2026-06-09; 2026-07-14..2026-07-25
+28,USGS:01311143,nitrate,keep,,,,bulk decision,qual-v1,SNR-07W2,quality review,16.84,
+29,USGS:06900050,nitrate,keep,,,,bulk decision,qual-v1,SNR-070H,quality review,16.14,2020-08-18..2020-08-28; 2020-09-17..2020-09-29; 2020-10-23..2020-11-03; 2021-08-02..2021-08-12; 2021-08-13..2021-08-31; 2021-09-04..2021-09-11; 2022-08-04..2022-08-16; 2022-08-26..2022-09-02; 2022-09-22..2022-10-01; 2022-10-02..2022-10-10; 2022-10-12..2022-10-24; 2023-09-02..2023-09-18; 2023-10-05..2023-10-26; 2024-10-09..2024-10-27; 2026-07-01..2026-07-11
+30,USGS:05579630,nitrate,keep,,,,bulk decision,qual-v1,SNR-07O9,quality review,16.1,2010-08-22..2010-09-01; 2010-09-05..2010-09-19; 2010-09-23..2010-10-24; 2010-10-27..2010-11-04; 2010-11-06..2010-11-23; 2011-09-17..2011-09-25; 2012-06-29..2012-07-26; 2012-08-07..2012-08-16
+31,USGS:07295000,nitrate,keep,,,,bulk decision,qual-v1,SNR-00HZ,quality review,15.48,2026-04-09..2026-04-17; 2026-04-17..2026-04-25
+32,USGS:01574000,nitrate,keep,,,,bulk decision,qual-v1,SNR-0745,quality review,15.46,2021-07-07..2021-07-16; 2021-07-25..2021-08-02; 2022-08-03..2022-08-17; 2022-08-25..2022-09-06; 2023-06-02..2023-06-23; 2023-08-23..2023-08-31; 2023-10-25..2023-11-22; 2024-10-21..2024-11-05; 2024-11-06..2024-11-23
+33,USGS:414204071111601,nitrate,keep,,,,bulk decision,qual-v1,SNR-09X0,quality review,15.14,2025-06-30..2025-07-09; 2026-07-12..2026-07-20
+34,USGS:07143672,nitrate,keep,,,,bulk decision,qual-v1,SNR-04A5,quality review,15.02,2017-06-16..2017-06-26; 2018-04-14..2018-04-22; 2018-11-12..2018-11-20; 2019-11-25..2019-12-05; 2019-12-05..2019-12-18; 2021-01-06..2021-01-13; 2022-08-16..2022-08-30; 2022-08-30..2022-09-10; 2022-11-11..2022-12-13; 2023-01-11..2023-01-18; 2023-12-01..2023-12-12
+35,USGS:401934089541702,nitrate,keep,,,,bulk decision,qual-v1,SNR-07H4,quality review,14.79,2023-12-03..2023-12-11; 2025-12-29..2026-01-06; 2026-01-07..2026-01-19; 2026-02-25..2026-03-08; 2026-03-15..2026-04-04; 2026-04-12..2026-04-20
+36,USGS:03275990,nitrate,keep,,,,bulk decision,qual-v1,SNR-0618,quality review,14.62,2017-05-04..2017-05-15; 2017-08-11..2017-08-19; 2017-08-23..2017-09-01; 2017-09-25..2017-10-03; 2017-10-28..2017-11-06; 2017-11-25..2017-12-04
+37,USGS:05576195,nitrate,keep,,,,bulk decision,qual-v1,SNR-06CR,quality review,14.38,2015-10-15..2015-10-22; 2015-10-29..2015-11-10; 2015-11-10..2015-11-18; 2024-08-26..2024-09-06; 2025-11-25..2025-12-17
+38,MPCA:51026001,nitrate,keep,,,,bulk decision,qual-v1,SNR-0D0N,quality review,14.37,
+39,USGS:05576100,nitrate,keep,,,,bulk decision,qual-v1,SNR-06GQ,quality review,13.32,2015-10-17..2015-10-24; 2017-09-13..2017-09-29; 2017-11-05..2017-11-15; 2017-12-05..2018-01-01; 2018-01-03..2018-01-22; 2025-12-28..2026-01-07; 2026-01-21..2026-02-08
+40,USGS:07289730,nitrate,keep,,,,bulk decision,qual-v1,SNR-00UG,quality review,13.21,
+41,USGS:0110588332,nitrate,keep,,,,bulk decision,qual-v1,SNR-09U3,quality review,12.79,2023-10-25..2023-11-01
+42,IWQIS:WQS0009+USGS:05411900,nitrate,keep,,,,bulk decision,qual-v1,SNR-0BVB,quality review,12.62,2016-08-24..2016-09-03
+43,IWQIS:WQS0119,nitrate,keep,,,,bulk decision,qual-v1,SNR-0ALL,quality review,12.2,2026-08-12..2026-08-22
+44,USGS:03432100,nitrate,keep,,,,bulk decision,qual-v1,SNR-02DT,quality review,12.06,2025-08-16..2025-08-25
+45,USGS:05599490,nitrate,keep,,,,bulk decision,qual-v1,SNR-0415,quality review,11.93,2016-09-29..2016-10-10; 2018-11-15..2018-11-23; 2019-06-11..2019-06-19; 2020-02-06..2020-02-14
+46,USGS:381704085941800,nitrate,keep,,,,bulk decision,qual-v1,SNR-04KK,quality review,11.89,
+47,USGS:03123499,nitrate,keep,,,,bulk decision,qual-v1,SNR-04H8,quality review,11.89,
+48,USGS:07288800,nitrate,keep,,,,bulk decision,qual-v1,SNR-00SU,quality review,11.62,2026-07-30..2026-08-13
+49,IWQIS:WQS0114,nitrate,keep,,,,bulk decision,qual-v1,SNR-0BZ3,quality review,11.55,2025-06-09..2025-06-17
+50,USGS:01668000,nitrate,keep,,,,bulk decision,qual-v1,SNR-04LM,quality review,11.47,2024-11-12..2024-11-20; 2026-07-19..2026-07-30
+51,USGS:05579610,nitrate,keep,,,,bulk decision,qual-v1,SNR-07OT,quality review,11.03,2012-08-05..2012-08-26
+52,USGS:06902000,nitrate,keep,,,,bulk decision,qual-v1,SNR-06BL,quality review,10.99,2017-08-13..2017-08-22; 2018-04-12..2018-04-24
+53,USGS:05554300,nitrate,keep,,,,bulk decision,qual-v1,SNR-083T,quality review,10.84,2011-11-16..2011-11-27; 2018-10-03..2018-10-11; 2022-10-05..2022-10-21; 2024-09-26..2024-10-03; 2024-10-14..2024-10-30; 2024-11-21..2024-12-03; 2025-10-22..2025-10-30; 2025-11-05..2025-11-14; 2025-11-25..2025-12-05
+54,IWQIS:WQS0012,nitrate,keep,,,,bulk decision,qual-v1,SNR-0CC2,quality review,10.76,2015-03-08..2015-03-16
+55,MPCA:40016001,nitrate,keep,,,,bulk decision,qual-v1,SNR-0D7G,quality review,10.75,
+56,USGS:06818000,nitrate,keep,,,,bulk decision,qual-v1,SNR-06J3,quality review,10.73,2022-10-09..2022-10-20; 2023-11-20..2023-11-28
+57,IWQIS:WQS0025,nitrate,keep,,,,bulk decision,qual-v1,SNR-0B63,quality review,10.64,
+58,USGS:03433500,nitrate,keep,,,,bulk decision,qual-v1,SNR-02LZ,quality review,10.63,
+59,IWQIS:WQS0081+USGS:05481000,nitrate,keep,,,,bulk decision,qual-v1,SNR-0B45,quality review,10.53,2022-11-12..2022-11-21
+60,USGS:03381495,nitrate,keep,,,,bulk decision,qual-v1,SNR-04CI,quality review,10.49,2016-08-27..2016-09-04
+61,USGS:015319015,nitrate,keep,,,,bulk decision,qual-v1,SNR-09XZ,quality review,10.46,
+62,USGS:06899900,nitrate,keep,,,,bulk decision,qual-v1,SNR-07O3,quality review,10.44,2023-06-07..2023-06-15
+63,USGS:07047950,nitrate,keep,,,,bulk decision,qual-v1,SNR-01NV,quality review,10.37,2025-12-10..2025-12-17; 2026-01-13..2026-01-22; 2026-01-26..2026-02-04
+64,IWQIS:WQS0104,nitrate,keep,,,,bulk decision,qual-v1,SNR-0AVJ,quality review,10.34,2023-11-09..2023-11-16
+65,USGS:03276000,nitrate,keep,,,,bulk decision,qual-v1,SNR-060T,quality review,10.31,2017-12-14..2017-12-23
+66,USGS:07290660,nitrate,keep,,,,bulk decision,qual-v1,SNR-00NO,quality review,10.18,
+67,USGS:06901500,nitrate,keep,,,,bulk decision,qual-v1,SNR-06RZ,quality review,10.14,2023-08-31..2023-09-08; 2023-09-09..2023-09-16
+68,USGS:03374100,nitrate,keep,,,,bulk decision,qual-v1,SNR-04S0,quality review,10.09,2024-08-12..2024-08-19; 2024-08-29..2024-09-23
+69,USGS:07144100,nitrate,keep,,,,bulk decision,qual-v1,SNR-0454,quality review,9.84,2022-09-14..2022-09-24; 2023-03-09..2023-03-17; 2023-08-28..2023-09-06
+70,USGS:06480000,nitrate,keep,,,,bulk decision,qual-v1,SNR-0D8B,quality review,9.76,
+71,USGS:375350097262800,nitrate,keep,,,,bulk decision,qual-v1,SNR-045Q,quality review,9.69,2022-10-28..2022-11-04; 2024-07-22..2024-07-31
+72,USGS:03346500,nitrate,keep,,,,bulk decision,qual-v1,SNR-0518,quality review,9.64,2016-09-05..2016-09-15; 2016-09-27..2016-10-10; 2023-11-01..2023-11-09; 2023-12-06..2023-12-17; 2025-09-04..2025-09-12
+73,USGS:03338780,nitrate,keep,,,,bulk decision,qual-v1,SNR-07DX,quality review,9.5,2020-11-06..2020-11-16
+74,USGS:01674500,nitrate,keep,,,,bulk decision,qual-v1,SNR-0458,quality review,9.26,
+75,IWQIS:WQS0002+USGS:05454300,nitrate,keep,,,,bulk decision,qual-v1,SNR-09UW,quality review,9.08,
+76,USGS:415959091441301,nitrate,keep,,,,bulk decision,qual-v1,SNR-0AGO,quality review,8.92,
+77,USGS:05447500,nitrate,keep,,,,bulk decision,qual-v1,SNR-09GE,quality review,8.78,2025-10-20..2025-10-29; 2025-10-31..2025-11-09
+78,IWQIS:WQS0006+USGS:05455700,nitrate,keep,,,,bulk decision,qual-v1,SNR-09C7,quality review,8.53,2016-01-30..2016-02-06
+79,USGS:06894650,nitrate,keep,,,,bulk decision,qual-v1,SNR-05ND,quality review,8.43,
+80,USGS:03381500,nitrate,keep,,,,bulk decision,qual-v1,SNR-04BB,quality review,8.39,
+81,IWQIS:WQS0090,nitrate,keep,,,,bulk decision,qual-v1,SNR-0CGM,quality review,8.29,
+82,USGS:02041650,nitrate,keep,,,,bulk decision,qual-v1,SNR-03KW,quality review,8.29,
+83,MPCA:43020001,nitrate,keep,,,,bulk decision,qual-v1,SNR-0CTS,quality review,8.28,
+84,IWQIS:WQS0039+USGS:05480820,nitrate,keep,,,,bulk decision,qual-v1,SNR-0BJY,quality review,8.13,
+85,USGS:02035000,nitrate,keep,,,,bulk decision,qual-v1,SNR-03YB,quality review,8.08,
+86,USGS:03340870,nitrate,keep,,,,bulk decision,qual-v1,SNR-06H0,quality review,8.03,
+87,IWQIS:WQP0010+USGS:05451500,nitrate,keep,,,,bulk decision,qual-v1,SNR-0AKE,quality review,7.82,
+88,MPCA:32062001,nitrate,keep,,,,bulk decision,qual-v1,SNR-0D08,quality review,7.79,
+89,IWQIS:WQS0005+USGS:05455500,nitrate,keep,,,,bulk decision,qual-v1,SNR-09F8,quality review,7.74,
+90,USGS:01458500,nitrate,keep,,,,bulk decision,qual-v1,SNR-07RQ,quality review,7.73,
+91,USGS:06808500,nitrate,keep,,,,bulk decision,qual-v1,SNR-08CN,quality review,7.54,
+92,MPCA:82015001,nitrate,keep,,,,bulk decision,qual-v1,SNR-0CWB,quality review,7.51,
+93,IWQIS:WQS0001,nitrate,keep,,,,bulk decision,qual-v1,SNR-09WD,quality review,7.29,
+94,MPCA:43007002,nitrate,keep,,,,bulk decision,qual-v1,SNR-0CWG,quality review,7.09,
+95,USGS:01184000,nitrate,keep,,,,bulk decision,qual-v1,SNR-0AFN,quality review,6.87,
+96,USGS:05545750,nitrate,keep,,,,bulk decision,qual-v1,SNR-0BD9,quality review,6.8,
+97,MPCA:29011001,nitrate,keep,,,,bulk decision,qual-v1,SNR-0DA9,quality review,6.62,
+98,USGS:01576045,nitrate,keep,,,,bulk decision,qual-v1,SNR-06UT,quality review,6.53,
+99,IWQIS:WQS0046,nitrate,keep,,,,bulk decision,qual-v1,SNR-09JC,quality review,6.49,
+100,USGS:05484000,nitrate,keep,,,,bulk decision,qual-v1,SNR-09NC,quality review,6.34,
+101,IWQIS:WQP0013,nitrate,keep,,,,bulk decision,qual-v1,SNR-09VB,quality review,6.3,
+102,USGS:411955088280601,nitrate,keep,,,,bulk decision,qual-v1,SNR-095Z,quality review,6.17,
+103,USGS:05446500,nitrate,keep,,,,bulk decision,qual-v1,SNR-09KB,quality review,6.07,
+104,MPCA:48027001,nitrate,keep,,,,bulk decision,qual-v1,SNR-0CT4,quality review,5.77,
+105,IWQIS:WQS0061+USGS:06608500,nitrate,keep,,,,bulk decision,qual-v1,SNR-0A58,quality review,5.72,
+106,USGS:01193050,nitrate,keep,,,,bulk decision,qual-v1,SNR-09JK,quality review,5.61,
+107,USGS:07144790,nitrate,keep,,,,bulk decision,qual-v1,SNR-0408,quality review,5.54,
+108,USGS:04067958,nitrate,keep,,,,bulk decision,qual-v1,SNR-0E5H,quality review,5.28,
+109,USGS:07052500,nitrate,keep,,,,bulk decision,qual-v1,SNR-038U,quality review,5.28,
+110,IWQIS:WQS0043+USGS:06600500,nitrate,keep,,,,bulk decision,qual-v1,SNR-0BBQ,quality review,5.25,
+111,MPCA:41043001+USGS:05374900,nitrate,keep,,,,bulk decision,qual-v1,SNR-0DCA,quality review,5.17,
+112,IWQIS:WQS0026,nitrate,keep,,,,bulk decision,qual-v1,SNR-0B71,quality review,5.16,
+113,MPCA:83016001,nitrate,keep,,,,bulk decision,qual-v1,SNR-0CS7,quality review,5.16,
+114,USGS:05482000,nitrate,keep,,,,bulk decision,qual-v1,SNR-09P8,quality review,5.15,
+115,USGS:05480986,nitrate,keep,,,,bulk decision,qual-v1,SNR-0B7R,quality review,5.03,
+116,IWQIS:WQS0064+USGS:05388250,nitrate,keep,,,,bulk decision,qual-v1,SNR-0CK5,quality review,4.29,
+117,IWQIS:WQS0056,nitrate,keep,,,,bulk decision,qual-v1,SNR-0B1K,quality review,4.26,
+118,IWQIS:WQS0066,nitrate,keep,,,,bulk decision,qual-v1,SNR-0A4V,quality review,4.17,
+119,USGS:384637075153201,nitrate,keep,,,,bulk decision,qual-v1,SNR-053J,quality review,4.03,
+120,USGS:401913089534501,nitrate,keep,,,,bulk decision,qual-v1,SNR-07GS,quality review,3.98,
+121,USGS:0167300055,nitrate,keep,,,,bulk decision,qual-v1,SNR-0412,quality review,3.27,
+122,IWQIS:WQS0076,nitrate,keep,,,,bulk decision,qual-v1,SNR-09VL,quality review,2.98,
+123,USGS:06892350,nitrate,keep,,,,bulk decision,qual-v1,SNR-05FC,quality review,2.97,
+124,IWQIS:WQS0040+USGS:06609500,nitrate,keep,,,,bulk decision,qual-v1,SNR-09RV,quality review,2.74,
+125,IWQIS:WQS0080,nitrate,keep,,,,bulk decision,qual-v1,SNR-09DX,quality review,2.01,
+126,IWQIS:WQP0004,nitrate,keep,,,,bulk decision,qual-v1,SNR-09R4,quality review,2.0,
+127,IWQIS:WQP0014,nitrate,keep,,,,bulk decision,qual-v1,SNR-09R6,quality review,1.89,
+128,USGS:05536356,nitrate,keep,,,,bulk decision,qual-v1,SNR-09PY,quality review,1.68,
+129,USGS:05480603,nitrate,keep,,,,bulk decision,qual-v1,SNR-0B37,quality review,1.49,
+130,USGS:01632900,nitrate,keep,,,,bulk decision,qual-v1,SNR-0506,quality review,1.05,
+131,IWQIS:WQS0068,nitrate,keep,,,,bulk decision,qual-v1,SNR-08CZ,quality review,,
+132,IWQIS:WQS9904,nitrate,keep,,,,bulk decision,qual-v1,SNR-09F5,quality review,,
+133,IWQIS:WQS9999,nitrate,keep,,,,bulk decision,qual-v1,SNR-09TA,quality review,,
+134,IWQIS:WQS0085,nitrate,keep,,,,bulk decision,qual-v1,SNR-0BIR,quality review,,
+135,IWQIS:WQS9931,nitrate,keep,,,,bulk decision,qual-v1,SNR-0BSW,quality review,,
+136,MPCA:32079001,nitrate,keep,,,,bulk decision,qual-v1,SNR-0D5O,quality review,,

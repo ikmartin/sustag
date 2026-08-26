@@ -224,6 +224,23 @@ def build_app() -> Dash:
                 ], style={"display": "flex", "gap": "10px"}),
                 html.Div(id="status", style={"fontFamily": "monospace", "color": "#0a662e",
                                              "fontSize": 12, "overflowWrap": "anywhere"}),
+                # BULK ACTIONS, behind a closed disclosure. Every button here writes EVERY row on the
+                # sheet in one go; the guard is the point, and "reset" is the undo that makes the
+                # other two recoverable.
+                html.Details([
+                    html.Summary("DANGER", style={"color": "#b91c1c", "fontWeight": "bold",
+                                                  "fontSize": 12, "cursor": "pointer"}),
+                    html.Div(id="danger-note", style={"fontSize": 11, "color": "#555",
+                                                      "margin": "4px 0"}),
+                    html.Button("Keep All", id="bulk-keep", n_clicks=0,
+                                style={"width": "100%", "marginBottom": "4px"}),
+                    html.Button("Exclude All", id="bulk-exclude", n_clicks=0,
+                                style={"width": "100%", "marginBottom": "4px"}),
+                    html.Button("Reset All Decisions", id="bulk-reset", n_clicks=0,
+                                style={"width": "100%"}),
+                ], id="danger-wrap", style={"display": "none", "border": "1px solid #fecaca",
+                                            "borderRadius": "6px", "padding": "6px 8px",
+                                            "background": "#fef2f2", "marginTop": "10px"}),
             ], style={"flex": "0 0 20%", "boxSizing": "border-box", "paddingLeft": "14px",
                       "display": "flex", "flexDirection": "column", "gap": "10px",
                       "alignSelf": "flex-start", "position": "sticky", "top": "8px"}),
@@ -267,6 +284,35 @@ def build_app() -> Dash:
                   Input("f-reset", "n_clicks"), prevent_initial_call=True)
     def _reset(_n):
         return "undecided", [], "any", [], [], [], ""
+
+    @app.callback(Output("danger-wrap", "style"), Output("danger-note", "children"),
+                  Input("tab", "value"), Input("status", "children"))
+    def _danger_visible(name, _status):
+        if name != "quality":
+            return {"display": "none"}, ""
+        d = backend.sheet(name)
+        style = {"display": "block", "border": "1px solid #fecaca", "borderRadius": "6px",
+                 "padding": "6px 8px", "background": "#fef2f2", "marginTop": "10px"}
+        return style, (f"applies to ALL {len(d)} row(s) on this sheet, at once. Keep/Exclude set the "
+                       f"verdict and leave any hand-entered spans/thresholds in place; Reset clears "
+                       f"verdicts AND spans AND thresholds.")
+
+    @app.callback(Output("status", "children", allow_duplicate=True),
+                  Input("bulk-keep", "n_clicks"), Input("bulk-exclude", "n_clicks"),
+                  Input("bulk-reset", "n_clicks"),
+                  State("tab", "value"), State("sticky-decided-by", "data"),
+                  prevent_initial_call=True)
+    def _bulk(_k, _e, _r, name, who):
+        if not ctx.triggered or not ctx.triggered[0].get("value"):
+            return no_update
+        verdict = {"bulk-keep": "keep", "bulk-exclude": "exclude", "bulk-reset": ""}.get(
+            ctx.triggered_id, None)
+        if verdict is None:
+            return no_update
+        try:
+            return backend.bulk_decide(name, verdict, decided_by=str(who or ""))
+        except ValueError as e:
+            return f"REFUSED: {e}"
 
     @app.callback(Output("excl-wrap", "style"), Input("tab", "value"))
     def _excl_visible(name):
@@ -352,13 +398,19 @@ def build_app() -> Dash:
         led = backend.ledgers()[name]
         extras = []
         for c in led.extra_editable:
+            # LABEL ABOVE, help behind a marked toggle. The label used to live in the input's
+            # placeholder with a bare "?" disclosure under it, which browsers draw as an unlabelled
+            # collapsible and reads as an empty dropdown.
+            # Label, then the hint as plain text, then the input. No disclosure: a one-line hint
+            # costs nothing to show and a bare "?" toggle reads as a broken control.
             extras.append(html.Div([
+                html.Div(c, style={"fontWeight": "bold", "fontSize": 12}),
+                html.Div(backend.EXTRA_HELP.get(c, ""),
+                         style={"fontSize": 11, "color": "#555", "lineHeight": "1.35"}),
                 dcc.Input(id={"kind": "extra", "field": c}, placeholder=c,
                           value=str(row.get(c, "") or ""), debounce=True,
                           style={"width": "100%", "boxSizing": "border-box"}),
-                html.Details([html.Summary("?"),
-                              html.Div(backend.EXTRA_HELP.get(c, ""), style={"fontSize": 12})]),
-            ], style={"display": "flex", "flexDirection": "column", "gap": "4px"}))
+            ], style={"display": "flex", "flexDirection": "column", "gap": "3px"}))
         build = evidence.BUILDERS.get(name, evidence.generic)
         return (build(row), extras,
                 str(row.get("decision", "")).strip() or None,
@@ -434,7 +486,28 @@ def build_app() -> Dash:
         raw = pd.read_parquet(backend.config.WATER_MERGED / f"{row.get('code')}.parquet")
         from . import plots
 
-        return dcc.Graph(figure=plots.masked_figure(raw, masked, str(row["channel"])))
+        why = backend.mask_explain(str(row.get("code")), str(row["channel"]),
+                                   extras.get("exclude_spans", ""), extras.get("max_threshold", ""))
+        lines = [f"raw {why.get('days_total', 0):,} day(s) -> published {len(masked):,}"]
+        if "days_in_spans" in why:
+            lines.append(f"{why['days_in_spans']} day(s) inside the excluded spans")
+        if "threshold" in why:
+            lines.append(f"ceiling {why['threshold']:g}: {why['days_over']} day(s) withheld WHOLE, "
+                         f"of which {why.get('days_over_whose_mean_is_under', 0)} have a mean UNDER "
+                         f"the ceiling -- a day goes when ANY of its statistics exceeds it, because "
+                         f"the mean was computed from the offending samples too")
+            trips = why.get("tripped_by") or {}
+            if trips:
+                lines.append("tripped by: " + ", ".join(f"{k.split('_', 1)[1]} ({v})"
+                                                        for k, v in sorted(trips.items(),
+                                                                           key=lambda kv: -kv[1])))
+        return html.Div([
+            html.Div([html.Div(x, style={"marginBottom": "2px"}) for x in lines],
+                     style={"fontFamily": "monospace", "fontSize": 12, "background": "#f8fafc",
+                            "border": "1px solid #e2e8f0", "borderRadius": "6px",
+                            "padding": "8px 10px", "margin": "6px 0", "maxWidth": "900px"}),
+            dcc.Graph(figure=plots.masked_figure(raw, masked, str(row["channel"]))),
+        ])
 
     return app
 

@@ -193,9 +193,10 @@ def _crops_closure(df: pd.DataFrame, cov: pd.DataFrame) -> tuple[bool, str]:
 # ---- nutrients --------------------------------------------------------------------------------------
 
 NUTRIENT_CRS = "EPSG:5070"
+# Subdirectories of RAW/gTREND, named as the gTREND-Nitrogen release ships them (Table 1 of its README, which sits beside them). The release carries 22 N mass-balance components on this same 250 m EPSG:5070 lattice; these two are the ones the nutrients product reduces today, and adding a component is one entry here.
 NUTRIENT_SOURCES = {
-    "surplus": ("surplus", "Surplus_N_"),
-    "fertilizer": ("fertilizer", "Fertilizer_Ag_"),
+    "surplus": ("gTREND/Surplus", "Surplus_N_"),
+    "fertilizer": ("gTREND/Agriculture_Fertilizer", "Fertilizer_Ag_"),
 }
 HA_PER_PIXEL = 250.0 * 250.0 / 10_000.0
 
@@ -204,7 +205,7 @@ def nutrient_rasters() -> dict[str, object]:
     """`{'{product}_{year}': path}` for every year of both products found on disk."""
     out = {}
     for product, (sub, stem) in NUTRIENT_SOURCES.items():
-        d = config.RAW / sub / "national"
+        d = config.RAW / sub
         for p in sorted(d.glob(f"{stem}*.tif")):
             try:
                 y = int(p.stem.replace(stem, ""))

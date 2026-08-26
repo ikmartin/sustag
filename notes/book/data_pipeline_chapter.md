@@ -29,7 +29,7 @@ Two things the pipeline does **not** do. It builds **no graph**: no nodes, no ed
 - [AOE Determination and Sensor Discovery](#aoe-determination-and-sensor-discovery)
 - [Geometry and Proximity of Sensors](#geometry-and-proximity-of-sensors)
 - [Identity and Sensor Merges](#identity-and-sensor-merges)
-- [Cleaning and Scrubbing](#cleaning-and-scrubbing)
+- [Cleaning, Scrubbing and Filtering](#cleaning-scrubbing-and-filtering)
 - [Publication](#publication)
 - [The Flow Network](#the-flow-network)
 - [Basins](#basins)
@@ -82,7 +82,7 @@ Each stage also runs alone (`run d2 --single`), and each prints what it read, wh
 
 ## Channels and Canonicalisation
 
-Three sources name the same quantity three ways: USGS keys columns by parameter code, IWQIS by ad-hoc English names, MPCA by integer variable ids. One **channel registry** is the single extension point for everything a sensor can measure; nothing else in the build may contain a literal parameter code or source column name. Each channel declares its canonical unit, its per-source native mappings and scales, its physical range (§ Cleaning and Scrubbing), its daily-statistics tier, and four independent axes that must never be conflated:
+Three sources name the same quantity three ways: USGS keys columns by parameter code, IWQIS by ad-hoc English names, MPCA by integer variable ids. One **channel registry** is the single extension point for everything a sensor can measure; nothing else in the build may contain a literal parameter code or source column name. Each channel declares its canonical unit, its per-source native mappings and scales, its physical range (§ Cleaning, Scrubbing and Filtering), its daily-statistics tier, and four independent axes that must never be conflated:
 
 - **fetch_priority** (1 | 2) — which channels the census asks for first. A fetch-cost fact, nothing else.
 - **scrutiny** (high | standard) — the stewardship tier. Identity and quality decisions touching a high-tier record gate on a human; standard-tier decisions take the rule's answer, recorded. A function of scarcity × consequence, not of any model's target. Nitrate sits alone in the high tier, and an import-time check refuses a tier larger than three channels — it is meant to be small and rarely changed.
@@ -143,7 +143,7 @@ half_lon_m = 0.5 · 10^(−dp_lon) · 111,320 · cos(φ)
 
 A sensor stated as `43.21, −92.7503` has a true position inside a sliver ±557 m north–south and ±4 m east–west — a shape no radius can represent, and one that a review map can intersect with the stream geometry to pin the position far tighter than either constraint alone.
 
-**Coordinate sentinels.** The value `−99.0` in both coordinates is a fill, not a place. It is a member of the sentinel machinery (§ Cleaning and Scrubbing): a sensor carrying it has *no* stated location, participates in no proximity computation, and snaps to nothing.
+**Coordinate sentinels.** The value `−99.0` in both coordinates is a fill, not a place. It is a member of the sentinel machinery (§ Cleaning, Scrubbing and Filtering): a sensor carrying it has *no* stated location, participates in no proximity computation, and snaps to nothing.
 
 **Snapping.** Each located sensor snaps to the nearest NHDPlus flowline, recording `comid` (the reach), `snap_dist_m` (the residual), `snap_pos_m` (metres from the reach's upstream end along the flowline), and `comid_agree` (whether the containing catchment's reach matches the snapped reach — disagreement means the sensor sits near a drainage divide and its reach assignment is less certain). The snap searches outward in radius tiers (500 m, 2 km, 10 km); among reaches within **25 m** of the closest it prefers the larger upstream drainage area, which resolves a confluence toward the mainstem without dragging a genuine tributary sensor onto it; where the source publishes its own drainage area, a candidate whose accumulated area disagrees by more than **2×** (|log error| > 0.69) is rejected in favor of one within **1.25×** if such exists inside 600 m; a snap beyond **500 m** is marked far. The snap residual is **context, never positional uncertainty**: a sensor 300 m from any mapped flowline is not a sensor whose own position is doubtful by 300 m — it means the flowline geometry is coarse there, or the sensor is not on a mapped stream at all (a well, a tile outlet, a field plot). Its stated coordinate may be exactly right, and the residual is displayed beside decisions as "the reach assignment is unreliable here", not folded into geometry.
 
@@ -227,13 +227,17 @@ Verified invariants (§ Verification): the bijection holds; every code is upperc
 **What a merge produces.** The merged record publishes under its **canonical member's** SNR id — the highest-authority member, ranked: a declared co-location a measurement confirms, then a measured co-location, then the longest record. The ranking is fully automatic and deliberately takes no human input: the choice affects only which member's id and coordinates front the record — never the assembled series — and within a ≤ 100 m bundle the coordinate difference is immaterial, so there is nothing here a human could usefully care about. The members, the rule that merged them, and who decided are columns. Where members overlap on a channel, the channel's registry merge policy picks a **winner per span**: every published day of every channel comes from exactly one contributing sensor, recorded per day in a `{channel}_src` provenance column. Values are never blended — a blend of two calibrations is a number no instrument produced.
 **Groundwater pairs are decided on record evidence alone.** Nested piezometers share a coordinate exactly, so geometry has no discriminating power in the one same-type class where nothing else separates a pair; the separating signal is the records (different screens in different aquifer units are uncorrelated or anticorrelated). Screen depth is not currently carried by any source we ingest; until it is, groundwater pairs always go to a human.
 
-## Cleaning and Scrubbing
+## Cleaning, Scrubbing and Filtering
 
-The rule, restated for this section: **scrub only what no conceivable model would want.** Everything scrubbed here is an instrument artifact — a fill value, a physically impossible reading, a dead instrument holding a value — never an improbable-but-possible measurement. Improbability is a modeling judgment; impossibility is a fact. Every mechanism below counts what it removes, per record and channel, and the counts are published metadata.
+Data is cleaned, scrubbed or filtered at various points in this pipeline, this section accounts for each place this occurs. The rule is that we remove **only the data no model would ever use**. This means we discard sensor records which come back empty, we scrub sentinel values like -999999 when they are clearly unphysical or documented by the publisher, but we do nothing else. The exception to this is the quality review panel which flags sensor data with basic statistics and has the ability to manually exclude ranges from the series.
 
-Four mechanisms, applied most-specific-first. For each value the order is: sentinel check (native units) → unit scaling → range check (canonical units); the per-sensor ceiling and span exclusions apply later, at publication, because they are (site, channel)-scoped judgments rather than value-scoped facts.
+Every removal is one of three kinds, and this section enumerates all of them: **value scrubs** (is this a measurement at all? — automatic, tally-closed), **structural filters** (is this site in scope? — never about quality), and **recorded judgments** (the quality ledger — a person's decision, by default absent).
 
-**Mechanism 1 — source sentinels, in native units, per native column, before combining and before scaling.** A sentinel is a fill value wearing a number, and it is exact: matched as an equality against a per-source list, in the units the source publishes. Two ordering rules, both load-bearing. *Before scaling*, because after a scale factor −999999 cfs becomes −28,316.82 m³/s, a number that looks like nothing in particular. *Per native column, before any combine*, because several channels assemble from more than one native column (a mean or max across variants), and a −999999 averaged with a real value is no longer exactly −999999 and is uncatchable afterward. The scrub tallies are therefore counted at the native-cell grain — `n_raw`, `n_kept`, `n_sentinel`, `n_nulled` all count cells of the source's columns, before any combine — so the invariant `n_raw = n_kept + n_sentinel + n_nulled` closes at one declared grain. The lists, each value measured in the wild:
+### Value scrubs
+
+Three mechanisms, applied in order per value: sentinel check (native units) → unit scaling → range check (canonical units).
+
+**Sentinels** — exact fill values, matched per native column, *before* combining and *before* scaling: after a scale factor −999999 cfs becomes −28,316.82 m³/s, a number that looks like nothing in particular, and a sentinel averaged into a two-column combine is no longer exact and is uncatchable afterward. Counted at the native-cell grain into the persisted scrub tallies, which close: `n_kept = n_cells − n_sentinel − n_below_lo − n_above_hi`, with clamped cells kept and counted in `n_clamped`. The lists, each value measured in the wild:
 
 | source | sentinel (native) | seen as, canonically | measured occurrences |
 |---|---|---|---|
@@ -244,7 +248,7 @@ Four mechanisms, applied most-specific-first. For each value the order is: senti
 
 The 999.99 case is why sentinels exist as a mechanism separate from ranges: real turbidity in this cohort reaches 6,940, so no defensible range ceiling sits below 1,000 — and without the sentinel rule, 49,531 fill values (34% of that station's turbidity record) publish as water. The control that shows the match is safe: across 17 million turbidity observations at all other stations, an exact 999.99 occurs four times. A sentinel becomes a missing value; it is never clamped.
 
-**Mechanism 2 — the physical range**, per channel, in canonical units. `lo` and `hi` bound what an *instrument* can truthfully report — they catch a failed sensor, never trim a distribution. The principle that sets every bound: **instrument-impossible, not site-implausible.** A hot spring at 59.8 °C and highway runoff at 175,000 µS/cm are real water measured truthfully at unusual sites, and nulling them because the cohort's median site could never produce them would be a modeling preference smuggled into the build; site-weirdness is the modeler's filter. The audit that grounds this table scanned all 1.76 billion values in the current native store; "what the bound catches" below is measured, not hypothesized.
+**The physical range** — per channel, in canonical units: `lo` and `hi` bound what an *instrument* can truthfully report — they catch a failed sensor, never trim a distribution. The principle that sets every bound: **instrument-impossible, not site-implausible.** A hot spring at 59.8 °C is real water measured truthfully at an unusual site; turbidity at 7.7 × 10¹⁰ is electronics. Nulling the second removes a non-measurement; nulling the first would be a modeling preference smuggled into the build, so site-weirdness is left to the modeler. Every bound was set by scanning all 1.76 billion values in the current native store; "what the bound catches" below is measured, not hypothesized.
 
 Semantics of a bound, for a channel with `clamp_negatives` set (concentrations and optical channels, which have a true zero):
 
@@ -277,11 +281,29 @@ The table. Every number justified in the right-hand column:
 
 Ranges and sentinels are registry facts, so the registry fingerprint covers them: editing a bound stales every canonical file, loudly, which is the intended cost.
 
-**Mechanism 3 — the per-sensor ceiling (`max_threshold`)**, a quality-ledger column. A value can be credible for the channel and impossible for *this* water — a DO probe reading atmospheric values from a drained ditch, a sensor with a known bad gain. A human writes a literal ceiling for one (record, channel); at publication, **whole days** with any sample above it are withheld, not just the samples, because the day's published mean was computed from the offending samples too.
+**The sub-detection clamp**, third of the three, is the one value *modification* rather than removal — the `lo <= value < 0 -> 0` rule in the semantics block above. It is listed here so the enumeration is complete: a model reading the published store should know that a zero concentration may be a clamped "at or below detection" reading, and the scrub tallies count clamped cells separately (`n_clamped`) so the substitution is always visible.
 
-**Mechanism 4 — span exclusion (`exclude_spans`)**, a quality-ledger column. For records sound except for a bounded malfunction — a flatline month, a stuck winter — a human writes literal inclusive date windows in the syntax `YYYY-MM-DD..YYYY-MM-DD; ...`, and publication nulls the channel's days inside them. A malformed span halts the build naming the row; it never masks a guess. The detector *proposes* spans (below) in this exact syntax, so confirming one is a cell copy, not a transcription off a plot — but the ledger stores the human's literal dates, never a flag that re-resolves against a recomputed proposal.
+### Structural filters
 
-**Detection: how records earn a human's attention.** Per (record, channel), a battery of signals, each either absolute (broken on its own terms) or cohort-relative (unlike its peers, robust-z over median/MAD with the z capped at 8 so one broken series cannot flatten the scale):
+None of these consult data quality; each is recorded, not silent.
+
+| where | what | recorded as |
+|---|---|---|
+| census | outside the AOE | never registered |
+| discovery | every declared series ends before the window / channels but no dates | `declared_ends_before_window` / `no_declared_series` |
+| records | source returned nothing / request errored | `source_empty` (durable) / `attempt_failed` (retried) |
+| exclusions ledger | a human names a uid (test loggers, scratch deployments) | `excluded_reason` |
+| identity | record-less pair → no row; cross-material pair → auto-`distinct` | candidate table |
+| snap | unplaceable coordinate | `snap_status`, sensor kept |
+| publication | — | the exact `published \| excluded \| held \| recordless` partition |
+
+**There is no record-length floor anywhere.** A four-day sensor publishes like an eighteen-year one; cohort definitions ("a year of nitrate", "surface water only") are access-time preferences owned by each modeling project. One rule sits at the boundary: a standard channel with 90+ days and **literally zero variance** is auto-excluded as a dead instrument — the single statistical exclusion the build makes on its own, kept because no model wants a constant.
+
+**Attribute NODATA.** The catchment-attribute tables write −9999 for "no answer"; stored literally, a catchment with unknown corn cover reads as minus nine thousand percent corn, and since missing coverage clusters geographically the value doubles as a region id wearing a covariate's name. Masked to NaN at acquisition. (Documented trap: `CAT_TILES_Early90s` encodes NODATA as 100, which no attribute description states.)
+
+### The quality tab of the review panel
+
+The quality machinery makes a reviewer's judgment *possible and recorded* — it cleans nothing automatically, and the standing policy is `keep`. Per (record, channel) it computes a battery of signals, each either absolute (broken on its own terms) or cohort-relative (unlike its peers, robust-z over median/MAD with the z capped at 8 so one broken series cannot flatten the scale):
 
 | signal | type | trigger |
 |---|---|---|
@@ -296,9 +318,15 @@ Ranges and sentinels are registry facts, so the registry fingerprint covers them
 
 Records with fewer than 50 samples are left unjudged by shape — shape features on 50 points are noise about noise. Any signal flags the series: high recall on purpose, because the human is the precision stage. **Stuck-span proposals** are maximal runs of one identical value spanning ≥ **7 continuous days of record** — gap-aware, so identical values merely bracketing a hole are not one stuck stretch, and 7 days because quantised low-flow plateaus shorter than that are real (a dry-summer week at the detection limit). Instrument railing is deliberately *not* proposed as a span: "at least the ceiling" is information, and the ceiling mechanism handles it.
 
-**Verdicts.** High-scrutiny channels: every flagged record gates on a human — `keep` (optionally with spans and a ceiling) or `exclude` the channel's series. Standard channels: the rule's verdict is recorded, never asked about — the one *excluding* rule is absolute and narrow (a series with ≥ 90 days and literally zero variance is a dead instrument), and cohort-relative outliers (scale, autocorrelation, flatline share beyond 3.5 robust-z of the channel cohort, measured cheaply on the assembled daily records) are RECORDED beside the keep as notes rather than acted on: the absolute thresholds are nitrate-calibrated and would misfire wholesale on flashy channels, so the cohort view is evidence for the person who eventually cares, not a verdict. Either way the verdict, its reason, and its masks are columns on the published metadata, so every masked day is explicable.
+A reviewer has three actions, all written to the quality ledger keyed on (member set, channel), all surviving every rebuild. **`keep`** publishes the series as is, signals and notes beside it in the metadata. **`exclude_spans`** takes literal inclusive windows in the syntax `YYYY-MM-DD..YYYY-MM-DD; ...` — a malformed span halts the build naming the row, and the ledger stores the human's literal dates, never a flag that re-resolves against a recomputed proposal; the detector pre-fills its proposals in this exact syntax, so confirming one is a cell copy rather than a transcription off a plot. **`max_threshold`** is a per-sensor ceiling in canonical units, where the registry's `hi` is the channel-wide physical one: **whole days** with any statistic above it are withheld, not just the offending samples, because the day's published mean was computed from those samples too — on a plot of daily means this reads as a below-ceiling day vanishing, so the panel's mask preview reports the counts that explain it. The preview cannot disagree with publication: it calls publication's own masking function on the same record, so what it draws is what submitting would store.
 
-**What each mechanism writes**, summarized: a sentinel → the value was never a measurement, becomes missing. A range violation → missing. A sub-detection negative → 0. A ceiling violation → the whole day withheld for that channel. An excluded span → the channel's days in-window withheld. An excluded series → the channel absent from the published record, reason on the metadata. Nothing in any mechanism deletes a sensor: cleaning operates on values and days, exclusion of records is publication's classify-with-reason (§ Publication), and the raw archive underneath is immutable regardless.
+High-scrutiny channels gate on a human — a flagged series with no verdict on file withholds its site from publication. Standard channels record the rule's verdict and never ask: the absolute thresholds are nitrate-calibrated and would misfire wholesale on flashy channels, so their cohort-relative outliers are notes beside a keep, evidence for the person who eventually cares.
+
+With the standing policy at keep, the tab's role is **diagnostic**: review a sensor's statistics against its channel cohort, see proposed spans against the record, inspect a suspicious site on the map and the timeline together. The signals publish as metadata either way, so a modeler can consume them as read-time features or filters — which is where noise, flatlines and improbable-but-physical values belong.
+
+### What each mechanism writes
+
+A sentinel → the value was never a measurement, becomes missing. A range violation → missing. A sub-detection negative → 0. A ceiling violation → the whole day withheld for that channel. An excluded span → the channel's days in-window withheld. An excluded series → the channel absent from the published record, reason on the metadata. Nothing in any mechanism deletes a sensor: cleaning operates on values and days, exclusion of records is publication's classify-with-reason (§ Publication), and the raw archive underneath is immutable regardless.
 
 ## Publication
 

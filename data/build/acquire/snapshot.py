@@ -204,7 +204,7 @@ def _check_populations():
         return None, "no snapshot yet"
     m = load()
     natives = int(m.relpath.str.startswith("acquired/water/native/").sum())
-    quarters = int(m.relpath.str.match(r"acquired/weather/gridmet_\d{4}Q\d\.parquet").sum())
+    quarters = int(m.relpath.str.match(r"acquired/weather/daily/gridmet_\d{4}Q\d\.parquet").sum())
     ok = natives >= 6000 and quarters >= 70
     return ok, f"{natives:,} native water files (audit: 7,302), {quarters} weather quarters (audit: 76)"
 
@@ -222,9 +222,11 @@ def _check_coverage():
         return None, "no snapshot yet"
     m = load()
     manifested = set(m[m.role == "acquired"].relpath)
+    # the same skip rules as manifest_rows, fetch_status included -- the two lists must agree on what
+    # "every file" means, or a deliberate manifest exclusion reads as a coverage hole forever
     on_disk = {f"acquired/{p.relative_to(config.ACQUIRED)}" for p in config.ACQUIRED.rglob("*")
                if p.is_file() and not p.name.startswith(".") and not p.name.endswith(".tmp")
-               and "__pycache__" not in p.parts}
+               and "__pycache__" not in p.parts and not p.name.startswith("fetch_status")}
     extra = on_disk - manifested
     return not extra, (f"{len(extra)} unmanifested file(s), e.g. {sorted(extra)[:3]}"
                        if extra else f"{len(on_disk):,} files, all manifested")

@@ -12,6 +12,36 @@ MEMBER_COLORS = (A_COLOR, B_COLOR, "#2ca02c", "#b8860b", "#d62728")
 INK_2 = "#555"
 
 
+def _daily_gaps(s: pd.Series) -> pd.Series:
+    """Reindex a date-indexed series onto its full calendar span so missing days become NaN.
+
+    A record read from the store carries only the days it HAS. Plotting that directly joins the last day before an outage to the first day after it, which draws a straight line through months of absence and reads as data. The NaNs are what make the line break.
+    """
+    if s is None or not len(s):
+        return s if s is not None else pd.Series(dtype="float64")
+    idx = pd.DatetimeIndex(s.index)
+    return s.reindex(pd.date_range(idx.min(), idx.max(), freq="D"))
+
+
+def _gap_break(d: pd.DataFrame, factor: float = 4.0) -> pd.DataFrame:
+    """Insert a NaN row wherever the sampling interval jumps beyond `factor` x the median.
+
+    The daily views can reindex onto a calendar; a NATIVE series has no fixed step, so the break has to be inferred from the series' own cadence. A 15-minute record with a two-day hole should not draw through it.
+    """
+    if d is None or len(d) < 3 or "datetime" not in d.columns:
+        return d
+    t = pd.to_datetime(d["datetime"])
+    step = t.diff()
+    med = step.median()
+    if pd.isna(med) or med <= pd.Timedelta(0):
+        return d
+    brk = d.index[step > factor * med]
+    if not len(brk):
+        return d
+    gaps = pd.DataFrame({"datetime": t.loc[brk] - med / 2, "value": float("nan")})
+    return pd.concat([d, gaps]).sort_values("datetime").reset_index(drop=True)
+
+
 def record_figure(series: pd.DataFrame, proposed_spans: str = "", title: str = ""):
     """One (record, channel) native series: daily mean with hover readout, proposal windows shaded, worst segment beside."""
     import plotly.graph_objects as go
@@ -23,10 +53,14 @@ def record_figure(series: pd.DataFrame, proposed_spans: str = "", title: str = "
                         subplot_titles=[title or "record (daily)", "worst segment (native)"])
     v = series.dropna(subset=["value"]) if len(series) else series
     if len(v):
+        # NO dropna: `resample("D")` emits a row for every calendar day and NaN where the record has
+        # none, and those NaNs are the ONLY thing that makes plotly break the line. Dropping them draws
+        # a straight segment across an outage -- a six-month gap rendered as a plausible trend.
         day = (v.set_index(pd.DatetimeIndex(v.datetime)).value
-               .resample("D").agg(["mean", "min", "max", "count"]).dropna(subset=["mean"]))
+               .resample("D").agg(["mean", "min", "max", "count"]))
         fig.add_trace(go.Scatter(
             x=day.index, y=day["mean"], mode="lines", line=dict(width=0.9, color=A_COLOR),
+            connectgaps=False,
             customdata=day[["min", "max", "count"]].to_numpy(),
             hovertemplate=("%{x|%Y-%m-%d}<br>mean %{y:.3f}<br>min %{customdata[0]:.3f}"
                            "  max %{customdata[1]:.3f}<br>%{customdata[2]:.0f} sample(s)<extra></extra>"),
@@ -36,10 +70,11 @@ def record_figure(series: pd.DataFrame, proposed_spans: str = "", title: str = "
                           fillcolor="#e08214", opacity=0.18, line_width=0)
         from ..publish.quality import SEG_W
 
-        seg = _worst_segment(v, SEG_W)
+        seg = _gap_break(_worst_segment(v, SEG_W))
         if len(seg):
             fig.add_trace(go.Scattergl(
                 x=seg.datetime, y=seg.value, mode="lines", line=dict(width=0.7, color=INK_2),
+                connectgaps=False,
                 hovertemplate="%{x|%Y-%m-%d %H:%M}<br>%{y:.3f}<extra></extra>",
                 showlegend=False), row=1, col=2)
     fig.update_layout(height=340, template="plotly_white", margin=dict(t=40, l=45, r=15, b=30))
@@ -72,8 +107,10 @@ def members_figure(members: list[str], channel: str = "nitrate", counterfactual:
     fig = go.Figure()
     if counterfactual is not None and len(counterfactual) and f"{channel}_mean" in counterfactual.columns:
         c = counterfactual.dropna(subset=[f"{channel}_mean"])
+        cg = _daily_gaps(pd.Series(c[f"{channel}_mean"].to_numpy(),
+                                   index=pd.DatetimeIndex(pd.to_datetime(c.date))))
         fig.add_trace(go.Scatter(
-            x=pd.to_datetime(c.date), y=c[f"{channel}_mean"], mode="lines",
+            x=cg.index, y=cg.to_numpy(), mode="lines", connectgaps=False,
             line=dict(width=5, color="#dddddd"), name="assembled (winner per span)",
             hovertemplate="%{x|%Y-%m-%d}<br>assembled %{y:.3f}<extra></extra>"))
     loaded = {}
@@ -82,8 +119,9 @@ def members_figure(members: list[str], channel: str = "nitrate", counterfactual:
         if s is None:
             continue
         loaded[u] = s
+        g = _daily_gaps(s)          # NaN on days the record does not cover -- see record_figure
         fig.add_trace(go.Scatter(
-            x=s.index, y=s.to_numpy(), mode="lines",
+            x=g.index, y=g.to_numpy(), mode="lines", connectgaps=False,
             line=dict(width=1.0, color=MEMBER_COLORS[i % len(MEMBER_COLORS)]), name=u,
             hovertemplate=f"{u}<br>%{{x|%Y-%m-%d}}<br>%{{y:.3f}}<extra></extra>"))
     if seam and len(loaded) == 2:
@@ -192,7 +230,9 @@ def masked_figure(raw: pd.DataFrame, masked: pd.DataFrame, channel: str):
         if frame is None or col not in getattr(frame, "columns", []):
             continue
         d = frame.dropna(subset=[col])
-        fig.add_trace(go.Scatter(x=pd.to_datetime(d.date), y=d[col], mode="lines",
+        gs = _daily_gaps(pd.Series(pd.to_numeric(d[col], errors="coerce").to_numpy(),
+                                   index=pd.DatetimeIndex(pd.to_datetime(d.date))))
+        fig.add_trace(go.Scatter(x=gs.index, y=gs.to_numpy(), mode="lines", connectgaps=False,
                                  line=dict(width=width, color=color), name=name,
                                  hovertemplate="%{x|%Y-%m-%d}<br>%{y:.3f}<extra></extra>"))
     fig.update_layout(height=300, template="plotly_white", margin=dict(t=30, l=45, r=15, b=30),
