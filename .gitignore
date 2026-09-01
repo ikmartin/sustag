@@ -95,3 +95,11 @@ src/data/superseded/
 src/data/published/
 
 data/stores/
+
+# credentials -- see data/build/parameters/api-keys.example.toml for the shape
+data/build/parameters/api-keys.toml
+
+# Project results: the JSON score records and the refusal list are the decision trail and are tracked;
+# the parquets beside them are regenerable bulk (imputed_discharge.parquet alone is 8.4 MB). Same split
+# xgboost/results already uses, where only log.json is committed.
+projects/*/results/*.parquet

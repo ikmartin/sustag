@@ -71,7 +71,12 @@ def _parquet_probe(p: Path) -> tuple[str | None, str | None]:
         return None, None
     names = pf.schema_arrow.names
     fp = hashlib.sha256(",".join(sorted(names)).encode()).hexdigest()[:12]
-    ts_cols = [i for i, f in enumerate(pf.schema_arrow) if "timestamp" in str(f.type)]
+    # DATE COLUMNS COUNT AS TEMPORAL EVIDENCE. Matching only "timestamp" left every weather quarter --
+    # whose `date` is `date32[day]` -- reporting `data_max_ts = NaN`, so `_classify_change` had nothing but
+    # a size delta to go on and called a 56% row loss `revised_out_of_window`, the same class as a routine
+    # trailing refresh. That is how July 2026 left the store with a reviewer's signature on it.
+    ts_cols = [i for i, f in enumerate(pf.schema_arrow)
+               if "timestamp" in str(f.type) or str(f.type).startswith("date")]
     best = None
     try:
         meta = pf.metadata

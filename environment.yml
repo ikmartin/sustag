@@ -20,6 +20,12 @@ dependencies:
   # ── weather (gridMET NetCDF) ──
   - xarray
   - netcdf4
+  # ── cloud stores (AORC hourly + NWM retrospective, both zarr on anonymous S3) ──
+  # Imported at call time rather than module load (see acquire/nwm.py), so their absence does not break
+  # an import -- it silently disables the fetch instead. Declare them or the next environment build
+  # hits the same invisible wall.
+  - zarr
+  - s3fs
   # ── viz / notebooks ──
   - matplotlib
   - seaborn

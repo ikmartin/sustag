@@ -163,7 +163,9 @@ def publish_comid_features() -> list[str]:
     config.PUB_COMID_FEATURES.mkdir(parents=True, exist_ok=True)
     done = []
     for p in sorted(config.COVARIATES_DIR.glob("*.parquet")):
-        bio.write_parquet(pd.read_parquet(p), config.PUB_COMID_FEATURES / p.name, stamps=_stamps())
+        # STREAMED, because publication must not cost more than the product it publishes: nutrients is
+        # 320.8M rows and load-then-write needs ~10 GB resident for a 3.5 GB file. See io.copy_parquet_stamped.
+        bio.copy_parquet_stamped(p, config.PUB_COMID_FEATURES / p.name, stamps=_stamps())
         done.append(p.name)
     return done
 

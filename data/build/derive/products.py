@@ -175,6 +175,7 @@ def build_crops(cat: zonal.Catchments, directory, limit=None, force=False) -> pd
             reduce=lambda c, r, ys=years: _crops_reduce(c, r, ys),
             limit=limit, force=force,
             part_dir=None if limit is not None else PARTS / f"crops_{years[0]}_{years[-1]}",
+            inputs=bio.input_stamp(*(group[y] for y in years)),
             label=f"crops group {gi}/{len(groups)} ({years[0]}-{years[-1]}) "))
     if limit is None:
         import math
@@ -194,11 +195,53 @@ def _crops_closure(df: pd.DataFrame, cov: pd.DataFrame) -> tuple[bool, str]:
 
 NUTRIENT_CRS = "EPSG:5070"
 # Subdirectories of RAW/gTREND, named as the gTREND-Nitrogen release ships them (Table 1 of its README, which sits beside them). The release carries 22 N mass-balance components on this same 250 m EPSG:5070 lattice; these two are the ones the nutrients product reduces today, and adding a component is one entry here.
+# The gTREND-Nitrogen release, keyed product -> (directory under RAW, file stem). Directory and stem
+# disagree throughout, so both are declared; the release's own README Table 1 is the authority.
+#
+# COMPONENTS, NOT JUST THE SUM. `Surplus` IS the mass balance -- inputs minus uptake -- and summation
+# destroys composition: two basins with identical surplus can be a high-fertilizer corn basin and a
+# moderate-manure pasture basin, whose nitrogen reaches a stream on completely different schedules
+# (fertilizer pulsed and soluble, manure mineralising slowly, fixation released on residue decay).
+#
+# THREE NESTING RELATIONS, VERIFIED ARITHMETICALLY on a 2010 corn-belt block to within 0.01, the storage
+# precision: `Agriculture_Fixation = Cropland_Fixation + Pasture_Fixation`, `Agriculture_Uptake =
+# Cropland_Uptake + Pasture_Uptake`, and `Lvst_Hogs` is a SUBSET of `Lvst_Sum` (hogs <= livestock
+# everywhere; 0.1% of it in that block). The parts are the information -- pasture uptake is 57% of
+# agricultural uptake and behaves nothing like cropland uptake -- so all of them are ingested, and the two
+# `Agriculture_*` totals earn their place as CLOSURE CHECKS on our own extraction rather than as
+# covariates. No recipe may feed a total and its own components as independent inputs.
 NUTRIENT_SOURCES = {
     "surplus": ("gTREND/Surplus", "Surplus_N_"),
     "fertilizer": ("gTREND/Agriculture_Fertilizer", "Fertilizer_Ag_"),
+    "fixation_ag": ("gTREND/Agriculture_Fixation", "Fix_Ag_"),
+    "fixation_cropland": ("gTREND/Cropland_Fixation", "Fix_Cropland_"),
+    "fixation_pasture": ("gTREND/Pasture_Fixation", "Fix_Pasture_"),
+    "uptake_ag": ("gTREND/Agriculture_Uptake", "CropUptake_Ag_"),
+    "uptake_cropland": ("gTREND/Cropland_Uptake", "CropUptake_Cropland_"),
+    "uptake_pasture": ("gTREND/Pasture_Uptake", "CropUptake_Pasture_"),
+    "deposition_oxidized": ("gTREND/Atmospheric_Oxidized", "Atmospheric_Oxidized_"),
+    "deposition_reduced": ("gTREND/Atmospheric_Reduced", "Atmospheric_Reduced_"),
+    "livestock": ("gTREND/Lvst_Sum", "Livestock_"),
+    "livestock_hogs": ("gTREND/Lvst_Hogs", "Hogs_"),
 }
+
+# Sums that must equal their parts, checked against our own zonal reduction rather than assumed.
+NUTRIENT_CLOSURES = (
+    ("fixation_ag", ("fixation_cropland", "fixation_pasture")),
+    ("uptake_ag", ("uptake_cropland", "uptake_pasture")),
+)
+
+# Directories under RAW/gTREND that are NOT rasters, so a discovery pass does not trip on them.
+GTREND_NON_RASTER = ("HUC8_scale",)
 HA_PER_PIXEL = 250.0 * 250.0 / 10_000.0
+
+# gTREND stores kg/ha to two decimals, so a value carries +/-0.005 of rounding.
+GTREND_KG_HA_PRECISION = 0.01
+
+# Per-pixel allowance for the component closure, DERIVED rather than tuned: the storage precision is in the raster's units (kg/ha), and `kg = mean x n_px x HA_PER_PIXEL`, so it reaches the closure multiplied by the pixel area -- 0.01 x 6.25 = 0.0625 kg a pixel, which is exactly the ceiling the failures were measured at. Three independently rounded rasters (a total and its two parts) can each round adversely, hence the factor.
+#
+# The closure's error therefore accumulates with PIXEL COUNT, not with value, which is what distinguishes it from a real defect: verified at the pixel level, `max |Fix_Ag - (Fix_Cropland + Fix_Pasture)| = 0.0100` over 2.25M pixels with identical nodata masks, so the source closes to its own precision and only the summation loses it. Across 360,000 catchment-years the median disagreement is exactly 0 and failures concentrate on large catchments (median 88 px against 48 overall). A genuinely absent component would scale with value and sit orders of magnitude outside this.
+GTREND_PX_TOL = GTREND_KG_HA_PRECISION * HA_PER_PIXEL * 2
 
 
 def nutrient_rasters() -> dict[str, object]:
@@ -243,11 +286,18 @@ def build_nutrients(cat: zonal.Catchments, limit=None, force=False) -> pd.DataFr
     print(f"  {len(paths)} raster(s): {sorted({k.rsplit('_', 1)[0] for k in paths})} "
           f"{years[0]}-{years[-1]}", flush=True)
     names = list(paths)
+    # A CHECKPOINT MUST CARRY EVERY DECLARED COMPONENT AND EVERY YEAR ON DISK. Guarding one axis is half a
+    # guard: `nutrient_rasters` globs whatever years exist, so a component gaining 2018-2020 would find
+    # every part "cached" and never extract them. `crops_cached` checks its year set against the archive
+    # listing; this is the same discipline, on both axes.
     return zonal.extract(cat, paths, NUTRIENT_CRS, ops=zonal.CONTINUOUS_OPS,
                          reduce=lambda c, r: _nutrients_reduce(c, r, names),
                          limit=limit, force=force,
                          part_dir=None if limit is not None else PARTS / "nutrients",
-                         label="nutrients ")
+                         label="nutrients ",
+                         expect_values=(("product", sorted(NUTRIENT_SOURCES)),
+                                        ("year", sorted(years))),
+                         inputs=bio.input_stamp(*paths.values()))
 
 
 def _nutrients_closure(df: pd.DataFrame, cov: pd.DataFrame) -> tuple[bool, str]:
@@ -257,7 +307,36 @@ def _nutrients_closure(df: pd.DataFrame, cov: pd.DataFrame) -> tuple[bool, str]:
     got = df.kg.to_numpy("float64")
     m = np.isfinite(want) & np.isfinite(got)
     bad = int((np.abs(got[m] - want[m]) > CLOSURE_TOL * np.abs(want[m]).clip(min=1.0)).sum())
-    return bad == 0, f"{len(df):,} rows, {bad} where kg != mean x area"
+    if bad:
+        return False, f"{len(df):,} rows, {bad} where kg != mean x area"
+
+    # THE COMPONENT CLOSURE. gTREND publishes both a total and its parts, and the parts must reproduce the
+    # total through OUR extraction, not merely in the source: verified arithmetically on the rasters to
+    # within 0.01 (the storage precision), so any disagreement here is our zonal reduction, not theirs.
+    # This is why the two `Agriculture_*` totals are ingested at all -- they are checks, not covariates.
+    notes = []
+    if "product" not in df.columns:      # a single-product frame has nothing to decompose
+        return True, f"{len(df):,} rows, 0 where kg != mean x area"
+    have = set(df["product"].unique())
+    for total, parts in NUTRIENT_CLOSURES:
+        if total not in have or not set(parts) <= have:
+            continue
+        sub = df[df["product"].isin((total, *parts))]
+        wide = sub.pivot_table(index=["comid", "year"], columns="product", values="kg", aggfunc="sum")
+        wide = wide.dropna(subset=[total, *parts])
+        if not len(wide):
+            continue
+        diff = (wide[total] - sum(wide[c] for c in parts)).abs()
+        # The allowance is relative PLUS per-pixel: see GTREND_PX_TOL for why the second term is the load-bearing one.
+        npx = (sub[sub["product"] == total].set_index(["comid", "year"])["n_px"]
+               .reindex(wide.index).fillna(0).to_numpy("float64"))
+        allow = CLOSURE_TOL * wide[total].abs().clip(lower=1.0).to_numpy("float64") + GTREND_PX_TOL * npx
+        off = int((diff.to_numpy("float64") > allow).sum())
+        notes.append(f"{total} = {'+'.join(parts)}: {off} of {len(wide):,} off")
+        if off:
+            return False, "; ".join(notes)
+    tail = ("; " + "; ".join(notes)) if notes else ""
+    return True, f"{len(df):,} rows, 0 where kg != mean x area{tail}"
 
 
 # ---- gridMET weights ---------------------------------------------------------------------------------
@@ -300,8 +379,23 @@ def id_raster(force: bool = False):
 
     IN 4326, gridMET's OWN CRS: the cells are exact 1/24-degree squares in lon/lat, so an id raster on that lattice is exact and tiny. Cells outside the AOE are left at the sentinel and a catchment overlapping one records no weight there, which is the honest answer: there is no weather on file for them.
     """
+    # KEYED ON THE GRID IT IS DERIVED FROM, not on its own existence. This raster is a rendering of
+    # `grid.parquet`; reusing it after the grid changes hands the weight matrix a lattice that no longer
+    # matches the weather store, and neither weights check would catch it -- one asserts every weight cell
+    # is IN the grid, the other takes a MEDIAN over catchments that have rows, so catchments with none are
+    # simply absent from the statistic. The sidecar records the grid's identity, as `d8` does for its raster.
+    grid_p = weather._grid_path()
+    stamp_p = ID_RASTER.with_suffix(ID_RASTER.suffix + ".grid.json")
+    want = None
+    if grid_p.exists():
+        st = grid_p.stat()
+        want = f"{st.st_size}:{st.st_mtime_ns}"
     if ID_RASTER.exists() and not force:
-        return ID_RASTER
+        got = stamp_p.read_text().strip() if stamp_p.exists() else None
+        if want is None or got == want:
+            return ID_RASTER
+        print("  gridmet_cell_ids.tif was rendered from a different grid.parquet -- rebuilding",
+              flush=True)
 
     g = _grid()
     ids_flat = weather.cell_id(g.lon.to_numpy(), g.lat.to_numpy()).astype("int64")
@@ -316,7 +410,10 @@ def id_raster(force: bool = False):
     north = weather._LAT0 - r0 * weather._RES + weather._RES / 2
     print(f"  gridmet id raster: {ids.shape[1]}x{ids.shape[0]} cells, "
           f"{int((ids != _NODATA).sum()):,} in the AOE", flush=True)
-    return zonal.cell_id_raster(ID_RASTER, west, north, weather._RES, "EPSG:4326", ids)
+    out = zonal.cell_id_raster(ID_RASTER, west, north, weather._RES, "EPSG:4326", ids)
+    if want is not None:
+        stamp_p.write_text(want)          # the grid this raster was rendered from
+    return out
 
 
 def _weights_reduce(comids: np.ndarray, res: pd.DataFrame) -> pd.DataFrame:
@@ -352,7 +449,7 @@ def build_weights(cat: zonal.Catchments, limit=None, force=False) -> pd.DataFram
     return zonal.extract(cat, {"gridmet": r}, "EPSG:4326", ops=zonal.CATEGORICAL_OPS,
                          reduce=_weights_reduce, limit=limit, force=force,
                          part_dir=None if limit is not None else PARTS / "weights_gridmet",
-                         label="gridmet weights ")
+                         inputs=bio.input_stamp(r), label="gridmet weights ")
 
 
 def _weights_closure(df: pd.DataFrame, cov: pd.DataFrame) -> tuple[bool, str]:
@@ -438,7 +535,7 @@ def build_agtile(cat: zonal.Catchments, directory, limit=None, force=False) -> p
     return zonal.extract(cat, {"agtile": r}, AGTILE_CRS, ops=zonal.CATEGORICAL_OPS,
                          reduce=_agtile_reduce, limit=limit, force=force,
                          part_dir=None if limit is not None else PARTS / "agtile",
-                         label="agtile ")
+                         inputs=bio.input_stamp(r), label="agtile ")
 
 
 def _agtile_closure(df: pd.DataFrame, cov: pd.DataFrame) -> tuple[bool, str]:
@@ -484,13 +581,17 @@ def main(force: bool = False, only: str | None = None, limit: int | None = None,
     if bad:
         raise SystemExit(f"{bad}: unknown product. Known: {list(PRODUCTS)}")
 
-    for p in ("crops", "agtile", "surplus", "fertilizer"):
-        ok, why = archive.present(p)
-        print(f"  {p:11s} {'OK ' if ok else 'MISSING'} {why}")
-        if not ok and ((p == "crops" and "crops" in want)
-                       or (p == "agtile" and "agtile" in want)
-                       or (p in ("surplus", "fertilizer") and "nutrients" in want)):
-            raise SystemExit(f"{p} is required for the products requested and is not on disk")
+    # THE NUTRIENT SOURCES ARE PROBED THROUGH THEIR OWN DECLARATION, not by a hardcoded name list. The
+    # gTREND components live under `raw/gTREND/<Component>/` while `archive.present` resolves `raw/<name>`,
+    # so the two disagreed the moment the components moved -- and the guard failed on `raw/surplus`, a
+    # directory that no longer exists, while the rasters sat correctly at `raw/gTREND/Surplus`.
+    probes = [("crops", "crops", "crops"), ("agtile", "agtile", "agtile")]
+    probes += [(name, sub, "nutrients") for name, (sub, _stem) in sorted(NUTRIENT_SOURCES.items())]
+    for label, sub, product in probes:
+        ok, why = archive.present(sub)
+        print(f"  {label:20s} {'OK ' if ok else 'MISSING'} {why}")
+        if not ok and product in want:
+            raise SystemExit(f"{label} is required for the products requested and is not on disk")
 
     OUT.mkdir(parents=True, exist_ok=True)
     cat = zonal.Catchments()
@@ -511,7 +612,7 @@ def main(force: bool = False, only: str | None = None, limit: int | None = None,
         _write(coverage(cat, crops_df, px_area), "coverage", None, cov, write=limit is None)
 
     if "nutrients" in want:
-        print("\n[d5.2] nutrients  (surplus + fertilizer, 250 m, one pass)")
+        print("\n[d5.2] nutrients  (gTREND components, 250 m, one pass)")
         _write(build_nutrients(cat, limit=limit, force=force), "nutrients", _nutrients_closure, cov, write=limit is None)
 
     if "weights" in want:
@@ -573,6 +674,57 @@ def _check_closures():
     return ok, "; ".join(notes)
 
 
+@verify.check("d5", "our zonal surplus reproduces gTREND's own HUC8 aggregation", deep=True)
+def _check_huc8_surplus():
+    """THE ONLY EXTERNAL TEST OF WHETHER THE EXTRACTION IS RIGHT rather than merely self-consistent.
+
+    Every other d5 check is internal -- class fractions summing to coverage, kg equalling mean times area -- and all of them would pass on a reduction that was wrong in the same way twice. The gTREND authors published their own HUC8 aggregation of the same surplus raster, so aggregating our catchment values up and comparing tests us against an independent reduction of identical inputs.
+
+    RESTRICTED TO FULLY-COVERED BASINS, and that is not a convenience: a HUC8 straddling the AOE edge is one we hold ~90% of, so our area-weighted mean is taken over a different region than theirs and disagreement measures the clip rather than the reduction. Coverage is our summed catchment area against the reference's own `AREASQKM`. Measured 2026-08-27 over 378 basins x 18 years: Pearson 0.99999, median relative disagreement 0.039%, 98.0% within 1%, bias 0.99970.
+    """
+    import numpy as np
+    import pyarrow.parquet as pq
+
+    from ..acquire import network
+
+    ref = huc8_surplus_reference()
+    out_p = OUT / "nutrients.parquet"
+    if ref is None or not out_p.exists():
+        return None, "no HUC8 reference or no nutrients product"
+    vaa_p = network._path("vaa")
+    if not vaa_p.exists():
+        return None, "no VAA on disk"
+
+    vaa = pq.read_table(vaa_p, columns=["comid", "reachcode"]).to_pandas()
+    vaa["huc8"] = vaa.reachcode.astype(str).str[:8]
+    vaa = vaa[vaa.huc8.str.len() == 8]
+    vaa["comid"] = pd.to_numeric(vaa.comid, errors="coerce")
+    vaa = vaa.dropna(subset=["comid"]).astype({"comid": "int64"})[["comid", "huc8"]]
+
+    years = sorted(set(ref.year) & set(range(2000, 2018)))
+    t = pq.read_table(out_p, columns=["comid", "year", "product", "kg", "n_px"],
+                      filters=[("product", "=", "surplus"), ("year", "in", set(years))]).to_pandas()
+    if not len(t):
+        return None, "no surplus rows in the nutrients product"
+    t = t.merge(vaa, on="comid", how="inner")
+    t["ha"] = t.n_px * HA_PER_PIXEL
+    agg = t.groupby(["huc8", "year"], as_index=False).agg(kg=("kg", "sum"), ha=("ha", "sum"))
+    agg["ours"] = agg.kg / agg.ha
+    area = ref.groupby("huc8", as_index=False).AREASQKM.first()
+    m = (agg.merge(ref.rename(columns={"kg_per_ha": "theirs"})[["huc8", "year", "theirs"]],
+                   on=["huc8", "year"]).merge(area, on="huc8"))
+    m = m[np.isfinite(m.ours) & np.isfinite(m.theirs)]
+    m = m[((m.ha / 100.0) / m.AREASQKM).between(0.98, 1.02)]      # fully covered only
+    if len(m) < 50:
+        return None, f"only {len(m)} fully-covered HUC8-year(s) to compare"
+    rel = (m.ours - m.theirs).abs() / m.theirs.abs().clip(lower=1e-9)
+    within = float((rel < 0.01).mean())
+    r = float(m.ours.corr(m.theirs))
+    ok = within >= 0.90 and r >= 0.999
+    return ok, (f"{len(m):,} HUC8-year(s) over {m.huc8.nunique()} fully-covered basin(s): "
+                f"pearson {r:.5f}, {within:.1%} within 1%, bias {m.ours.sum() / m.theirs.sum():.5f}")
+
+
 @verify.check("d5", "the weight matrix joins the weather store and conserves catchment area")
 def _check_weights_join():
     """The standing regression for the 1,351,290 cell_id offset -- the failure mode is ZERO joining rows."""
@@ -610,3 +762,27 @@ def _check_product_aoe_stamps():
     stale = [p.name for p in files if (bio.read_stamps(p).get("aoe") or want) != want]
     return not stale, (f"{len(stale)} product(s) cut against another extent: {stale[:4]}"
                        if stale else f"{len(files)} product(s), all stamped {want}")
+
+
+# ---- gTREND's own HUC8 aggregation, as an external check ------------------------------------------------
+
+HUC8_SURPLUS_CSV = config.RAW / "gTREND" / "HUC8_scale" / "Nsurplus_HUC8.csv"
+HUC8_GPKG = config.RAW / "gTREND" / "HUC8_scale" / "HUC8.gpkg"
+
+
+def huc8_surplus_reference(years=None) -> pd.DataFrame | None:
+    """gTREND's OWN basin-averaged surplus, `(huc8, year, kg_per_ha)`. `None` when the release is absent.
+
+    THE ONLY EXTERNAL GROUND TRUTH IN THE COVARIATE LAYER. Almost everything d5 produces can be checked for internal consistency -- class fractions summing to coverage, kg equalling mean times area -- but nothing outside the pipeline says whether our zonal reduction of a raster is RIGHT. The gTREND authors published their own HUC8 aggregation of the same surplus raster (2,139 basins, 1930-2017), so aggregating our catchment values up to HUC8 and comparing against theirs tests our extraction against an independent one. Disagreement means our reduction is wrong, not theirs.
+    """
+    if not HUC8_SURPLUS_CSV.exists():
+        return None
+    d = pd.read_csv(HUC8_SURPLUS_CSV, dtype={"HUC8_id": str})
+    ycols = [c for c in d.columns if c.endswith("_Nsurplus")]
+    if years is not None:
+        want = {str(y) for y in years}
+        ycols = [c for c in ycols if c.split("_")[0] in want]
+    out = d.melt(id_vars=["HUC8_id", "AREASQKM"], value_vars=ycols,
+                 var_name="_y", value_name="kg_per_ha")
+    out["year"] = out._y.str.split("_").str[0].astype("int16")
+    return out.rename(columns={"HUC8_id": "huc8"})[["huc8", "year", "AREASQKM", "kg_per_ha"]]

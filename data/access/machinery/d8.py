@@ -36,7 +36,7 @@ _ESRI_CHECKS = [
 
 # ── module state, set at load time ─────────────────────────────────────────────
 _DIRECTION: np.ndarray | None = None
-_SOURCE: str | None = None  # "hydrosheds" | "legacy"
+_SOURCE: str | None = None  # always "hydrosheds" once loaded; kept because the flow-accumulation cache key carries it
 W: int | None = None
 H: int | None = None
 TRANSFORM: Affine | None = None
@@ -57,7 +57,7 @@ _FLOW_FIELD_CACHE: dict[tuple, np.ndarray] = {}
 
 
 def load_direction_array() -> np.ndarray:
-    """The D8 direction raster as an (H, W) uint8 array (cached in-process). Prefers the HydroSHEDS GeoTIFF; falls back to the legacy Iowa PNG (auto-downloaded). Sets W/H/TRANSFORM and the encoding tables (_D8_STEP/NEIGHBOR_CHECKS/NODATA) to match the chosen source."""
+    """The D8 direction raster as an (H, W) uint8 array (cached in-process). Raises if the HydroSHEDS GeoTIFF is absent -- there is no fallback. Sets W/H/TRANSFORM and the ESRI encoding tables (_D8_STEP/NEIGHBOR_CHECKS/NODATA)."""
     global _DIRECTION, _SOURCE, W, H, TRANSFORM, _D8_STEP, NEIGHBOR_CHECKS, NODATA
     if _DIRECTION is not None:
         return _DIRECTION

@@ -132,9 +132,64 @@ class Catchments:
             yield self.comid[take], (gdf if str(crs).upper() in ("EPSG:4326", "4326") else gdf.to_crs(crs))
 
 
+def _adopt_or_clear(part_dir, inputs: str | None, label: str = "") -> None:
+    """Drop a checkpoint directory whose parts were computed from DIFFERENT inputs.
+
+    `expect_values` guards axes that appear as values in the output -- product, year. It cannot see an input that changed without changing the output's vocabulary: a re-pulled agtile raster, a regenerated cell-id raster, a CDL year rewritten in place. Those are the same blind spot the nutrients checkpoints had, one level up, so they are keyed the way `d8._accum_cache_file` keys its cache -- on the identity of what was read.
+
+    A MISSING stamp is ADOPTED, not treated as a mismatch: the parts predating this guard are the output of a four-hour pass and there is no evidence against them. Only a stamp that disagrees clears the directory, which is the same coverage-not-equality reasoning the network layers use.
+    """
+    if inputs is None:
+        return
+    p = part_dir / ".inputs"
+    if p.exists():
+        if p.read_text().strip() == inputs:
+            return
+        stale = sorted(part_dir.glob("part_*.parquet"))
+        for q in stale:
+            q.unlink(missing_ok=True)
+        if stale:
+            print(f"  {label}inputs changed -- discarded {len(stale)} checkpoint part(s)", flush=True)
+    p.write_text(inputs + "\n")
+
+
+def _raster_groups(paths) -> list[list]:
+    """Split `paths` into groups whose combined working set fits GDAL's block cache. One group means no split.
+
+    A feature-sequential pass visits every raster for each feature, so the cache must hold one working set PER RASTER at once. The nutrients pass broke on exactly this: 216 gTREND years tiled 1168x1856 float32 -- 8.7 MB a block -- against a default cache of 5% of RAM, which is 99 blocks for 216 rasters. Every catchment then re-decompressed what the previous one evicted; a profile put 99% of samples inside `gdal_LZWDecode` and the pass ran at ~0.8 s per catchment, projecting nine days over 1.49M.
+
+    The mismatch is in the source tiling, not in the request: one of those blocks covers 292 x 464 km where the median catchment is 1.38 km2, so a single catchment read decompresses ~135,000 km2. Nothing can make that read cheap -- but it need only happen once per block, which it does as soon as the working set fits.
+
+    Grouping is preferred to `strategy="raster-sequential"`, which also fixes the cache but recomputes each feature's coverage fraction once per raster: measured over 12 rasters it was 7x SLOWER (2.84 s against 0.40 s) for bit-identical values. Groups keep the cheap strategy and simply ask for less at a time.
+
+    Half the cache is the budget, and four blocks per raster the estimate, since a window can straddle a 2x2 block corner and the reduce still needs room. Small-tiled or few-raster sources (CDL year groups, the single-raster agtile and weights passes) come back as one group and are unaffected.
+    """
+    import numpy as np
+    import rasterio
+    from rasterio.env import get_gdal_config
+
+    paths = list(paths)
+    try:
+        with rasterio.open(paths[0]) as src:
+            bh, bw = src.block_shapes[0]
+            block_bytes = bh * bw * np.dtype(src.dtypes[0]).itemsize
+        cache = int(get_gdal_config("GDAL_CACHEMAX") or 0) or 64 << 20
+    except Exception as exc:                           # noqa: BLE001 -- unprobeable
+        # LOUDLY, because the fallback IS the pathological path: one group is what ran the nutrients pass
+        # at nine days, and a silent degrade would restore it with nothing printed to say so.
+        print(f"  WARNING: cannot size raster groups ({type(exc).__name__}: {exc}) -- "
+              f"running all {len(paths)} rasters at once", flush=True)
+        return [paths]
+    per_group = max(1, int(cache / 2 // (4 * block_bytes)))
+    if per_group >= len(paths):
+        return [paths]
+    return [paths[i:i + per_group] for i in range(0, len(paths), per_group)]
+
+
 def extract(cat: Catchments, rasters: dict, crs: str, ops=CATEGORICAL_OPS,
             reduce=None, size: int = BATCH, limit: int | None = None,
-            label: str = "", part_dir=None, force: bool = False) -> pd.DataFrame:
+            label: str = "", part_dir=None, force: bool = False, expect_values=(),
+            inputs: str | None = None) -> pd.DataFrame:
     """Run `rasters` over every catchment and return the concatenated per-batch results.
 
     Parameters
@@ -175,6 +230,7 @@ def extract(cat: Catchments, rasters: dict, crs: str, ops=CATEGORICAL_OPS,
     n_total = len(cat) if limit is None else min(limit, len(cat))
     if part_dir is not None:
         part_dir.mkdir(parents=True, exist_ok=True)
+        _adopt_or_clear(part_dir, inputs, label)
 
     def _part(i):
         return None if part_dir is None else part_dir / f"part_{i:05d}.parquet"
@@ -184,15 +240,54 @@ def extract(cat: Catchments, rasters: dict, crs: str, ops=CATEGORICAL_OPS,
     done, t0, worked = 0, time.time(), 0
     out, written = [], []
     repaired0 = cat.n_repaired
-    skip = (lambda i: (p := _part(i)) is not None and p.exists()) if not force else None
+    # A CHECKPOINT IS ONLY VALID FOR THE REQUEST THAT WROTE IT. Skipping on existence alone reuses a part
+    # written for a NARROWER set of rasters, so widening the request silently produces the old output while
+    # every batch reports "cached": the nutrients product was two components and became twelve, and without
+    # this the ten new ones would never have been computed. `expect_values` names values the part must
+    # carry -- checked from the parquet footer, no rows read.
+    def _stale(p) -> bool:
+        """True when a part cannot serve the CURRENT request. Every declared axis is checked, not one.
+
+        Guarding a single axis is only half a guard: the nutrients product is keyed on (product, year), and checking products alone would let a component gaining three new years report every batch cached. Each pair is (column, required values); a part missing any value on any axis is stale.
+        """
+        if not expect_values:
+            return False
+        import pyarrow.parquet as pq
+
+        for col, need in expect_values:
+            try:
+                have = set(pq.read_table(p, columns=[col]).column(col).to_pylist())
+            except Exception:                              # noqa: BLE001 -- unreadable is stale
+                return True
+            if not set(need) <= have:
+                return True
+        return False
+
+    def _usable(i) -> bool:
+        p = _part(i)
+        if p is None or not p.exists():
+            return False
+        if _stale(p):
+            p.unlink(missing_ok=True)
+            return False
+        return True
+
+    groups = _raster_groups(paths)
+    if len(groups) > 1:
+        print(f"  {label}{len(paths)} rasters exceed the block cache -- "
+              f"{len(groups)} groups of <={len(groups[0])}", flush=True)
+    skip = _usable if not force else None
     for i, (comids, gdf) in enumerate(cat.batches(crs, size=size, limit=limit, skip=skip)):
         done += len(comids)
         part = _part(i)
         if gdf is None:                       # checkpointed; geometry was never built
             written.append(part)
             continue
-        res = exact_extract(paths if len(paths) > 1 else paths[0], gdf, list(ops),
-                            output="pandas", strategy="feature-sequential")
+        res = pd.concat([exact_extract(g if len(g) > 1 else g[0], gdf, list(ops),
+                                       output="pandas", strategy="feature-sequential")
+                         for g in groups], axis=1) if len(groups) > 1 else exact_extract(
+            paths if len(paths) > 1 else paths[0], gdf, list(ops),
+            output="pandas", strategy="feature-sequential")
         res = _rename(res, rasters, ops)
         df = reduce(comids, res) if reduce is not None else res.assign(comid=comids)
         if part is not None:

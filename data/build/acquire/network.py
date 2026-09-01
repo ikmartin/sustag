@@ -34,8 +34,72 @@ def waterbodies_path():
     return _path("waterbodies")
 
 
-def exists() -> bool:
-    return all(_path(n).exists() for n in _LAYERS)
+def _layer_stamp(name: str) -> str | None:
+    """The AOE a layer was cut against, from its own `aoe_stamp` column. `None` when unreadable.
+
+    Footer-free but cheap: one row group, one column. `_write` has always stamped this and nothing has ever read it.
+    """
+    import pyarrow.parquet as pq
+
+    p = _path(name)
+    if not p.exists():
+        return None
+    try:
+        f = pq.ParquetFile(p)
+        if "aoe_stamp" not in f.schema_arrow.names:
+            return None
+        t = f.read_row_group(0, columns=["aoe_stamp"])
+        return str(t.column("aoe_stamp")[0]) if t.num_rows else None
+    except Exception:                                  # noqa: BLE001 -- unreadable is not current
+        return None
+
+
+def exists(aoe_stamp: str | None = None) -> bool:
+    """Are all layers on disk AND cut against `aoe_stamp` (default: the current extent)?
+
+    EXISTENCE WAS NEVER THE QUESTION. These layers are CLIPPED TO THE AOE, so a file cut against a retired extent is not a cached answer to the current request -- it is a different answer to a different question. Guarding on existence alone meant that widening the extent left `flowlines`, `catchments` and `vaa` clipped to the old one, and because `zonal.Catchments` reads the catchment layer, every D5 product was then computed over the retired cohort and written with the CURRENT stamp -- so the AOE-stamp check passed on artifacts describing the wrong region. The correct key was inside the file the guard declined to open.
+    """
+    want = aoe_stamp or config.aoe_stamp()
+    stale = []
+    for n in _LAYERS:
+        if not _path(n).exists():
+            return False
+        got = _layer_stamp(n)
+        if got is not None and got != want:
+            stale.append((n, got))
+    if not stale:
+        return True
+
+    # A DIFFERENT STAMP IS NOT AUTOMATICALLY THE WRONG DATA. These layers are CLIPPED, so what matters is
+    # whether the stored clip still COVERS the current extent -- a layer cut against a larger, earlier AOE
+    # is a superset and perfectly usable, while one cut against a smaller AOE is missing reaches the current
+    # request needs. Equality would force a multi-gigabyte refetch every time the extent shrank, which is
+    # both wasteful and the kind of cost that gets a check disabled.
+    if _covers_aoe(want):
+        print(f"  network: cut against AOE {stale[0][1][:12]}, current is {want[:12]} -- but the stored "
+              f"clip COVERS the current extent, so it stands", flush=True)
+        return True
+    print(f"  network: cut against AOE {stale[0][1][:12]} which does NOT cover the current extent "
+          f"{want[:12]} -- refetching {len(stale)} layer(s)", flush=True)
+    return False
+
+
+def _covers_aoe(want: str) -> bool:
+    """Does the stored catchment layer's footprint contain the current AOE? Bounds only -- no geometry union.
+
+    A bounding-box test is deliberately loose: it can pass for a clip that is missing interior reaches. It is used only to avoid a needless refetch when the extent SHRANK, which is the common case; a grown extent fails the box test and refetches, which is the outcome that matters.
+    """
+    try:
+        import geopandas as gpd
+        from shapely.geometry import box
+
+        p = _path("catchments")
+        if not p.exists():
+            return False
+        stored = box(*gpd.read_parquet(p, columns=["geometry"]).total_bounds)
+        return box(*config.aoe_geometry().bounds).buffer(-1e-9).within(stored)
+    except Exception:                                  # noqa: BLE001 -- cannot prove coverage
+        return False
 
 
 def _write(gdf, name: str) -> None:

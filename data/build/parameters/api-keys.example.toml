@@ -1,0 +1,16 @@
+# Copy to `api-keys.toml` (gitignored) and fill in. Every credential the build needs lives here;
+# `config.API_KEYS` is the only path to it.
+
+# USGS Water Services personal access tokens. The FIRST is `usgs`; additional keys take a numeric
+# suffix (`usgs2`, `usgs3`, ...) and are discovered by that suffix, so widening the rotation is a
+# matter of adding a line. Quota is per token, so N keys buy N times the quota -- and, when the
+# record fetch shards, N times the RATE, since each shard pins one key for its process.
+usgs = ""
+
+# USDA NASS QuickStats. Needed for the Census of Agriculture county series (cover-crop acreage).
+nass_quickstats = ""
+
+# NASA Earthdata Login. NLDAS-2 authenticates via .netrc rather than a key, so these are the
+# credentials to write there, not a token the build sends.
+# earthdata_user = ""
+# earthdata_pass = ""

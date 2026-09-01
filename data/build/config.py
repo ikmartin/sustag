@@ -2,7 +2,7 @@
 
 SCOPE LITERALS LIVE IN `parameters/scope.toml`, not in code: the boxes and the collection window are build INPUTS that version with intent, and a build is `build(snapshots, parameters, decisions)`. This module only loads them.
 
-STORE ROOTS, AND THE ONE INTERIM ASYMMETRY. The layout follows the chapter's layers -- `raw/` is adopted in place and never written by the build; `acquired/` is Layer A's output; `snapshots/` holds manifests naming states of raw+acquired; `derived/` and `published/` are Layers D and P. The heavy immovable archives (raw, acquired) currently sit under `src/data/` and every fresh store sits at its final home under `data/stores/`; the final migration moves the archives and flips RAW/ACQUIRED here, touching no other module. New acquisitions append into the EXISTING acquired root so the archive stays one thing.
+STORE ROOTS. The layout follows the chapter's layers -- `raw/` is adopted in place and never written by the build; `acquired/` is Layer A's output; `snapshots/` holds manifests naming states of raw+acquired; `derived/` and `published/` are Layers D and P. All of them sit under `data/stores/`. New acquisitions append into the EXISTING acquired root so the archive stays one thing. `data/access/config.py` mirrors the roots both layers need and must move with this file.
 """
 
 from __future__ import annotations
@@ -25,6 +25,10 @@ ACQUIRED = REPO / "data" / "stores" / "acquired"
 # Fresh stores, at their final home from day one.
 STORES = REPO / "data" / "stores"
 SNAPSHOTS = STORES / "snapshots"
+# Scratch for multi-step acquisitions -- staged column slices, part-downloads. OUTSIDE the manifested
+# roots on purpose: a run interrupted between staging and merge would otherwise register its scratch as
+# `added` in one snapshot and `removed` in the next, and `removed` is a drift conflict that gates the build.
+WORK = STORES / "work"
 DERIVED = STORES / "derived"
 PUBLISHED = STORES / "published"
 
@@ -139,7 +143,10 @@ def equal_area_km2(geom) -> float:
     return float(gpd.GeoSeries([geom], crs=4326).to_crs(EQUAL_AREA).area.iloc[0] / 1e6)
 
 
-API_KEYS = REPO / "src" / "build" / "api-keys.toml"
+# Credentials live beside the build's other inputs, and are GITIGNORED -- `parameters/api-keys.example.toml`
+# is the committed shape. Anything needing a key (USGS tokens today; NASA Earthdata and NASS QuickStats
+# when their sources land) reads it from here rather than carrying its own path.
+API_KEYS = PARAMETERS / "api-keys.toml"
 
 
 def usgs_pats() -> list[str]:
@@ -166,6 +173,7 @@ def ensure_dirs() -> None:
         ACQ_SEED_BASINS,
         ACQ_FACILITIES,
         SNAPSHOTS,
+        WORK,
         WATER_CANONICAL,
         WATER_MERGED,
         COVARIATES_DIR,

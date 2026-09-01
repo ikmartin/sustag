@@ -1,3 +1,8 @@
+"""SUPERSEDED 2026-08-26 -- DO NOT RUN. This queries the Water Quality Portal LEGACY endpoint, which
+silently drops every USGS result after 2024-03-11 (HTTP 200, valid header, missing rows). See SUPERSEDED.md
+in this directory. The live path is the WQX adapter at data/build/acquire/sources/wqx.py.
+"""
+
 """E1 -- the credibility audit. Decides whether the volunteer pool is usable, and whether the block is measurable at all.
 
     python 02_audit.py                 # -> cache/audit_basins.parquet + a printed verdict

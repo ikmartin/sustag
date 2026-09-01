@@ -55,7 +55,13 @@ def expanded_dir(product: str) -> Path | None:
     z = find_zip(product)
     if z is not None:
         return z.parent / _top_level(z)
-    for d in sorted(product_dir(product).rglob("*")):
+    # The rasters may sit directly in the product directory rather than one level down. Zipped archives
+    # unpack into a named top-level folder, which is where the subdirectory search below comes from; a
+    # delivery dropped in by hand has no such wrapper, and gTREND's components are exactly that shape.
+    root = product_dir(product)
+    if root.exists() and any(root.glob("*.tif")):
+        return root
+    for d in sorted(root.rglob("*")):
         if d.is_dir() and any(d.glob("*.tif")):
             return d
     return None

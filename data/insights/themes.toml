@@ -1,0 +1,80 @@
+# THEMES ARE ENUMERATED FROM THE DOMAIN, NOT FROM OUR HOLDINGS.
+#
+# If the list were derived from the data we happen to hold, every theme would have members by construction
+# and no gap could ever be visible -- which defeats the purpose. These are the things that govern nitrate in
+# a watershed; our sources are then slotted into them, and a theme that comes up empty or thin is the
+# finding. Someone who knows this domain should be able to read the rendered section and immediately name
+# something we have nothing under.
+#
+# `sources` names entries in the pipeline; `[]` is a legitimate and informative value.
+# `verdict` is set by the audit, not by hand: well_covered | thin | absent | on_disk_unexposed
+
+[meteorological_forcing]
+description = "Precipitation, temperature, radiation, humidity, wind -- the drivers that move and transform nitrogen day to day."
+sources = ["gridmet_daily"]
+candidates = ["aorc_hourly"]
+
+[antecedent_moisture_and_snow]
+description = "The state of the profile BEFORE the rain: soil moisture, snowpack, melt, multi-scale drought. Flush magnitude depends on it and precipitation alone does not measure it."
+sources = ["gridmet_drought_pentad"]
+candidates = ["snodas", "nldas2"]   # terraclimate refused 2026-08-26: monthly, and gridMET already supplies its seasonal aggregates
+
+[nitrogen_inputs]
+description = "Nitrogen entering the catchment: fertilizer, manure, fixation, atmospheric deposition, point-source effluent."
+sources = ["gtrend_fertilizer", "gtrend_livestock", "gtrend_fixation", "gtrend_deposition",
+           "streamcat_n_families", "wieczorek_chemical", "dmr_loads"]
+candidates = ["sparrow_shares"]
+
+[nitrogen_sinks_and_uptake]
+description = "Nitrogen leaving by the plant pathway: crop and pasture uptake, harvest removal."
+sources = ["gtrend_uptake", "streamcat_n_families", "cdl_crops"]
+
+[legacy_nitrogen]
+description = "Nitrogen accumulated in soil and groundwater from past decades, released long after application. Central in the literature and barely represented here."
+sources = ["streamcat_n_families"]
+
+[crops_and_land_cover]
+description = "What grows where, and what is not farmed at all."
+sources = ["cdl_crops", "wieczorek_land_cover"]
+
+[artificial_drainage]
+description = "Tile and ditch networks -- the dominant nitrate transport pathway in the corn belt, and the one that bypasses the soil profile."
+sources = ["agtile", "wieczorek_hydrologic_modifications", "streamcat"]
+candidates = ["sekellick_manure"]
+
+[surface_hydrology_and_flow]
+description = "Discharge, velocity, travel time, network topology: how much water moves and how fast."
+sources = ["nhdplus_vaa", "discharge_channel", "modelled_discharge"]
+candidates = []   # nwm refused 2026-08-31: an in-house model beat it on four of five metrics at held-out basins
+
+[groundwater_and_residence_time]
+description = "Recharge, water-table depth, baseflow index, subsurface contact time -- the slow pathway, and where legacy nitrogen lives."
+sources = ["wieczorek_hydrologic"]
+
+[instream_processing]
+description = "Denitrification and attenuation between the field and the sensor. A nitrate molecule's fate depends on how long it spends in water and at what temperature."
+sources = ["nhdplus_vaa", "dams_on_reach", "waterbodies"]
+candidates = ["sparrow_delfrac"]
+
+[soils_and_geology]
+description = "Texture, drainage class, organic matter, lithology, karst -- what the water passes through."
+sources = ["wieczorek_soils", "wieczorek_geology", "streamcat", "karst_weary_doctor"]
+candidates = []
+
+[physiography_and_regions]
+description = "Landform, ecoregion, hydrologic landscape region. As much GROUPING candidates as features; lift from them is a finding about the CV design."
+sources = ["wieczorek_regions", "wieczorek_topographic"]
+
+[point_sources_and_structures]
+description = "Treatment plants, outfalls, dams, impoundments: discrete anthropogenic terms on the network."
+sources = ["dmr_loads", "facilities", "dams", "nid"]
+
+[conservation_practices]
+description = "Cover crops, tillage, buffers, terraces, bioreactors -- the interventions meant to reduce delivery. Poorly observed at any useful resolution."
+sources = ["wieczorek_bmp"]
+candidates = ["census_of_ag_cover_crops"]
+
+[water_quality_observations]
+description = "The target itself, and the covariate channels measured beside it. Not a covariate theme -- the node population."
+sources = ["usgs", "iwqis", "mpca", "wqx_discrete"]
+candidates = []

@@ -62,6 +62,33 @@ def _params_available(native_path) -> str | None:
     return "+".join(sorted(c for c in names if c != "datetime" and not c.endswith("_quality"))) or None
 
 
+def _covers_declared(native_path, source: str, declared: str | None) -> bool:
+    """Does the archived native carry a column for every channel the registration declares?
+
+    CACHED MUST MEAN "CACHED FOR THIS REQUEST". The fetch is channel-scoped -- adapters restrict the call to the pcodes the declaration names -- so a native on disk holds only what was declared WHEN IT WAS FETCHED. Adding a channel to the registry widens `channels_declared`, `canonical.stale` correctly rebuilds every canonical file from those natives, and the new channel is all-null everywhere while A3 reports every sensor `cached`. Nothing downstream can see the difference between "this sensor does not measure it" and "we never asked".
+
+    The evidence was already being computed: `_params_available` reads the native's footer on every branch of `process_sensor` and lands on the sensors table, where it was used only for display.
+
+    A native missing a declared channel's columns is NOT proof the sensor lacks it -- the source may simply have returned nothing. So this returns False (refetch) only when a declared channel has NO column present; the fetch then settles it, and a genuinely absent channel costs one request per registry widening rather than a permanent hole.
+    """
+    if not declared:
+        return True
+    have = _params_available(native_path)
+    if have is None:
+        return False
+    cols = {c.split("_")[0] for c in have.split("+")}
+    for ch in (x.strip() for x in str(declared).split("+")):
+        c = registry.CHANNELS.get(ch)
+        if c is None:
+            continue
+        sm = c.sources.get(source)
+        if sm is None or not getattr(sm, "cols", None):
+            continue                                   # this source does not advertise it; nothing owed
+        if not (set(sm.cols) & cols):
+            return False
+    return True
+
+
 def process_sensor(uid: str, source: str, native_id: str, force: bool = False,
                    refresh: bool = False, declared: str | None = None) -> dict:
     """Fetch and persist one sensor's native record. Returns an accounting row; derives nothing.
@@ -72,7 +99,10 @@ def process_sensor(uid: str, source: str, native_id: str, force: bool = False,
     native_path = config.ACQ_WATER_NATIVE / f"{contracts.uid_to_filename(uid)}.parquet"
     start, end = config.collection_start().isoformat(), None
 
-    if native_path.exists() and not force:
+    if native_path.exists() and not force and not _covers_declared(native_path, source, declared):
+        # A widened declaration is a different request, not a cache hit. Fall through to the fetch.
+        print(f"    {uid}: native predates a widened channel declaration -- refetching", flush=True)
+    elif native_path.exists() and not force:
         if not refresh:
             return dict(site_uid=uid, status="cached", detail="on_disk",
                         fetch_last_attempt=now, fetch_last_success=now,

@@ -124,6 +124,9 @@ def _load_all() -> None:
 
     for mod in ("data.build.acquire.snapshot", "data.build.acquire.reconcile",
                 "data.build.acquire.census", "data.build.acquire.records",
+                "data.build.acquire.drought", "data.build.acquire.attributes",
+                "data.build.acquire.manure", "data.build.derive.karst",
+                "data.build.acquire.wqx",
                 "data.build.derive.extent", "data.build.derive.canonical",
                 "data.build.derive.geometry", "data.build.derive.identity",
                 "data.build.derive.assemble", "data.build.derive.products",
@@ -134,6 +137,34 @@ def _load_all() -> None:
             # LOUD, because a module that fails to import contributes NO checks and an empty table
             # looks exactly like a clean one. A stage not yet written is the only benign case.
             print(f"  verify: {mod} did not import, its checks are ABSENT ({e})", file=sys.stderr)
+
+
+@check("a3", "every module that defines checks is on the load list")
+def _check_all_check_modules_loaded():
+    """A check nobody loads is a check nobody runs, and the table it should have filled looks clean.
+
+    `_load_all` names its modules literally, which is deliberate -- import order matters and a stage not yet written should not break the harness. The cost is that ADDING a module is a second edit somebody forgets: the pentad store shipped with three registered checks that never ran, and passed verification, because `data.build.acquire.drought` was not on the list. This is the guard for that, and it is cheap: a source scan for the decorator, no imports.
+    """
+    import pathlib
+
+    # REGISTERED, not merely listed. `_load_all` names some modules literally and reaches others through
+    # their imports -- `weather` and `structures` arrive via `products`, which is fine and not worth
+    # forbidding. What matters is that every module DEFINING a check contributed one, so the test is the
+    # registry itself rather than the load list.
+    root = pathlib.Path(__file__).resolve().parent
+    registered = {getattr(c.fn, "__module__", "") for c in _CHECKS}
+    missing = []
+    for q in sorted(root.rglob("*.py")):
+        if q.name == "verify.py" or "__pycache__" in q.parts:
+            continue
+        src = q.read_text()
+        if "@verify.check(" not in src and "@check(" not in src:
+            continue
+        mod = "data.build." + ".".join(q.relative_to(root).with_suffix("").parts)
+        if mod not in registered:
+            missing.append(mod)
+    return not missing, (f"{len(registered)} module(s) contributed checks; none defined but unloaded"
+                         if not missing else f"DEFINED BUT NEVER LOADED: {missing}")
 
 
 def main(argv=None) -> int:

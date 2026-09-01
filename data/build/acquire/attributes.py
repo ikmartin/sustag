@@ -18,7 +18,7 @@ import time
 
 import pandas as pd
 
-from .. import config
+from .. import config, verify
 
 # Fitted on nitrogen load. Excluded by default; a caller wanting them must ask, and the column is flagged.
 FITTED_ON_TARGET = ("sw_flux", "TNLOAD", "TNLOSS")
@@ -27,7 +27,30 @@ FITTED_ON_TARGET = ("sw_flux", "TNLOAD", "TNLOSS")
 #
 # CLIMATE WATER BALANCE IS EXCLUDED, and it is 7,668 of the release's 14,139 attributes -- more than half the catalogue and most of its size. gridMET covers the same ground at 4 km daily resolution, which is finer than these per-COMID summaries, so keeping both is paying twice for the worse copy.
 WIECZOREK_THEMES = ("Soils", "Best Management Practices", "Hydrologic Modifications",
-                    "Chemical", "Land Cover", "Geology", "Topographic")
+                    "Chemical", "Land Cover", "Geology", "Topographic",
+                    # Added 2026-08-26. "Hydrologic" is NOT "Hydrologic Modifications" (dams and canals,
+                    # already pulled) -- it is the flow-pathway partition: CONTACT, IEOF/SATOF, RECHG, BFI,
+                    # EWT, TWI, which is the only catchment-grain description of HOW water reaches a reach.
+                    "Hydrologic",
+                    # Regional categoricals: HLR, Fenneman physiography, EPA Level III ecoregion. As much
+                    # GROUPING candidates as features -- they will look strong under LOSO and weak under
+                    # LOFO, which is what the LOSO-LOFO gap column exists to expose.
+                    "Regions")
+
+# EVERY THEME THE CATALOGUE OFFERS IS EITHER TAKEN ABOVE OR DECLINED HERE, WITH A REASON. Declining is a
+# deliberate act; an unlisted theme is an oversight, and the verify check refuses one. "not evaluated" is a
+# legitimate entry -- it says nobody has looked, which is honest and auditable, unlike silence.
+WIECZOREK_THEMES_DECLINED = {
+    "Climate Water Balance": "7,668 attributes of 30-year normals and monthly climatology; gridMET gives "
+                             "us the same quantities daily at 1/24 degree, so these are a coarser "
+                             "summary of data we already hold",
+    "Climate": "345 attributes, same relationship to gridMET as above",
+    "Climate and Water Balance": "69 attributes, same relationship to gridMET as above",
+    "Population": "33 attributes -- NOT EVALUATED. Plausibly relevant (human-waste nitrogen scales with "
+                  "population), but StreamCat's n_hw and the DMR loading product both measure the "
+                  "discharge directly, which is the quantity that matters",
+    "Water Use": "3 attributes -- NOT EVALUATED. Small enough that the audit should look rather than guess",
+}
 
 # The NODATA sentinel these tables write where a value is unknown. See `_mask_nodata` for why it cannot be left as a number.
 NODATA_SENTINEL = -9999
@@ -153,12 +176,14 @@ def _path(name: str):
     return config.ACQ_ATTRIBUTES / f"{name}.parquet"
 
 
-def _covered(name: str, comids, key: str = "comid") -> bool:
+def _covered(name: str, comids, key: str = "comid", columns=None) -> bool:
     """True when the artifact on disk already covers this COMID set AND can be joined to it.
 
     EXISTENCE IS NOT COVERAGE. A skip-if-the-file-exists check treats a 2,000-COMID probe as a finished 1.5M-COMID pull, reports "on disk", and the run completes green on data that is 0.1% of what was asked for. Nothing downstream can tell the difference -- the columns are all present and the rows are all real.
 
     NOR IS A ROW COUNT. Eight Wieczorek files were written with no COMID at all and every one passed this check, because they held the 2.7M NATIONAL rows and the threshold was set against the AOE's 1.5M -- a file with too MANY rows is a file that was never filtered, which is the opposite of covered. The key column is therefore checked first: without it the artifact cannot be joined to anything and its row count means nothing.
+
+    NOR ARE ROWS ENOUGH WHEN THE REQUEST WIDENS. `columns` names what the caller intends to fetch, and a file missing any of them is not covered however many rows it holds. Without that test this check is key-aware and column-BLIND, which is how eleven annual nitrogen families -- 327 columns of manure, legacy N and fertilizer running back to 1987 -- could be added to the request and never fetched, because the rows were already there. `weather._complete` carried the same blindness for the same reason; `_dir_covered` below has always had it right.
     """
     import pyarrow.parquet as pq
 
@@ -169,6 +194,13 @@ def _covered(name: str, comids, key: str = "comid") -> bool:
     if key.lower() not in names:
         print(f"    {name}: on disk but has no {key} column -- unjoinable, refetching")
         return False
+    if columns:
+        on_file = {n.lower() for n in names}
+        missing = sorted({c for c in columns if c.lower() not in on_file})
+        if missing:
+            print(f"    {name}: on disk but missing {len(missing)} requested column(s) "
+                  f"(e.g. {missing[:4]}) -- refetching")
+            return False
     have = pq.read_metadata(p).num_rows
     if have >= 0.99 * len(comids):
         return True
@@ -217,8 +249,58 @@ def catchment_comids() -> set[int]:
     return set(pd.to_numeric(ids, errors="coerce").dropna().astype("int64"))
 
 
+# THE ANNUAL SERIES IS A SEPARATE ARTIFACT, AND THE REASON IS COST. Asking `streamcat()` for the base
+# metrics AND every vintage in one pass triples the payload per request: measured, one 5,000-COMID batch
+# takes 42 s at 159 metrics and 100 s at 486, which over 296 batches is the difference between 3.5 hours
+# and 8 -- and under that load requests start exceeding the server's timeout, so a tenth of them fail and
+# retry. Splitting the request in two keeps each one near the size known to work, and means the base file,
+# already complete for its own metrics, is never refetched to add columns beside it.
+#
+# Metric FAMILIES requested in full rather than collapsed to their newest vintage. `latest_vintage` keeps
+# one member per family because all vintages of everything is 2,371 columns, 17.8 hours and 28 GB -- but a
+# family whose whole point is the TREND is destroyed by that collapse, and the nitrogen mass balance is the
+# case in point: farm fertilizer, livestock waste (manure) and accumulated legacy N run annually 1987-2017
+# and were being reduced to a single 2017 snapshot. Naming a family here restores its series and nothing
+# else's. Matched as a prefix against the vintage-stripped metric name.
+STREAMCAT_FULL_SERIES = (
+    "n_ff",        # farm fertilizer
+    "n_lw",        # livestock waste -- manure, the axis CDL cannot see
+    "n_lwr",       # livestock waste recovered
+    "n_ags",       # agricultural surplus
+    "n_leg",       # accumulated legacy N
+    "n_dep",       # atmospheric deposition
+    "n_hw",        # human waste
+    "n_cf",        # crop fixation
+    "n_cr",        # crop removal
+    "n_tin",       # total inputs
+    "n_uf",        # urban fertilizer
+)
+
+
+def _family_of(name: str) -> str:
+    """A metric name minus its trailing vintage: `n_ff_2017` -> `n_ff`. The grouping `latest_vintage` uses."""
+    import re
+
+    m = re.match(r"^(.*?)_?((?:19|20)\d{2})$", name)
+    return (m.group(1) if m else name).lower()
+
+
+def expand_full_series(all_names, families=STREAMCAT_FULL_SERIES) -> list[str]:
+    """Every vintage of every named family, from the full catalogue. Empty families are reported, not silent.
+
+    A family that matches nothing is almost always a typo or a renamed metric, and returning quietly would leave the series missing for exactly as long as nobody checked -- which is the failure this whole function exists to undo.
+    """
+    fams = {f.lower() for f in families}
+    out = [n for n in all_names if _family_of(n) in fams and "[" not in n]
+    found = {_family_of(n) for n in out}
+    missing = sorted(fams - found)
+    if missing:
+        print(f"    streamcat: requested famil(ies) matched no metric: {missing}", flush=True)
+    return sorted(out)
+
+
 def streamcat(comids: list[int], force: bool = False, include_fitted: bool = False,
-              batch: int = _STREAMCAT_BATCH) -> int:
+              batch: int = _STREAMCAT_BATCH, full_series=(), names=None, artifact="streamcat") -> int:
     """EPA StreamCat, in both local (`cat`) and accumulated (`ws`) form, minus the fitted-on-target metrics.
 
     The accessor is the MODULE-LEVEL `pynhd.streamcat`, not a method on the class. `StreamCat` itself only exposes catalogue attributes (`valid_names`, `metrics_df`, `valid_aois`) and `all_metrics_bycomid`, which takes a single COMID.
@@ -231,12 +313,25 @@ def streamcat(comids: list[int], force: bool = False, include_fitted: bool = Fal
     """
     have_cat = catchment_comids()
     askable = [c for c in comids if c in have_cat]
-    if _covered("streamcat", askable, key="COMID") and not force:
-        print("  streamcat: on disk"); return 0
+
+    # THE NAME LIST IS BUILT BEFORE THE COVERAGE TEST, not after, so the test can compare the request
+    # against what is on disk. Ordering it the other way is what made a widened request a no-op.
+    all_names = streamcat_names()
+    names = list(names) if names is not None else latest_vintage(all_names, include_fitted)
+    if full_series:
+        extra = [n for n in expand_full_series(all_names, full_series) if n not in set(names)]
+        if extra:
+            fams = sorted({_family_of(n) for n in extra})
+            print(f"    + {len(extra)} extra vintage(s) across {len(fams)} full-series famil(ies): {fams}",
+                  flush=True)
+            names = sorted(set(names) | set(extra))
+    want_cols = [f"{n}{aoi}" for n in names for aoi in ("cat", "ws")]
+    if _covered(artifact, askable, key="COMID", columns=want_cols) and not force:
+        print(f"  {artifact}: on disk"); return 0
     _patch_streamcat_years()
     from pynhd import streamcat as sc_get
 
-    names = latest_vintage(streamcat_names(), include_fitted)
+
     n_req = -(-len(askable) // batch)
     rem = quota_remaining()
     print(f"    {len(names)} metrics x {len(askable):,} COMIDs with a catchment "
@@ -253,7 +348,7 @@ def streamcat(comids: list[int], force: bool = False, include_fitted: bool = Fal
     import pyarrow.parquet as pq
 
     # FLUSHED TO DISK, NOT ACCUMULATED. Collecting 3,000 batch frames and concatenating at the end holds the finished table AND the list it came from at the same moment -- about 320 columns over 1.5M COMIDs, so roughly 4 GB doubled to 8 at the concat, on the 17 GB machine that has already been OOM-killed once this build. Row groups append, so the peak is one buffer.
-    p = _path("streamcat")
+    p = _path(artifact)
     tmp = p.with_name(p.name + ".tmp")
     writer, cols, buf, held, written = None, None, [], 0, 0
 
@@ -336,7 +431,7 @@ def streamcat(comids: list[int], force: bool = False, include_fitted: bool = Fal
     if failed:
         tmp.unlink(missing_ok=True)
         raise RuntimeError(
-            f"streamcat: {len(failed):,} of {len(comids):,} COMIDs never returned after retries "
+            f"{artifact}: {len(failed):,} of {len(comids):,} COMIDs never returned after retries "
             f"({len(failed) / len(comids):.2%}); partial file discarded. Rerun to resume -- the "
             f"service throttles a sustained pull and usually recovers.")
     tmp.replace(p)
@@ -589,6 +684,7 @@ def main(force: bool = False, include_fitted: bool = False) -> dict:
     print(f"  {len(comids):,} COMIDs in the AOE")
     out = {}
     for name, fn in (("streamcat", lambda: streamcat(comids, force, include_fitted)),
+                     ("streamcat_series", lambda: streamcat_series(comids, force)),
                      ("wieczorek", lambda: wieczorek(comids, force)),
                      ("nid", lambda: nid(force))):
         try:
@@ -599,3 +695,69 @@ def main(force: bool = False, include_fitted: bool = False) -> dict:
             # Not truncated to 80 -- a coverage shortfall explains itself in the message, and clipping it turns a diagnosable failure into a mystery.
             print(f"  {name}: FAILED {type(e).__name__}: {e}")
     return out
+
+
+@verify.check("a3", "every attribute theme the catalogue offers is either pulled or declined with a reason")
+def _check_wieczorek_themes_declared():
+    """The declaration covers the catalogue. A theme in neither list is an oversight, not a choice.
+
+    This is the check that would have surfaced `Hydrologic` and `Regions` -- 437 attributes including the entire flow-pathway partition -- sitting unpulled for as long as nobody happened to compare the tuple against the catalogue. Network-free: it reads the theme names off the directories on disk plus the two declarations, and reports SKIP when the catalogue has never been pulled.
+    """
+    taken, declined = set(WIECZOREK_THEMES), set(WIECZOREK_THEMES_DECLINED)
+    overlap = taken & declined
+    if overlap:
+        return False, f"theme(s) both pulled and declined: {sorted(overlap)}"
+    blank = [t for t, why in WIECZOREK_THEMES_DECLINED.items() if not str(why).strip()]
+    if blank:
+        return False, f"declined with no reason: {sorted(blank)}"
+    known = config.ACQ_ATTRIBUTES / "wieczorek_catalogue_themes.json"
+    if not known.exists():
+        return None, (f"{len(taken)} theme(s) pulled, {len(declined)} declined; "
+                      f"catalogue roster not cached, so completeness is unchecked")
+    import json
+
+    catalogue = set(json.loads(known.read_text()))
+    missing = catalogue - taken - declined
+    if missing:
+        return False, f"{len(missing)} catalogue theme(s) neither pulled nor declined: {sorted(missing)}"
+    return True, f"{len(catalogue)} catalogue theme(s): {len(taken)} pulled, {len(declined)} declined"
+
+
+# ---- the annual series, as its own artifact ------------------------------------------------------------
+
+_SERIES_BATCH = 2_500          # half the base batch: ~2x the metrics per row, so ~the same bytes per request
+
+
+def streamcat_series_names(include_missing_base: bool = True) -> list[str]:
+    """Metrics that belong in the series artifact: every vintage of the declared families, plus any base metric the main file is missing.
+
+    The second half matters more than it sounds. `latest_vintage` has always requested twelve metrics that are simply not in `streamcat.parquet` -- `bankfulldepth`, `bankfullwidth`, `thalwegdepth`, `wettedwidth`, `ici`, `iwi`, `mast2014`/`msst2014`/`mwst2014` (mean annual/summer/winter stream temperature), `nars_region`, `nrsa_frame`, `prg_bmmi0809` -- and nothing noticed, because the coverage check counted rows. Rather than refetch 159 metrics over 1.5M COMIDs to collect twelve, they ride along here.
+    """
+    import pyarrow.parquet as pq
+
+    names = streamcat_names()
+    base = set(latest_vintage(names))
+    want = [n for n in expand_full_series(names) if n not in base]
+    if include_missing_base:
+        p = _path("streamcat")
+        if p.exists():
+            on_file = {c.lower() for c in pq.read_schema(p).names}
+            gap = sorted(m for m in base if f"{m}cat".lower() not in on_file)
+            if gap:
+                print(f"    + {len(gap)} base metric(s) absent from streamcat.parquet: {gap[:6]}",
+                      flush=True)
+                want += gap
+    return sorted(set(want))
+
+
+def streamcat_series(comids: list[int], force: bool = False, batch: int = _SERIES_BATCH) -> int:
+    """The annual nitrogen mass balance, one column per (metric, vintage, AOI). Returns rows written.
+
+    Separate from `streamcat()` by design -- see the note beside `STREAMCAT_FULL_SERIES`. Same quota-aware retry path, same incremental flush, half the COMID batch because each row is twice as wide.
+    """
+    names = streamcat_series_names()
+    if not names:
+        print("  streamcat series: nothing declared"); return 0
+    fams = sorted({_family_of(n) for n in names})
+    print(f"    {len(names)} metrics across {len(fams)} famil(ies)", flush=True)
+    return streamcat(comids, force=force, batch=batch, names=names, artifact="streamcat_series")

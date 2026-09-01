@@ -31,18 +31,19 @@ def _path():
 def _cached(name: str, make, force: bool) -> pd.DataFrame | None:
     """A stamped product from disk, rebuilt when missing, forced, or cut against a DIFFERENT AOE.
 
-    THE STAMP IS THE CACHE KEY, not the filename -- read and checked by `io.read_parquet(expect=)`, the one reader pair the stamp family runs through. Returns None when the NID pull has not run, so the caller can tell "no dam table" from "no dams here".
+    THE STAMP IS THE CACHE KEY, not the filename -- read and checked by `io.read_parquet(expect=)`, the one reader pair the stamp family runs through. Both axes are named: the extent, and the NID pull these tables are computed FROM, so a re-pulled or widened NID makes the cached table unreachable rather than silently reused. Returns None when the NID pull has not run, so the caller can tell "no dam table" from "no dams here".
     """
     p = config.COVARIATES_DIR / name
+    stamps = {"aoe": config.aoe_stamp(), "inputs": bio.input_stamp(_path())}
     if p.exists() and not force:
         try:
-            return bio.read_parquet(p, expect={"aoe": config.aoe_stamp()})
+            return bio.read_parquet(p, expect=stamps)
         except bio.StaleArtifactError:
-            print(f"  {name} was cut against a different AOE -- rebuilding")
+            print(f"  {name} was cut against a different AOE or NID -- rebuilding")
     if not _path().exists():
         return None
     out = make()
-    bio.write_parquet(out, p, stamps={"aoe": config.aoe_stamp()})
+    bio.write_parquet(out, p, stamps=stamps)
     return out
 
 

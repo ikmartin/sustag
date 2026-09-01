@@ -100,6 +100,51 @@ def write_parquet(df: pd.DataFrame, path: Path, stamps: dict | None = None, inde
     return path
 
 
+def copy_parquet_stamped(src: Path, dst: Path, stamps: dict | None = None) -> Path:
+    """Copy a parquet file row group by row group, attaching stamps. The frame is NEVER materialised.
+
+    `write_parquet(read_parquet(p))` is the obvious way to restamp an artifact and it does not survive a large one: the twelve-component nutrients product is 320,834,088 rows whose `product` column is a string, so pandas needs ~10 GB resident to hold a file that is 3.5 GB on disk and 3.8 GB in arrow. Streaming holds ONE row group -- about 12 MB here -- and writes byte-equivalent output, so publication's cost stops scaling with the product it publishes.
+
+    Row group boundaries are preserved, which also preserves the statistics a predicate-pushdown reader prunes on.
+    """
+    import pyarrow.parquet as pq
+
+    src, dst = Path(src), Path(dst)
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    pf = pq.ParquetFile(src)
+    schema = pf.schema_arrow
+    if stamps:
+        meta = dict(schema.metadata or {})
+        for k, v in stamps.items():
+            meta[_STAMP_PREFIX + str(k).encode()] = str(v).encode()
+        schema = schema.with_metadata(meta)
+    tmp = dst.with_name(dst.name + ".tmp")
+    with pq.ParquetWriter(tmp, schema) as w:
+        for i in range(pf.metadata.num_row_groups):
+            w.write_table(pf.read_row_group(i).replace_schema_metadata(schema.metadata))
+    os.replace(tmp, dst)
+    return dst
+
+
+def input_stamp(*paths) -> str:
+    """A short hash over the identity of every input file a product reads: name, size, mtime.
+
+    THE STAMP MUST NAME EVERY INPUT THE FUNCTION READS. A product stamped on the extent alone leaves a cached artifact standing when an input is rebuilt underneath it -- a nineteen-archive reader ignores a twentieth, and a manual acquisition arriving between two runs never joins, with no line printed to say so. `d8._accum_cache_file` is the model: key on the identity of what you read, and a changed input becomes unreachable rather than silently reused.
+
+    Missing files contribute their absence, so acquiring one is itself a change. Pair with `read_parquet(expect=)` for stamped artifacts, or fold into a checkpoint directory name where there is no single artifact to stamp.
+    """
+    import hashlib
+
+    h = hashlib.sha256()
+    for q in sorted(str(x) for x in paths):
+        try:
+            st = Path(q).stat()
+            h.update(f"{q}:{st.st_size}:{st.st_mtime_ns}".encode())
+        except FileNotFoundError:
+            h.update(f"{q}:absent".encode())
+    return h.hexdigest()[:12]
+
+
 def read_stamps(path: Path) -> dict[str, str]:
     """the build's stamps on a parquet artifact, from the footer alone -- no row is touched."""
     import pyarrow.parquet as pq

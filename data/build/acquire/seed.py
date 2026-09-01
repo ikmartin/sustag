@@ -19,6 +19,19 @@ SEED_MIN_SPAN_DAYS = 1
 
 NO_SERIES = "no_nitrate_series"
 SHORT_SPAN = "span_under_min"
+NOT_IN_SITU = "not_an_in_situ_nitrate_series"
+
+# THE AOE IS SEEDED ON IN-SITU NITRATE SERIES, AND ONLY THOSE. A seed's basin becomes part of the region
+# every raster is then clipped to, so what may vote is a design decision and not a side effect of whoever
+# happens to advertise nitrate. Continuous instruments are the cohort this project exists to model;
+# discrete grab samples (WQX) are observations we want and whose BASINS we do not -- they register, they
+# publish, they never vote. Recoverable later if that changes: seeding is not a cohort filter, so a
+# non-seed keeps every column and loses only its vote.
+#
+# Declared as CHANNELS rather than sources, because the distinction is one of measurement process. The
+# channel split that makes `nitrate_discrete` separate from `nitrate` is what carries it -- and stating
+# the rule here means a future source cannot inherit a vote merely by naming its column `nitrate_*`.
+SEED_CHANNELS = ("nitrate",)
 
 
 def _span_days(begin, end) -> pd.Series:
@@ -30,14 +43,26 @@ def _span_days(begin, end) -> pd.Series:
 def mark_seeds(sensors: pd.DataFrame, min_span_days: int = SEED_MIN_SPAN_DAYS) -> pd.DataFrame:
     """Fill `aoe_seed` and `seed_exclusion_reason` for every row.
 
-    Two exclusions, both decidable from metadata alone: null begin AND end where the source reports spans at all (a registration with no series, different from a short one), and a span that cannot contain one observation day. A null span where the source publishes no spans is missing evidence, not evidence of absence -- excluding on it would have dropped all 227 USGS seeds the first time this ran against a table built before the column existed. IWQIS and MPCA publish no spans and seed by default; their records are on local disk and cost nothing to confirm.
+    Three exclusions, all decidable from metadata alone. The first is a DESIGN rule -- only in-situ nitrate series vote on the extent (see `SEED_CHANNELS`) -- and the other two are evidence tests: null begin AND end where the source reports spans at all (a registration with no series, different from a short one), and a span that cannot contain one observation day. A null span where the source publishes no spans is missing evidence, not evidence of absence -- excluding on it would have dropped all 227 USGS seeds the first time this ran against a table built before the column existed. IWQIS and MPCA publish no spans and seed by default; their records are on local disk and cost nothing to confirm.
     """
     out = sensors.copy()
     span = _span_days(out.nitrate_begin, out.nitrate_end)
     reports_span = out.groupby("source").nitrate_begin.transform(lambda s: s.notna().any())
 
     reason = pd.Series(pd.NA, index=out.index, dtype="object")
-    reason[reports_span & out.nitrate_begin.isna() & out.nitrate_end.isna()] = NO_SERIES
+
+    # Anything advertising a nitrate-family channel that is NOT in `SEED_CHANNELS` is excluded by name,
+    # before the span tests. Without this a discrete-sample source is excluded only incidentally -- by
+    # having null `nitrate_begin` while its own channel's span sits in a differently-prefixed column --
+    # which is true today and would stop being true the moment someone reused the column.
+    if "channels_declared" in out.columns:
+        declared = out.channels_declared.fillna("").astype(str)
+        nitrate_family = declared.str.contains("nitrate", case=False, na=False)
+        seeds_ok = declared.apply(
+            lambda d: any(c in [x.strip() for x in str(d).split("+")] for c in SEED_CHANNELS))
+        reason[nitrate_family & ~seeds_ok] = NOT_IN_SITU
+
+    reason[reports_span & out.nitrate_begin.isna() & out.nitrate_end.isna() & reason.isna()] = NO_SERIES
     reason[span.notna() & (span < min_span_days) & reason.isna()] = SHORT_SPAN
 
     out["aoe_seed"] = reason.isna()

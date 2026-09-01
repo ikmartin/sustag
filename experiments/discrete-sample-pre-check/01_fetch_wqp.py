@@ -1,3 +1,8 @@
+"""SUPERSEDED 2026-08-26 -- DO NOT RUN. This queries the Water Quality Portal LEGACY endpoint, which
+silently drops every USGS result after 2024-03-11 (HTTP 200, valid header, missing rows). See SUPERSEDED.md
+in this directory. The live path is the WQX adapter at data/build/acquire/sources/wqx.py.
+"""
+
 """Pull discrete nitrate results from the Water Quality Portal, harmonise units, deduplicate, cache.
 
     python 01_fetch_wqp.py                       # Iowa streams, all organisations -> cache/wqp_nitrate.parquet

@@ -12,24 +12,33 @@ import pandas as pd
 from . import config
 
 
-def _store_key() -> str:
+def _store_key(columns=()) -> str:
+    """Cache key over the published store's file identities AND the column set asked of them.
+
+    THE KEY MUST NAME THE COLUMN SET, not only the store. The pooled frame's column list lives in this module, so widening it -- a new nitrate primitive -- changes no file on disk, and a store-only hash would hand back the previous frame with the new column absent. That surfaces as a `KeyError` downstream rather than a wrong number, which is the benign end of this failure family, but it is still a stale read the key can simply prevent.
+    """
     h = hashlib.sha256()
-    for p in sorted(config.PUB_WATER.glob("*.parquet")):
-        st = p.stat()
-        h.update(f"{p.name}:{st.st_size}:{st.st_mtime_ns}".encode())
+    for q in sorted(config.PUB_WATER.glob("*.parquet")):
+        st = q.stat()
+        h.update(f"{q.name}:{st.st_size}:{st.st_mtime_ns}".encode())
+    for c in sorted(columns):
+        h.update(f"col:{c}".encode())
     return h.hexdigest()[:12]
 
 
 def pooled_nitrate(refresh: bool = False) -> pd.DataFrame:
     """Every published record's daily nitrate in one frame: (code, date, the seven primitives, provenance)."""
     config.CACHE.mkdir(parents=True, exist_ok=True)
-    key = _store_key()
+    # The column list is built BEFORE the key, because it is part of it -- the same ordering
+    # `attributes._covered` needs, for the same reason: a test run against a name list the caller
+    # has not assembled yet can only check half the question.
+    cols = [f"nitrate_{s}" for s in ("mean", "min", "max", "p25", "median", "p75", "n_obs")]
+    key = _store_key(cols + ["nitrate_src"])
     p = config.CACHE / f"nitrate_pooled_{key}.parquet"
     if p.exists() and not refresh:
         return pd.read_parquet(p)
     for stale in config.CACHE.glob("nitrate_pooled_*.parquet"):
         stale.unlink()
-    cols = [f"nitrate_{s}" for s in ("mean", "min", "max", "p25", "median", "p75", "n_obs")]
     frames = []
     for f in sorted(config.PUB_WATER.glob("*.parquet")):
         d = pd.read_parquet(f)
